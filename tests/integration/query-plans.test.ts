@@ -44,7 +44,7 @@ function captureQueries(run: () => unknown) {
 }
 function plans(queries: Captured[]) {
   return queries
-    .filter((query) => /^\s*select\b/iu.test(query.sql))
+    .filter((query) => /^\s*(?:select|with)\b/iu.test(query.sql))
     .flatMap((query) =>
       z
         .array(z.object({ detail: z.string() }))
