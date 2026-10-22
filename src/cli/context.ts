@@ -1,6 +1,6 @@
 import { fork } from 'node:child_process';
 import { statSync } from 'node:fs';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { createContext, createReadContext } from '../core/context.js';
 import { openDatabase } from '../core/database/open.js';
 import type { DatabaseConnection } from '../core/database/types.js';

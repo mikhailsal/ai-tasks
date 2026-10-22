@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { statisticsCounters } from '../../schema/read-views.js';
 import { statisticCategories, statisticOutcomes } from './statistics-sql.js';
 const counterSchema = z.strictObject(statisticsCounters);

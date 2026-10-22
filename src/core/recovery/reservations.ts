@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { ReservationConflict } from '../../schema/recovery.js';
 import { domainError } from '../errors.js';
 

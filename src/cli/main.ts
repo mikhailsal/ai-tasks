@@ -4,7 +4,7 @@ import { findPackageJSON } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command, CommanderError } from 'commander';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { domainError } from '../core/errors.js';
 import { writeFailure, writeJson } from './io.js';
 import { addCommonOptions, commandOptions, requireOptions } from './options.js';

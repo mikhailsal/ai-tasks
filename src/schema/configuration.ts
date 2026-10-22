@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { configKeySchema, labelSchema } from './values.js';
 export const paletteSchema = z.enum([
   'slate',

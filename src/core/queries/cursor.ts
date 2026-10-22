@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { applicationState } from '../../schema/entities.js';
 import { revisionSchema, uuidSchema } from '../../schema/values.js';
 import { domainError } from '../errors.js';

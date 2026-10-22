@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { projects, tasks } from '../../schema/entities.js';
 import type { MutationEnvelope } from '../../schema/envelopes.js';
 import { uuidSchema } from '../../schema/values.js';

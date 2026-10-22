@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import {
   createDraft,
   updateDraft,

@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { successEnvelopeSchema } from '../../schema/envelopes.js';
 import { dependencyResourceSchema } from '../../schema/tasks.js';
 import type { CoreContext } from '../database/types.js';

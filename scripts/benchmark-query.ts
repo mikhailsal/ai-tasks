@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { createReadContext } from '../src/core/context.js';
 import { openDatabase } from '../src/core/database/open.js';
 import { listTasks } from '../src/core/queries/tasks.js';

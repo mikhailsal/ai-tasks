@@ -4,7 +4,7 @@ import {
   persistQueryClientRestore,
   persistQueryClientSubscribe,
 } from '@tanstack/react-query-persist-client';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import {
   errorEnvelopeSchema,
   successEnvelopeSchema,

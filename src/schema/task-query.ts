@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { priorityValueSchema } from './configuration.js';
 import { taskCategorySchema } from './tasks.js';
 import { configKeySchema, slugSchema } from './values.js';

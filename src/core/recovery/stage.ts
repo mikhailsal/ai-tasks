@@ -1,5 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { applicationState, projectConfigs, projects } from '../../schema/entities.js';
 import { paginationSecrets } from '../../schema/pagination.js';
 import { projectConfigInputSchema } from '../../schema/configuration.js';

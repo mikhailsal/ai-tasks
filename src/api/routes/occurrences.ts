@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { slugSchema, uuidSchema } from '../../schema/values.js';
 import type { DataHelper } from '../helper-client.js';
 import { emptyQuery, queryInput, registerMutationRoute, routeParams } from './transport.js';

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { tasks } from '../../schema/entities.js';
 import { successEnvelopeSchema } from '../../schema/envelopes.js';
 import { taskDetailSchema, taskResourceSchema } from '../../schema/tasks.js';

@@ -1,5 +1,5 @@
 import { createReadStream } from 'node:fs';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { domainError, errorEnvelope, cliExit, DomainError } from '../core/errors.js';
 import { mutationEnvelopeSchema } from '../schema/envelopes.js';
 import { BODY_LIMIT_BYTES, jsonValueSchema, type JsonValue } from '../schema/values.js';

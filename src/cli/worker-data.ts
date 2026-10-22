@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { createContext, createReadContext } from '../core/context.js';
 import type { DatabaseConnection } from '../core/database/types.js';
 import { DomainError } from '../core/errors.js';

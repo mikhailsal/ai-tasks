@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { slugSchema } from '../schema/values.js';
 import type { openDatabase } from './database/open.js';
 import { domainError } from './errors.js';

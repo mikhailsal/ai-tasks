@@ -1,5 +1,5 @@
 import { type Command, InvalidArgumentError, Option } from 'commander';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { domainError } from '../core/errors.js';
 import { readScopeSchema } from '../schema/scopes.js';
 export const cliOptionsSchema = z.strictObject({

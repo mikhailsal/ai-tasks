@@ -1,6 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { responseMetaSchema } from '../../schema/envelopes.js';
 import { backupInfoSchema, restoreResultSchema } from '../../schema/recovery.js';
 import { uuidSchema } from '../../schema/values.js';

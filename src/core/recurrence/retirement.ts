@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, lt } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { occurrences, recurrenceIntervals } from '../../schema/recurrence.js';
 import type { DatabaseTransaction } from '../database/types.js';
 import { domainError } from '../errors.js';

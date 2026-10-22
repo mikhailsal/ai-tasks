@@ -1,6 +1,6 @@
 import { get, set, del } from 'idb-keyval';
 import type { PersistedClient, Persister } from '@tanstack/react-query-persist-client';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { jsonValueSchema } from '../../../src/schema/values.js';
 import { cacheStore, CACHE_VERSION, reportCacheError } from './cache-storage.js';
 import { snapshotMatchesEpoch } from './cache-identity.js';

@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { ResponseMeta } from '../../schema/envelopes.js';
 import { slugSchema, uuidSchema } from '../../schema/values.js';
 import type { ConnectionLock } from '../database/lock-check.js';

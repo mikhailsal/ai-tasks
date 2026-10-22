@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { applicationState } from '../../schema/entities.js';
 import {
   mutationEnvelopeSchema,

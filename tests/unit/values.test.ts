@@ -79,9 +79,63 @@ describe('browser-safe values', () => {
     expect(timestampSchema.parse('2024-02-29t12:30:00.123+03:00')).toBe(
       '2024-02-29T12:30:00.123+03:00',
     );
-    expect(timezoneSchema.parse('Europe/Moscow')).toBe('Europe/Moscow');
-    expect(timezoneSchema.safeParse('Not/A_Timezone').success).toBe(false);
-    expect(timezoneSchema.safeParse('+03:00').success).toBe(false);
+  });
+
+  it('retains DateTimeFormat timezone validation when supportedValuesOf is unavailable', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(Intl, 'supportedValuesOf');
+    Object.defineProperty(Intl, 'supportedValuesOf', { configurable: true, value: undefined });
+    try {
+      expect(timezoneSchema.parse('US/Eastern')).toBe('US/Eastern');
+      expect(timezoneSchema.safeParse('Not/A_Timezone').success).toBe(false);
+    } finally {
+      if (descriptor) Object.defineProperty(Intl, 'supportedValuesOf', descriptor);
+    }
+  });
+
+  it('accepts every canonical timezone while preserving alias, case, and invalid-input parity', () => {
+    const canonical = ['UTC', ...Intl.supportedValuesOf('timeZone')];
+    for (const timezone of canonical) {
+      expect(timezoneSchema.safeParse(timezone).success, timezone).toBe(true);
+    }
+    const compatibilityCases = [
+      'Etc/UTC',
+      'GMT',
+      'GMT+0',
+      'US/Eastern',
+      'Asia/Kolkata',
+      'Europe/Kyiv',
+      'europe/moscow',
+      'utc',
+      '',
+      ' Europe/Moscow',
+      'Europe/Moscow ',
+      'Not/A_Timezone',
+      '+03:00',
+      '-05:00',
+    ];
+    for (const timezone of compatibilityCases) {
+      let expected = false;
+      if (!/^[+-]/.test(timezone)) {
+        try {
+          new Intl.DateTimeFormat('en', { timeZone: timezone });
+          expected = true;
+        } catch {
+          // Match the pre-optimization validator exactly.
+        }
+      }
+      expect(timezoneSchema.safeParse(timezone).success, timezone).toBe(expected);
+    }
+    const failure = timezoneSchema.safeParse('Not/A_Timezone');
+    expect(failure.success).toBe(false);
+    if (!failure.success) {
+      expect(failure.error.issues).toEqual([
+        expect.objectContaining({
+          code: 'custom',
+          message: 'Must be a valid IANA timezone',
+          path: [],
+        }),
+      ]);
+    }
   });
 
   it('accepts only JSON data and positive safe integer revisions', () => {

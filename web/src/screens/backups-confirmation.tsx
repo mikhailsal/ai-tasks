@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { MetaData } from '../../../src/schema/meta.js';
 import type { ProjectResource } from '../../../src/schema/projects.js';
 import type { BackupValidation } from '../../../src/schema/recovery.js';

@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { domainError } from '../errors.js';
 import { jsonValueSchema } from '../../schema/values.js';
 import { auditResource } from '../queries/audit.js';

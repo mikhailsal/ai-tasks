@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { jsonValueSchema } from '../../../src/schema/values.js';
 import { priorityValueSchema } from '../../../src/schema/configuration.js';
 import {

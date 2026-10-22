@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, isNotNull, isNull, type SQL } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { projects } from '../../schema/entities.js';
 import { successEnvelopeSchema } from '../../schema/envelopes.js';
 import { projectResourceSchema } from '../../schema/projects.js';

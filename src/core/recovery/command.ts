@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { mutationEnvelopeSchema, errorEnvelopeSchema } from '../../schema/envelopes.js';
 import { errorCodeSchema } from '../../schema/errors.js';
 import { restoreResultSchema } from '../../schema/recovery.js';

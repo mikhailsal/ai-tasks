@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { projectConfigInputSchema } from './configuration.js';
 import {
   descriptionSchema,

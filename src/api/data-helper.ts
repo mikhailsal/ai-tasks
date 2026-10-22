@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { createContext } from '../core/context.js';
 import { openDatabase } from '../core/database/open.js';
 import { domainError, errorEnvelope } from '../core/errors.js';

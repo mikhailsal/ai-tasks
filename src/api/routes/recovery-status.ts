@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { domainError } from '../../core/errors.js';
 import { recoveryStatusInputSchema } from '../../schema/recovery.js';
 import { uuidSchema } from '../../schema/values.js';

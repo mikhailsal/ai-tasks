@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
 import { open, rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { MutationEnvelope } from '../../schema/envelopes.js';
 import { actorSchema, createContext } from '../context.js';
 import { refuseUnresolvedRecovery, type ConnectionLock } from '../database/lock-check.js';

@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { FastifyInstance, HTTPMethods } from 'fastify';
 import { domainError } from '../../core/errors.js';
 import { readScopeSchema } from '../../schema/scopes.js';

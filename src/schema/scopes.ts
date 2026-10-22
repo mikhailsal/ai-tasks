@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { slugSchema } from './values.js';
 export const readScopeSchema = z.union([
   z.strictObject({ project_slug: slugSchema }),

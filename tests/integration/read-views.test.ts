@@ -130,6 +130,37 @@ it('[ready] literal Unicode search intersects configured category, kind, marker,
   ).toEqual([]);
   expect(view.snapshot()).toEqual(before);
 });
+it.each<Parameters<typeof listTasks>[1] & Record<string, JsonValue>>([
+  { all_projects: true, category: 'in_progress' },
+  {
+    project_slug: 'classic',
+    q: '100%_\\ рЕгИсТр',
+    category: 'in_progress',
+    kind: 'ordinary',
+    status_id: 'in_progress',
+    emoji: '🧪',
+    priority: null,
+  },
+  { all_projects: true, q: 'visibility:', include_terminal: true },
+  { all_projects: true, category: 'completed', include_terminal: true },
+  { all_projects: true, category: 'completed' },
+  { all_projects: true, archive: 'only' },
+  { all_projects: true, archive: 'include', include_terminal: true },
+  { project_slug: 'beta-named', priority: { model: 'named', level_id: 'not-in-use' } },
+  { all_projects: true, priority: { model: 'numeric', value: 1.25 } },
+  { all_projects: true, kind: 'recurring' },
+])('agenda preserves task-list filter intersections for %j', async (input) => {
+  const before = view.snapshot();
+  const expected = listTasks(view.readContext, { ...input, limit: 200 });
+  expect(expected.data.next_cursor).toBeNull();
+  const read = await groupedApi('agenda');
+  const actual = read(Object.assign({ limit: 200 }, input));
+  expect(actual.data.next_cursor).toBeNull();
+  expect(new Set(items(actual).map((task) => task.id))).toEqual(
+    new Set(expected.data.items.map((task) => task.id)),
+  );
+  expect(view.snapshot()).toEqual(before);
+});
 it('[ready] archive and terminal switches preserve custom-category meaning and one recurring parent with earliest pending/debt', () => {
   const before = view.snapshot();
   expect(listTasks(view.readContext, { all_projects: true, q: 'visibility:' }).data.items).toEqual(

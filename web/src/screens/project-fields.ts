@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { configurationDraftSchema } from '../components/configuration-model.js';
 import type { projectResourceSchema } from '../../../src/schema/projects.js';
 export const projectFieldsSchema = z.strictObject({

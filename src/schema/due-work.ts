@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { successEnvelopeSchema } from './envelopes.js';
 import { revisionSchema, uuidSchema } from './values.js';
 export const dueWorkInputSchema = z.strictObject({

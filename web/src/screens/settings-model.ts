@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import type { settingsEnvelopeSchema } from '../../../src/schema/settings.js';
 import type { DraftBase } from '../data/drafts.js';
 import type { ProjectResource } from '../../../src/schema/projects.js';

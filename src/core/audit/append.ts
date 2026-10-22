@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { auditRecords } from '../../schema/history.js';
 import { jsonValueSchema, uuidSchema } from '../../schema/values.js';
 import type { CoreContext, DatabaseTransaction } from '../database/types.js';

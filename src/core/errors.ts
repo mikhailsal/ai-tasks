@@ -1,4 +1,4 @@
-import { core } from 'zod/mini';
+import { $ZodError } from 'zod/v4/core';
 import { errorCodeSchema, errorDefinitions, type ErrorCode } from '../schema/errors.js';
 import type { ErrorEnvelope } from '../schema/envelopes.js';
 import { jsonValueSchema, type JsonValue } from '../schema/values.js';
@@ -41,7 +41,7 @@ function operationalError(error: unknown): DomainError | undefined {
 }
 export function normalizeError(error: unknown): DomainError {
   if (error instanceof DomainError) return error;
-  if (error instanceof core.$ZodError) {
+  if (error instanceof $ZodError) {
     return domainError('VALIDATION_ERROR', errorDefinitions.VALIDATION_ERROR.message, {
       issues: error.issues.map((issue) => ({
         code: issue.code,

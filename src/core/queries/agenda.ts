@@ -1,13 +1,11 @@
 import { Temporal } from '@js-temporal/polyfill';
-import { asc, sql } from 'drizzle-orm';
+import { asc, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod/mini';
-import { tasks } from '../../schema/entities.js';
 import type { agendaInputSchema } from '../../schema/read-views.js';
 import { agendaPageEnvelopeSchema, type bucketSchema } from '../../schema/read-views.js';
 import type { CoreContext } from '../database/types.js';
 import { domainError } from '../errors.js';
 import { readTaskPage, type TaskPageRow } from './task-page.js';
-import { effectiveTaskDeadline, taskCategory } from './task-query-sql.js';
 import { groupTaskRows } from './task-view-groups.js';
 type Boundaries = {
   todayEnd: number;
@@ -29,15 +27,18 @@ function boundaries(asOf: number, timezone: string): Boundaries {
     );
   }
 }
-function bucketOrder(asOf: number, timezone: string) {
-  const { todayEnd, next7End } = boundaries(asOf, timezone);
+function bucketOrder(
+  asOf: number,
+  { todayEnd, next7End }: Boundaries,
+  refs: { deadline: SQL; kind: SQL; category: SQL },
+) {
   return [
     asc(sql`CASE
-    WHEN ${effectiveTaskDeadline} IS NULL THEN 4
-    WHEN ${effectiveTaskDeadline} < ${asOf} AND (${tasks.kind} = 'recurring'
-      OR ${taskCategory} IN ('not_started','in_progress','review')) THEN 0
-    WHEN ${effectiveTaskDeadline} < ${todayEnd} THEN 1
-    WHEN ${effectiveTaskDeadline} < ${next7End} THEN 2
+    WHEN ${refs.deadline} IS NULL THEN 4
+    WHEN ${refs.deadline} < ${asOf} AND (${refs.kind} = 'recurring'
+      OR ${refs.category} IN ('not_started','in_progress','review')) THEN 0
+    WHEN ${refs.deadline} < ${todayEnd} THEN 1
+    WHEN ${refs.deadline} < ${next7End} THEN 2
     ELSE 3 END`),
   ];
 }
@@ -61,14 +62,22 @@ export function listAgenda(
   context: Pick<CoreContext, 'connection' | 'now'>,
   input: z.input<typeof agendaInputSchema>,
 ) {
-  const page = readTaskPage(context, input, { family: 'agenda', precedingOrder: bucketOrder });
-  const bounds = boundaries(page.asOf, page.timezone);
+  let bounds: Boundaries | undefined;
+  const page = readTaskPage(context, input, {
+    family: 'agenda',
+    materializeOrder: true,
+    precedingOrder: (asOf, timezone, refs) => {
+      bounds = boundaries(asOf, timezone);
+      return bucketOrder(asOf, bounds, refs);
+    },
+  });
+  const resolvedBounds = bounds ?? boundaries(page.asOf, page.timezone);
   return agendaPageEnvelopeSchema.parse({
     ok: true,
     data: {
       groups: groupTaskRows(page.rows, (row) => ({
         ...row.task,
-        agenda_bucket: agendaBucket(row, page.asOf, bounds),
+        agenda_bucket: agendaBucket(row, page.asOf, resolvedBounds),
       })),
       next_cursor: page.nextCursor,
     },

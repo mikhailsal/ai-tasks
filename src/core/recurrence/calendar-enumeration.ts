@@ -1,5 +1,5 @@
 import { and, asc, eq } from 'drizzle-orm';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { occurrences, recurrenceIntervals, recurrenceState } from '../../schema/recurrence.js';
 import type { CalendarSchedule } from '../../schema/recurrence-input.js';
 import type { AuditEvent } from '../audit/append.js';

@@ -1,5 +1,5 @@
 import { createStore, del, get, set } from 'idb-keyval';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { mutationEnvelopeSchema, type MutationEnvelope } from '../../../src/schema/envelopes.js';
 import {
   BODY_LIMIT_BYTES,

@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { successEnvelopeSchema } from '../../../src/schema/envelopes.js';
 import { queryApi } from '../data/api.js';
 import { errorMessage } from '../data/resources.js';

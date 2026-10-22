@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod/mini';
-import { projectConfigInputSchema, type ProjectConfigInput } from '../../schema/configuration.js';
+import { projectConfigInputSchema } from '../../schema/configuration.js';
 import { projectConfigs, projects, tasks } from '../../schema/entities.js';
 import type { CoreContext, DatabaseTransaction } from '../database/types.js';
 import { domainError } from '../errors.js';
@@ -14,16 +14,24 @@ import { nextPageCursor, paginationContext, queryMetadata, queryState } from './
 import {
   effectiveTaskDeadline,
   registerTaskSearch,
+  taskCategory,
   taskListInputSchema,
   taskPredicates,
   taskPriorityRank,
   taskPriorityUnset,
 } from './task-query-sql.js';
 type ReadContext = Pick<CoreContext, 'connection' | 'now'>;
+type TaskOrderReferences = {
+  deadline: SQL;
+  kind: SQL;
+  category: SQL;
+};
 type PageOptions = {
   family: 'tasks' | 'agenda' | 'priorities';
-  precedingOrder?: (asOf: number, timezone: string) => SQL[];
+  precedingOrder?: (asOf: number, timezone: string, refs: TaskOrderReferences) => SQL[];
+  materializeOrder?: true;
 };
+type TaskPageKey = { taskId: string; displayDeadline: number | null };
 function joinedConfiguration(snapshot: typeof projectConfigs.$inferSelect | null) {
   if (!snapshot)
     throw domainError('INTERNAL_ERROR', 'The current project configuration is unavailable');
@@ -36,21 +44,13 @@ function joinedConfiguration(snapshot: typeof projectConfigs.$inferSelect | null
     throw domainError('INTERNAL_ERROR', 'The stored project configuration is invalid');
   return parsed.data;
 }
-function hydrateTaskPageRows(
-  transaction: DatabaseTransaction,
-  pageRows: { taskId: string; displayDeadline: number | null }[],
-) {
+function hydrateTaskPageRows(transaction: DatabaseTransaction, pageRows: TaskPageKey[]) {
   const selectedIds = pageRows.map((row) => row.taskId);
-  const taskRows = transaction
-    .select({ task: tasks, project: projects })
-    .from(tasks)
-    .innerJoin(projects, eq(tasks.projectSlug, projects.slug))
-    .where(inArray(tasks.id, selectedIds))
-    .all();
-  const taskRowsById = new Map(taskRows.map((row) => [row.task.id, row]));
-  const projectSlugs = [...new Set(taskRows.map((row) => row.project.slug))];
+  const taskRows = transaction.select().from(tasks).where(inArray(tasks.id, selectedIds)).all();
+  const taskRowsById = new Map(taskRows.map((task) => [task.id, task]));
+  const projectSlugs = [...new Set(taskRows.map((task) => task.projectSlug))];
   const configRows = transaction
-    .select({ projectSlug: projects.slug, config: projectConfigs })
+    .select({ project: projects, config: projectConfigs })
     .from(projects)
     .leftJoin(
       projectConfigs,
@@ -61,22 +61,95 @@ function hydrateTaskPageRows(
     )
     .where(inArray(projects.slug, projectSlugs))
     .all();
-  const configurations = new Map<string, ProjectConfigInput>();
-  for (const row of configRows)
-    configurations.set(row.projectSlug, joinedConfiguration(row.config));
+  const projectContexts = new Map(
+    configRows.map((row) => [
+      row.project.slug,
+      { project: row.project, config: joinedConfiguration(row.config) },
+    ]),
+  );
   return pageRows.map((pageRow) => {
-    const row = taskRowsById.get(pageRow.taskId);
-    if (!row)
+    const task = taskRowsById.get(pageRow.taskId);
+    if (!task)
       throw domainError('INTERNAL_ERROR', 'A task disappeared from the current read snapshot');
-    const config = configurations.get(row.project.slug);
-    if (!config)
+    const context = projectContexts.get(task.projectSlug);
+    if (!context)
       throw domainError('INTERNAL_ERROR', 'The current project configuration is unavailable');
     return {
-      task: taskResource(row.task, row.project, config, pageRow.displayDeadline),
-      project: row.project,
-      config,
+      task: taskResource(task, context.project, context.config, pageRow.displayDeadline),
+      ...context,
     };
   });
+}
+function materializedTaskPageRows(
+  transaction: DatabaseTransaction,
+  page: {
+    input: z.output<typeof taskListInputSchema>;
+    emojiKey: string | undefined;
+    options: PageOptions;
+    asOf: number;
+    timezone: string;
+    offset: number;
+  },
+) {
+  // Category filters run against the materialized alias so workflow JSON is
+  // decoded once per candidate and reused by both filtering and agenda order.
+  const computedInput = { ...page.input, include_terminal: true, category: undefined };
+  const computed = transaction
+    .select({
+      taskId: sql<string>`${tasks.id}`.as('task_id'),
+      projectPriority: sql<number>`${projects.priority}`.as('project_priority'),
+      projectSlug: sql<string>`${projects.slug}`.as('project_slug'),
+      taskKind: sql<string>`${tasks.kind}`.as('task_kind'),
+      category: taskCategory.as('task_category'),
+      displayDeadline: effectiveTaskDeadline.as('display_deadline'),
+      priorityUnset: taskPriorityUnset.as('priority_unset'),
+      priorityRank: taskPriorityRank.as('priority_rank'),
+      createdAt: sql<number>`${tasks.createdAt}`.as('created_at'),
+    })
+    .from(tasks)
+    .innerJoin(projects, eq(tasks.projectSlug, projects.slug))
+    .leftJoin(
+      projectConfigs,
+      and(
+        eq(projectConfigs.projectSlug, projects.slug),
+        eq(projectConfigs.revision, projects.configRevision),
+      ),
+    )
+    .where(taskPredicates(computedInput, page.emojiKey));
+  const column = (name: string) => sql`${sql.identifier(name)}`;
+  const deadline = column('display_deadline');
+  const category = column('task_category');
+  const kind = column('task_kind');
+  const materializedFilters: SQL[] = [];
+  if (!page.input.include_terminal)
+    materializedFilters.push(
+      sql`(${kind} != 'ordinary' OR ${category} NOT IN ('completed','cancelled'))`,
+    );
+  if (page.input.category !== undefined)
+    materializedFilters.push(eq(category, page.input.category));
+  const precedingOrder = page.options.precedingOrder?.(page.asOf, page.timezone, {
+    deadline,
+    kind,
+    category,
+  });
+  const order = [
+    desc(column('project_priority')),
+    asc(column('project_slug')),
+    ...(precedingOrder ?? []),
+    asc(column('priority_unset')),
+    asc(column('priority_rank')),
+    asc(sql`CASE WHEN ${deadline} IS NULL THEN 1 ELSE 0 END`),
+    asc(deadline),
+    asc(column('created_at')),
+    asc(column('task_id')),
+  ];
+  return transaction.all<TaskPageKey>(sql`
+    WITH computed AS MATERIALIZED (${computed.getSQL()})
+    SELECT ${column('task_id')} AS taskId, ${deadline} AS displayDeadline FROM computed
+    WHERE ${and(...materializedFilters) ?? sql`1`}
+    ORDER BY ${sql.join(order, sql`, `)}
+    LIMIT ${page.input.limit + 1} OFFSET ${page.offset}
+  `);
 }
 /** Page parents in SQL before mapping resources; all families share one consistent read transaction. */
 export function readTaskPage(
@@ -103,35 +176,50 @@ export function readTaskPage(
     // Keep the ordered query narrow. Project configuration contains several JSON
     // documents, and projecting it here would make Drizzle decode the same values
     // once for every task before the page can de-duplicate them.
-    const pageRows = transaction
-      .select({
-        taskId: tasks.id,
-        displayDeadline: effectiveTaskDeadline,
-      })
-      .from(tasks)
-      .innerJoin(projects, eq(tasks.projectSlug, projects.slug))
-      .leftJoin(
-        projectConfigs,
-        and(
-          eq(projectConfigs.projectSlug, projects.slug),
-          eq(projectConfigs.revision, projects.configRevision),
-        ),
-      )
-      .where(taskPredicates(parsed, emojiKey))
-      .orderBy(
-        desc(projects.priority),
-        asc(projects.slug),
-        ...(options.precedingOrder?.(page.asOf, state.timezone) ?? []),
-        asc(taskPriorityUnset),
-        asc(taskPriorityRank),
-        asc(sql`CASE WHEN ${effectiveTaskDeadline} IS NULL THEN 1 ELSE 0 END`),
-        asc(effectiveTaskDeadline),
-        asc(tasks.createdAt),
-        asc(tasks.id),
-      )
-      .limit(parsed.limit + 1)
-      .offset(page.offset)
-      .all();
+    // Agenda benefits from computing its repeated deadline/category expressions
+    // once; the simpler task and priority orders stay faster without materialization.
+    const pageRows = options.materializeOrder
+      ? materializedTaskPageRows(transaction, {
+          input: parsed,
+          emojiKey,
+          options,
+          asOf: page.asOf,
+          timezone: state.timezone,
+          offset: page.offset,
+        })
+      : transaction
+          .select({
+            taskId: tasks.id,
+            displayDeadline: effectiveTaskDeadline,
+          })
+          .from(tasks)
+          .innerJoin(projects, eq(tasks.projectSlug, projects.slug))
+          .leftJoin(
+            projectConfigs,
+            and(
+              eq(projectConfigs.projectSlug, projects.slug),
+              eq(projectConfigs.revision, projects.configRevision),
+            ),
+          )
+          .where(taskPredicates(parsed, emojiKey))
+          .orderBy(
+            desc(projects.priority),
+            asc(projects.slug),
+            ...(options.precedingOrder?.(page.asOf, state.timezone, {
+              deadline: effectiveTaskDeadline,
+              kind: sql`${tasks.kind}`,
+              category: taskCategory,
+            }) ?? []),
+            asc(taskPriorityUnset),
+            asc(taskPriorityRank),
+            asc(sql`CASE WHEN ${effectiveTaskDeadline} IS NULL THEN 1 ELSE 0 END`),
+            asc(effectiveTaskDeadline),
+            asc(tasks.createdAt),
+            asc(tasks.id),
+          )
+          .limit(parsed.limit + 1)
+          .offset(page.offset)
+          .all();
     const selectedPageRows = pageRows.slice(0, parsed.limit);
     const selected =
       selectedPageRows.length === 0 ? [] : hydrateTaskPageRows(transaction, selectedPageRows);

@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { backupInfoSchema, type BackupInfo } from '../../schema/recovery.js';
 import { revisionSchema, slugSchema, timezoneSchema, uuidSchema } from '../../schema/values.js';
 import { domainError, normalizeError } from '../errors.js';

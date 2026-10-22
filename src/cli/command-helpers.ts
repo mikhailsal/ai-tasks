@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { domainError } from '../core/errors.js';
 import { successEnvelopeSchema, type MutationEnvelope } from '../schema/envelopes.js';
 import type { JsonValue } from '../schema/values.js';

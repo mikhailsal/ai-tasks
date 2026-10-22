@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { parseInput } from '../../core/validation.js';
 import { descriptionSchema } from '../../schema/values.js';
 import { requireSubcommand, runProjectRead } from '../command-helpers.js';

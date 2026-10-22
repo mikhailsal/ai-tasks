@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 export const BODY_LIMIT_BYTES = 1048576;
 function validJsonArrayShape(value: object): boolean {
   const length: unknown = Object.getOwnPropertyDescriptor(value, 'length')?.value;
@@ -83,9 +83,23 @@ export const timestampSchema = z.pipe(
     .datetime({ offset: true })
     .check(z.regex(/T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/)),
 );
+let canonicalTimezoneNames: ReadonlySet<string> | undefined;
+function canonicalTimezones(): ReadonlySet<string> | undefined {
+  if (canonicalTimezoneNames !== undefined) return canonicalTimezoneNames;
+  if (typeof Intl.supportedValuesOf !== 'function') return;
+  try {
+    // ECMA-402 omits UTC and accepted compatibility aliases from this list.
+    canonicalTimezoneNames = new Set(['UTC', ...Intl.supportedValuesOf('timeZone')]);
+    return canonicalTimezoneNames;
+  } catch {
+    // Older or partial Intl implementations retain the authoritative fallback below.
+    return;
+  }
+}
 export const timezoneSchema = z.string().check(
   z.refine((timezone) => {
     if (/^[+-]/.test(timezone)) return false;
+    if (canonicalTimezones()?.has(timezone)) return true;
     try {
       new Intl.DateTimeFormat('en', { timeZone: timezone });
       return true;

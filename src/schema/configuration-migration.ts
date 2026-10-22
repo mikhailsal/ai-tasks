@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { priorityValueSchema, projectConfigInputSchema } from './configuration.js';
 import { errorCodeSchema } from './errors.js';
 import { mutationSuccessEnvelopeSchema, successEnvelopeSchema } from './envelopes.js';

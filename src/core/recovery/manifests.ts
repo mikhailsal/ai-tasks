@@ -1,6 +1,6 @@
 import { readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { successEnvelopeSchema } from '../../schema/envelopes.js';
 import { backupEnvelopeSchema, recoveryJobEnvelopeSchema } from '../../schema/recovery.js';
 import { slugSchema, uuidSchema } from '../../schema/values.js';

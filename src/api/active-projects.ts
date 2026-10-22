@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { DomainError } from '../core/errors.js';
 import { successEnvelopeSchema, type SuccessEnvelope } from '../schema/envelopes.js';
 import { projectResourceSchema } from '../schema/projects.js';

@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { recurrenceInputSchema } from './recurrence-input.js';
 import {
   ordinaryCategorySchema,

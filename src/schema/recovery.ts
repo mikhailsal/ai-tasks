@@ -1,4 +1,4 @@
-import { z } from 'zod/mini';
+import * as z from 'zod/mini';
 import { successEnvelopeSchema, errorEnvelopeSchema } from './envelopes.js';
 import {
   jsonValueSchema,
