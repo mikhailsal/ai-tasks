@@ -6,7 +6,7 @@ import { projectResourceSchema } from '../../schema/projects.js';
 import { slugSchema } from '../../schema/values.js';
 import type { CoreContext } from '../database/types.js';
 import { projectResource, requireProject } from '../projects/read.js';
-import { readClock } from '../time.js';
+import { readClock } from '../clock.js';
 import { parseInput } from '../validation.js';
 import { nextPageCursor, paginationContext, queryMetadata, queryState } from './page.js';
 import { queryFingerprint } from './cursor.js';

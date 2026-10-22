@@ -1,7 +1,4 @@
 import type { Command } from 'commander';
-import { previewConfiguration, migrateConfiguration } from '../../core/projects/configuration.js';
-import { getProjectConfiguration, readConfigPresets } from '../../core/queries/configuration.js';
-import { createReadContext, withCliDatabase } from '../context.js';
 import { scopedInput } from '../io.js';
 import { readScope } from '../options.js';
 import {
@@ -22,21 +19,24 @@ export function registerConfigurationCommands(program: Command): void {
   family
     .command('get')
     .description('Read current project configuration')
-    .action(async (_options: unknown, command: Command) =>
-      runProjectRead(command, getProjectConfiguration),
-    );
+    .action(async (_options: unknown, command: Command) => {
+      const { getProjectConfiguration } = await import('../../core/queries/configuration.js');
+      return runProjectRead(command, getProjectConfiguration);
+    });
   family
     .command('preview')
     .description('Preview configuration mappings and affected tasks without saving')
-    .action(async (_options: unknown, command: Command) =>
-      runProjectRead(command, previewConfiguration, true),
-    );
+    .action(async (_options: unknown, command: Command) => {
+      const { previewConfiguration } = await import('../../core/projects/configuration.js');
+      return runProjectRead(command, previewConfiguration, true);
+    });
   family
     .command('migrate')
     .description('Apply a complete configuration migration atomically')
-    .action(async (_options: unknown, command: Command) =>
-      runMutation(command, migrateConfiguration),
-    );
+    .action(async (_options: unknown, command: Command) => {
+      const { migrateConfiguration } = await import('../../core/projects/configuration.js');
+      return runMutation(command, migrateConfiguration);
+    });
   family
     .command('presets')
     .description('Read built-in priority and workflow presets')
@@ -44,8 +44,12 @@ export function registerConfigurationCommands(program: Command): void {
       const { options, body } = await readCommand(command, readOptions);
       const scope = readScope(options);
       requireEmptyInput(scopedInput(options, body));
-      const result = await withCliDatabase((connection) =>
-        readConfigPresets(createReadContext({ connection }), scope),
+      const [{ readConfigPresets }, context] = await Promise.all([
+        import('../../core/queries/configuration.js'),
+        import('../context.js'),
+      ]);
+      const result = await context.withCliDatabase((connection) =>
+        readConfigPresets(context.createReadContext({ connection }), scope),
       );
       writeSuccess(result, options);
     });

@@ -2,18 +2,8 @@ import { Temporal } from '@js-temporal/polyfill';
 import { timestampSchema, timezoneSchema } from '../schema/values.js';
 import { domainError } from './errors.js';
 
-const earliestTimestamp = -62_167_219_200_000;
-const latestTimestamp = 253_402_300_799_999;
-
-function validateInstant(value: number): number {
-  if (!Number.isInteger(value) || value < earliestTimestamp || value > latestTimestamp) {
-    throw domainError(
-      'VALIDATION_ERROR',
-      'Time must be integer milliseconds within years 0000–9999',
-    );
-  }
-  return value;
-}
+import { validateInstant } from './clock.js';
+export { formatTimestamp, readClock } from './clock.js';
 
 export function parseTimestamp(value: unknown): number {
   const parsed = timestampSchema.safeParse(value);
@@ -28,14 +18,6 @@ export function parseTimestamp(value: unknown): number {
   } catch {
     throw domainError('VALIDATION_ERROR', 'Timestamp is outside the supported date range');
   }
-}
-
-export function formatTimestamp(value: number): string {
-  return new Date(validateInstant(value)).toISOString();
-}
-
-export function readClock(now: () => number): number {
-  return validateInstant(now());
 }
 
 /** Explicit offsets select a valid fold branch; gaps always require caller correction. */

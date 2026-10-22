@@ -2,7 +2,7 @@ import { z } from 'zod/mini';
 import { slugSchema } from '../schema/values.js';
 import type { openDatabase } from './database/open.js';
 import { domainError } from './errors.js';
-import { readClock } from './time.js';
+import { readClock } from './clock.js';
 export const actorSchema = z.union([
   z.literal('human-web'),
   z

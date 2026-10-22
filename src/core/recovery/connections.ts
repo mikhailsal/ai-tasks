@@ -1,7 +1,6 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { lstatSync } from 'node:fs';
-import * as schema from '../../schema/index.js';
 import { uuidSchema } from '../../schema/values.js';
 import { verifyConnectionLock, type ConnectionLock } from '../database/lock-check.js';
 import { verifySqliteVersion } from '../database/open.js';
@@ -65,7 +64,7 @@ export function openRecoveryConnection(options: RecoveryConnectionOptions) {
     configureConnection(sqlite, options.role);
     return {
       sqlite,
-      db: drizzle(sqlite, { schema }),
+      db: drizzle(sqlite),
       now: options.now,
       close() {
         if (sqlite.open) sqlite.close();

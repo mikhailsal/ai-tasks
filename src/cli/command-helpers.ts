@@ -3,7 +3,7 @@ import { z } from 'zod/mini';
 import { domainError } from '../core/errors.js';
 import { successEnvelopeSchema, type MutationEnvelope } from '../schema/envelopes.js';
 import type { JsonValue } from '../schema/values.js';
-import { createCliMutationContext, createReadContext, withCliDatabase } from './context.js';
+import type { createCliMutationContext, createReadContext } from './context.js';
 import { mutationInput, readJsonInput, scopedInput, writeJson, type CliInput } from './io.js';
 import {
   commandOptions,
@@ -194,6 +194,7 @@ export async function runMutation(
 ): Promise<void> {
   const { options, body } = await readCommand(command, mutationOptions);
   const mutation = mutationInput(options, body);
+  const { createCliMutationContext, withCliDatabase } = await import('./context.js');
   const result = await withCliDatabase((connection) =>
     mutate(
       createCliMutationContext(connection, mutation.projectSlug),
@@ -215,6 +216,7 @@ export async function runProjectRead(
   const { options, body } = await readCommand(command, readOptions);
   const input = singleProjectInput(options, body);
   if (!acceptsBody) requireEmptyInput(input.body);
+  const { createReadContext, withCliDatabase } = await import('./context.js');
   const result = await withCliDatabase((connection) =>
     read(createReadContext({ connection }), input.projectSlug, input.body),
   );

@@ -5,7 +5,7 @@ import { projectResourceSchema, type ProjectResource } from '../../schema/projec
 import { slugSchema } from '../../schema/values.js';
 import type { DatabaseConnection, DatabaseTransaction } from '../database/types.js';
 import { domainError } from '../errors.js';
-import { formatTimestamp } from '../time.js';
+import { formatTimestamp } from '../clock.js';
 import { parseInput } from '../validation.js';
 
 type ReadDatabase = DatabaseConnection['db'] | DatabaseTransaction;

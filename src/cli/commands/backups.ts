@@ -1,15 +1,8 @@
 import type { Command } from 'commander';
 import { domainError } from '../../core/errors.js';
-import {
-  createBackup,
-  listBackups,
-  validateBackup,
-  getRecoveryStatus,
-} from '../../core/recovery/index.js';
 import { parseInput } from '../../core/validation.js';
 import { backupListInputSchema, recoveryStatusInputSchema } from '../../schema/recovery.js';
 import { uuidSchema } from '../../schema/values.js';
-import { backupPaths, restoreFromCli } from '../backups-restore.js';
 import {
   readCommand,
   readOptions,
@@ -18,7 +11,6 @@ import {
   requireSubcommand,
   writeSuccess,
 } from '../command-helpers.js';
-import { createCliMutationContext, createReadContext, withCliDatabase } from '../context.js';
 import { mutationInput, scopedInput, type CliInput } from '../io.js';
 import type { CliOptions } from '../options.js';
 
@@ -65,8 +57,13 @@ export function registerBackupCommands(program: Command): void {
       const input = queryInput(options, body);
       strictKeys(input, ['all_projects', 'limit', 'cursor']);
       const query = parseInput(backupListInputSchema, input);
-      const result = await withCliDatabase((connection) =>
-        listBackups(createReadContext({ connection }), query, backupPaths()),
+      const [{ listBackups }, { backupPaths }, context] = await Promise.all([
+        import('../../core/recovery/index.js'),
+        import('../backups-restore.js'),
+        import('../context.js'),
+      ]);
+      const result = await context.withCliDatabase((connection) =>
+        listBackups(context.createReadContext({ connection }), query, backupPaths()),
       );
       writeSuccess(result, options);
     });
@@ -76,9 +73,14 @@ export function registerBackupCommands(program: Command): void {
     .action(async (_options: unknown, command: Command) => {
       const { options, body } = await readCommand(command, operationalOptions);
       const mutation = mutationInput(options, body);
-      const result = await withCliDatabase((connection) =>
+      const [{ createBackup }, { backupPaths }, context] = await Promise.all([
+        import('../../core/recovery/index.js'),
+        import('../backups-restore.js'),
+        import('../context.js'),
+      ]);
+      const result = await context.withCliDatabase((connection) =>
         createBackup(
-          createCliMutationContext(connection, mutation.projectSlug),
+          context.createCliMutationContext(connection, mutation.projectSlug),
           mutation.projectSlug,
           mutation.input,
           backupPaths(),
@@ -96,8 +98,13 @@ export function registerBackupCommands(program: Command): void {
       parseInput(backupListInputSchema, query);
       requireEmptyInput(scopedInput(options, body));
       const backupId = parseInput(uuidSchema, id);
-      const result = await withCliDatabase((connection) =>
-        validateBackup(createReadContext({ connection }), backupId, backupPaths()),
+      const [{ validateBackup }, { backupPaths }, context] = await Promise.all([
+        import('../../core/recovery/index.js'),
+        import('../backups-restore.js'),
+        import('../context.js'),
+      ]);
+      const result = await context.withCliDatabase((connection) =>
+        validateBackup(context.createReadContext({ connection }), backupId, backupPaths()),
       );
       writeSuccess(result, options);
     });
@@ -112,6 +119,7 @@ export function registerBackupCommands(program: Command): void {
     .action(async (_options: unknown, command: Command) => {
       const { options, body } = await readCommand(command, [...operationalOptions, 'wait']);
       const mutation = mutationInput(options, body);
+      const { restoreFromCli } = await import('../backups-restore.js');
       writeSuccess(
         await restoreFromCli(mutation.projectSlug, mutation.input, options.wait !== false),
         options,
@@ -123,6 +131,10 @@ export function registerBackupCommands(program: Command): void {
     .action(async (id: string | undefined, _options: unknown, command: Command) => {
       const { options, body } = await readCommand(command, [...readOptions, 'operationId']);
       const query = backupStatusInput(options, body, id);
+      const [{ getRecoveryStatus }, { backupPaths }] = await Promise.all([
+        import('../../core/recovery/index.js'),
+        import('../backups-restore.js'),
+      ]);
       const result = await getRecoveryStatus({
         backupDirectory: backupPaths().backupDirectory,
         ...(query.job_id === undefined ? {} : { jobId: query.job_id }),

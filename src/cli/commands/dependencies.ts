@@ -1,6 +1,4 @@
 import type { Command } from 'commander';
-import { listDependencies } from '../../core/queries/dependencies.js';
-import { addDependency, removeDependency } from '../../core/tasks/dependencies.js';
 import { requireSubcommand, runMutation, runProjectRead } from '../command-helpers.js';
 
 export function registerDependencyCommands(program: Command): void {
@@ -11,18 +9,21 @@ export function registerDependencyCommands(program: Command): void {
   family
     .command('list <task-id>')
     .description('Read prerequisite links and their current satisfaction')
-    .action(async (id: string, _options: unknown, command: Command) =>
-      runProjectRead(command, (context, slug) => listDependencies(context, slug, id)),
-    );
-  for (const [name, mutate] of [
-    ['add', addDependency],
-    ['remove', removeDependency],
+    .action(async (id: string, _options: unknown, command: Command) => {
+      const { listDependencies } = await import('../../core/queries/dependencies.js');
+      return runProjectRead(command, (context, slug) => listDependencies(context, slug, id));
+    });
+  for (const [name, exportName] of [
+    ['add', 'addDependency'],
+    ['remove', 'removeDependency'],
   ] as const) {
     family
       .command(`${name} <task-id>`)
       .description(`${name} a prerequisite using its explicit project and task identifiers`)
-      .action(async (id: string, _options: unknown, command: Command) =>
-        runMutation(command, (context, slug, input) => mutate(context, slug, id, input)),
-      );
+      .action(async (id: string, _options: unknown, command: Command) => {
+        const mutations = await import('../../core/tasks/dependencies.js');
+        const mutate = mutations[exportName];
+        return runMutation(command, (context, slug, input) => mutate(context, slug, id, input));
+      });
   }
 }

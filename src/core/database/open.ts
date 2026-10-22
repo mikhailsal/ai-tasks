@@ -1,6 +1,5 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import * as schema from '../../schema/index.js';
 import {
   refuseUnresolvedRecovery,
   verifyConnectionLock,
@@ -43,7 +42,7 @@ export function openDatabase(options: {
       throw new Error('Database connection settings could not be applied');
     return {
       sqlite,
-      db: drizzle(sqlite, { schema }),
+      db: drizzle(sqlite),
       now: options.now ?? Date.now,
       close() {
         if (sqlite.open) sqlite.close();

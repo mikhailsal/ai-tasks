@@ -4,7 +4,7 @@ import { metaEnvelopeSchema } from '../../schema/meta.js';
 import { readScopeSchema } from '../../schema/scopes.js';
 import type { CoreContext } from '../database/types.js';
 import { domainError } from '../errors.js';
-import { formatTimestamp } from '../time.js';
+import { formatTimestamp } from '../clock.js';
 
 export function readMeta(
   context: Pick<CoreContext, 'connection' | 'now'>,

@@ -1,8 +1,5 @@
 import type { Command } from 'commander';
 import { domainError } from '../../core/errors.js';
-import { getOccurrence, listOccurrences } from '../../core/queries/recurrence.js';
-import { cancelOccurrences } from '../../core/recurrence/cancel.js';
-import { completeOccurrences } from '../../core/recurrence/complete.js';
 import { parseInput } from '../../core/validation.js';
 import { occurrenceListInputSchema } from '../../schema/recurrence-query.js';
 import {
@@ -14,7 +11,6 @@ import {
   singleProjectInput,
   writeSuccess,
 } from '../command-helpers.js';
-import { createReadContext, withCliDatabase } from '../context.js';
 import type { CliInput } from '../io.js';
 import { positiveIntegerOption, type CliOptions } from '../options.js';
 
@@ -50,26 +46,37 @@ export function registerOccurrenceCommands(program: Command): void {
         'cursor',
       ]);
       const { projectSlug, query } = occurrenceQueryInput(options, body);
-      const result = await withCliDatabase((connection) =>
-        listOccurrences(createReadContext({ connection }), projectSlug, id, query),
+      const [{ listOccurrences }, context] = await Promise.all([
+        import('../../core/queries/recurrence.js'),
+        import('../context.js'),
+      ]);
+      const result = await context.withCliDatabase((connection) =>
+        listOccurrences(context.createReadContext({ connection }), projectSlug, id, query),
       );
       writeSuccess(result, options);
     });
   family
     .command('get <task-id> <occurrence-id>')
     .description('Read one frozen occurrence through its owning project and parent')
-    .action(async (id: string, occurrenceId: string, _options: unknown, command: Command) =>
-      runProjectRead(command, (context, slug) => getOccurrence(context, slug, id, occurrenceId)),
-    );
-  for (const [name, mutate] of [
-    ['complete', completeOccurrences],
-    ['cancel', cancelOccurrences],
+    .action(async (id: string, occurrenceId: string, _options: unknown, command: Command) => {
+      const { getOccurrence } = await import('../../core/queries/recurrence.js');
+      return runProjectRead(command, (context, slug) =>
+        getOccurrence(context, slug, id, occurrenceId),
+      );
+    });
+  for (const [name, moduleName] of [
+    ['complete', 'complete'],
+    ['cancel', 'cancel'],
   ] as const) {
     family
       .command(`${name} <task-id>`)
       .description(`${name} selected occurrence revisions atomically`)
-      .action(async (id: string, _options: unknown, command: Command) =>
-        runMutation(command, (context, slug, input) => mutate(context, slug, id, input)),
-      );
+      .action(async (id: string, _options: unknown, command: Command) => {
+        const mutate =
+          moduleName === 'complete'
+            ? (await import('../../core/recurrence/complete.js')).completeOccurrences
+            : (await import('../../core/recurrence/cancel.js')).cancelOccurrences;
+        return runMutation(command, (context, slug, input) => mutate(context, slug, id, input));
+      });
   }
 }

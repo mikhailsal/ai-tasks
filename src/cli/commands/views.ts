@@ -1,16 +1,7 @@
 import type { Command } from 'commander';
 import type { z } from 'zod/mini';
-import { listAgenda } from '../../core/queries/agenda.js';
-import { listPriorities } from '../../core/queries/priorities.js';
-import { getStatistics } from '../../core/queries/statistics.js';
-import { parseInput } from '../../core/validation.js';
-import {
-  agendaInputSchema,
-  prioritiesInputSchema,
-  statisticsInputSchema,
-} from '../../schema/read-views.js';
 import { queryInput, readCommand, readOptions, writeSuccess } from '../command-helpers.js';
-import { createReadContext, withCliDatabase } from '../context.js';
+import type { createReadContext } from '../context.js';
 import type { CliOptions } from '../options.js';
 const filters = ['q', 'status', 'category', 'kind', 'emoji', 'archive', 'includeTerminal'] as const;
 function registerView<Schema extends z.ZodMiniType>(
@@ -18,9 +9,11 @@ function registerView<Schema extends z.ZodMiniType>(
   options: {
     name: string;
     description: string;
-    schema: Schema;
     allowed: readonly (keyof CliOptions)[];
-    read: (context: ReturnType<typeof createReadContext>, input: z.output<Schema>) => unknown;
+    load: () => Promise<{
+      schema: Schema;
+      read: (context: ReturnType<typeof createReadContext>, input: z.output<Schema>) => unknown;
+    }>;
   },
 ) {
   program
@@ -28,9 +21,14 @@ function registerView<Schema extends z.ZodMiniType>(
     .description(options.description)
     .action(async (_options: unknown, command: Command) => {
       const { options: flags, body } = await readCommand(command, options.allowed);
-      const input = parseInput(options.schema, queryInput(flags, body));
-      const result = await withCliDatabase((connection) =>
-        options.read(createReadContext({ connection }), input),
+      const [{ parseInput }, view, context] = await Promise.all([
+        import('../../core/validation.js'),
+        options.load(),
+        import('../context.js'),
+      ]);
+      const input = parseInput(view.schema, queryInput(flags, body));
+      const result = await context.withCliDatabase((connection) =>
+        view.read(context.createReadContext({ connection }), input),
       );
       writeSuccess(result, flags);
     });
@@ -40,22 +38,37 @@ export function registerViewCommands(program: Command): void {
   registerView(program, {
     name: 'agenda',
     description: 'Read project-grouped local calendar buckets at one captured instant',
-    schema: agendaInputSchema,
     allowed: pagedOptions,
-    read: listAgenda,
+    load: async () => {
+      const [{ agendaInputSchema }, { listAgenda }] = await Promise.all([
+        import('../../schema/read-views.js'),
+        import('../../core/queries/agenda.js'),
+      ]);
+      return { schema: agendaInputSchema, read: listAgenda };
+    },
   });
   registerView(program, {
     name: 'priorities',
     description: 'Read priorities within each project and its configured model',
-    schema: prioritiesInputSchema,
     allowed: pagedOptions,
-    read: listPriorities,
+    load: async () => {
+      const [{ prioritiesInputSchema }, { listPriorities }] = await Promise.all([
+        import('../../schema/read-views.js'),
+        import('../../core/queries/priorities.js'),
+      ]);
+      return { schema: prioritiesInputSchema, read: listPriorities };
+    },
   });
   registerView(program, {
     name: 'stats',
     description: 'Read separate task and occurrence counts; JSON from/to bounds are half-open',
-    schema: statisticsInputSchema,
     allowed: [...readOptions, ...filters],
-    read: getStatistics,
+    load: async () => {
+      const [{ statisticsInputSchema }, { getStatistics }] = await Promise.all([
+        import('../../schema/read-views.js'),
+        import('../../core/queries/statistics.js'),
+      ]);
+      return { schema: statisticsInputSchema, read: getStatistics };
+    },
   });
 }

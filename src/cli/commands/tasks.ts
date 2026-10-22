@@ -1,9 +1,4 @@
 import type { Command } from 'commander';
-import { createTask, updateTask, archiveTask, restoreTask } from '../../core/tasks/commands.js';
-import { transitionTask } from '../../core/tasks/transitions.js';
-import { getTask, listTasks, taskListInputSchema } from '../../core/queries/tasks.js';
-import { parseInput } from '../../core/validation.js';
-import { createReadContext, withCliDatabase } from '../context.js';
 import {
   queryInput,
   readCommand,
@@ -35,33 +30,50 @@ export function registerTaskCommands(program: Command): void {
         'archive',
         'includeTerminal',
       ]);
+      const [{ listTasks, taskListInputSchema }, { parseInput }, context] = await Promise.all([
+        import('../../core/queries/tasks.js'),
+        import('../../core/validation.js'),
+        import('../context.js'),
+      ]);
       const input = parseInput(taskListInputSchema, queryInput(options, body));
-      const result = await withCliDatabase((connection) =>
-        listTasks(createReadContext({ connection }), input),
+      const result = await context.withCliDatabase((connection) =>
+        listTasks(context.createReadContext({ connection }), input),
       );
       writeSuccess(result, options);
     });
   family
     .command('get <task-id>')
     .description('Read a task and its saved description')
-    .action(async (id: string, _options: unknown, command: Command) =>
-      runProjectRead(command, (context, slug) => getTask(context, slug, id)),
-    );
+    .action(async (id: string, _options: unknown, command: Command) => {
+      const { getTask } = await import('../../core/queries/tasks.js');
+      return runProjectRead(command, (context, slug) => getTask(context, slug, id));
+    });
   family
     .command('create')
     .description('Create an ordinary or recurring task')
-    .action(async (_options: unknown, command: Command) => runMutation(command, createTask));
-  for (const [name, mutate] of [
-    ['update', updateTask],
-    ['transition', transitionTask],
-    ['archive', archiveTask],
-    ['restore', restoreTask],
-  ] as const) {
+    .action(async (_options: unknown, command: Command) => {
+      const { createTask } = await import('../../core/tasks/commands.js');
+      return runMutation(command, createTask);
+    });
+  for (const name of ['update', 'transition', 'archive', 'restore'] as const) {
     family
       .command(`${name} <task-id>`)
       .description(`${name} an ordinary or recurring task`)
-      .action(async (id: string, _options: unknown, command: Command) =>
-        runMutation(command, (context, slug, input) => mutate(context, slug, id, input)),
-      );
+      .action(async (id: string, _options: unknown, command: Command) => {
+        if (name === 'transition') {
+          const { transitionTask } = await import('../../core/tasks/transitions.js');
+          return runMutation(command, (context, slug, input) =>
+            transitionTask(context, slug, id, input),
+          );
+        }
+        const mutations = await import('../../core/tasks/commands.js');
+        const mutate =
+          name === 'update'
+            ? mutations.updateTask
+            : name === 'archive'
+              ? mutations.archiveTask
+              : mutations.restoreTask;
+        return runMutation(command, (context, slug, input) => mutate(context, slug, id, input));
+      });
   }
 }

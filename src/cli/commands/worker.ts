@@ -1,10 +1,7 @@
 import type { Command } from 'commander';
 import { domainError } from '../../core/errors.js';
-import { runRecurrenceWorker } from '../../runtime/recurrence-worker.js';
-import { withCliDatabase } from '../context.js';
 import { writeJson } from '../io.js';
 import { commandOptions, readScope, requireOptions } from '../options.js';
-import { workerCallbacks } from '../worker-data.js';
 
 export function registerWorkerCommands(program: Command): void {
   program
@@ -18,6 +15,12 @@ export function registerWorkerCommands(program: Command): void {
       if (!('project_slug' in scope))
         throw domainError('VALIDATION_ERROR', 'Worker requires an explicit project');
       try {
+        const [{ runRecurrenceWorker }, { withCliDatabase }, { workerCallbacks }] =
+          await Promise.all([
+            import('../../runtime/recurrence-worker.js'),
+            import('../context.js'),
+            import('../worker-data.js'),
+          ]);
         await withCliDatabase(async (connection) => {
           const callbacks = workerCallbacks(connection, scope.project_slug);
           await runRecurrenceWorker({

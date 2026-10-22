@@ -1,14 +1,5 @@
 import type { Command } from 'commander';
 import {
-  createProject,
-  updateProject,
-  archiveProject,
-  restoreProject,
-} from '../../core/projects/commands.js';
-import { getProject, listProjects, projectListInputSchema } from '../../core/queries/projects.js';
-import { parseInput } from '../../core/validation.js';
-import { createReadContext, withCliDatabase } from '../context.js';
-import {
   queryInput,
   readCommand,
   readOptions,
@@ -33,25 +24,38 @@ export function registerProjectCommands(program: Command): void {
         'cursor',
         'archive',
       ]);
+      const [{ listProjects, projectListInputSchema }, { parseInput }, context] = await Promise.all(
+        [
+          import('../../core/queries/projects.js'),
+          import('../../core/validation.js'),
+          import('../context.js'),
+        ],
+      );
       const input = parseInput(projectListInputSchema, queryInput(options, body));
-      const result = await withCliDatabase((connection) =>
-        listProjects(createReadContext({ connection }), input),
+      const result = await context.withCliDatabase((connection) =>
+        listProjects(context.createReadContext({ connection }), input),
       );
       writeSuccess(result, options);
     });
   family
     .command('get')
     .description('Read the selected project')
-    .action(async (_options: unknown, command: Command) => runProjectRead(command, getProject));
-  for (const [name, mutate] of [
-    ['create', createProject],
-    ['update', updateProject],
-    ['archive', archiveProject],
-    ['restore', restoreProject],
+    .action(async (_options: unknown, command: Command) => {
+      const { getProject } = await import('../../core/queries/projects.js');
+      return runProjectRead(command, getProject);
+    });
+  for (const [name, exportName] of [
+    ['create', 'createProject'],
+    ['update', 'updateProject'],
+    ['archive', 'archiveProject'],
+    ['restore', 'restoreProject'],
   ] as const) {
     family
       .command(name)
       .description(`${name} the selected project`)
-      .action(async (_options: unknown, command: Command) => runMutation(command, mutate));
+      .action(async (_options: unknown, command: Command) => {
+        const mutations = await import('../../core/projects/commands.js');
+        return runMutation(command, mutations[exportName]);
+      });
   }
 }

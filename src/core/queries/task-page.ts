@@ -1,8 +1,8 @@
-import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod/mini';
 import { projectConfigInputSchema, type ProjectConfigInput } from '../../schema/configuration.js';
 import { projectConfigs, projects, tasks } from '../../schema/entities.js';
-import type { CoreContext } from '../database/types.js';
+import type { CoreContext, DatabaseTransaction } from '../database/types.js';
 import { domainError } from '../errors.js';
 import { requireProject } from '../projects/read.js';
 import { normalizeEmoji } from '../tasks/emoji.js';
@@ -36,6 +36,48 @@ function joinedConfiguration(snapshot: typeof projectConfigs.$inferSelect | null
     throw domainError('INTERNAL_ERROR', 'The stored project configuration is invalid');
   return parsed.data;
 }
+function hydrateTaskPageRows(
+  transaction: DatabaseTransaction,
+  pageRows: { taskId: string; displayDeadline: number | null }[],
+) {
+  const selectedIds = pageRows.map((row) => row.taskId);
+  const taskRows = transaction
+    .select({ task: tasks, project: projects })
+    .from(tasks)
+    .innerJoin(projects, eq(tasks.projectSlug, projects.slug))
+    .where(inArray(tasks.id, selectedIds))
+    .all();
+  const taskRowsById = new Map(taskRows.map((row) => [row.task.id, row]));
+  const projectSlugs = [...new Set(taskRows.map((row) => row.project.slug))];
+  const configRows = transaction
+    .select({ projectSlug: projects.slug, config: projectConfigs })
+    .from(projects)
+    .leftJoin(
+      projectConfigs,
+      and(
+        eq(projectConfigs.projectSlug, projects.slug),
+        eq(projectConfigs.revision, projects.configRevision),
+      ),
+    )
+    .where(inArray(projects.slug, projectSlugs))
+    .all();
+  const configurations = new Map<string, ProjectConfigInput>();
+  for (const row of configRows)
+    configurations.set(row.projectSlug, joinedConfiguration(row.config));
+  return pageRows.map((pageRow) => {
+    const row = taskRowsById.get(pageRow.taskId);
+    if (!row)
+      throw domainError('INTERNAL_ERROR', 'A task disappeared from the current read snapshot');
+    const config = configurations.get(row.project.slug);
+    if (!config)
+      throw domainError('INTERNAL_ERROR', 'The current project configuration is unavailable');
+    return {
+      task: taskResource(row.task, row.project, config, pageRow.displayDeadline),
+      project: row.project,
+      config,
+    };
+  });
+}
 /** Page parents in SQL before mapping resources; all families share one consistent read transaction. */
 export function readTaskPage(
   context: ReadContext,
@@ -58,11 +100,12 @@ export function readTaskPage(
       order: 'project_priority_model_deadline_created_id_v1',
     });
     const page = paginationContext({ state, query, now, cursor: parsed.cursor });
-    const rows = transaction
+    // Keep the ordered query narrow. Project configuration contains several JSON
+    // documents, and projecting it here would make Drizzle decode the same values
+    // once for every task before the page can de-duplicate them.
+    const pageRows = transaction
       .select({
-        task: tasks,
-        project: projects,
-        config: projectConfigs,
+        taskId: tasks.id,
         displayDeadline: effectiveTaskDeadline,
       })
       .from(tasks)
@@ -89,23 +132,13 @@ export function readTaskPage(
       .limit(parsed.limit + 1)
       .offset(page.offset)
       .all();
-    const configurations = new Map<string, ProjectConfigInput>();
-    const selected = rows.slice(0, parsed.limit).map((row) => {
-      let config = configurations.get(row.project.slug);
-      if (!config) {
-        config = joinedConfiguration(row.config);
-        configurations.set(row.project.slug, config);
-      }
-      return {
-        task: taskResource(row.task, row.project, config, row.displayDeadline),
-        project: row.project,
-        config,
-      };
-    });
+    const selectedPageRows = pageRows.slice(0, parsed.limit);
+    const selected =
+      selectedPageRows.length === 0 ? [] : hydrateTaskPageRows(transaction, selectedPageRows);
     return {
       rows: selected,
       nextCursor:
-        rows.length > parsed.limit
+        pageRows.length > parsed.limit
           ? nextPageCursor({ state, query, asOf: page.asOf, offset: page.offset + selected.length })
           : null,
       meta: queryMetadata(state, now, page.asOf),

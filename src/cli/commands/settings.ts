@@ -1,5 +1,4 @@
 import type { Command } from 'commander';
-import { getSettings, updateSettings } from '../../core/projects/settings.js';
 import {
   readCommand,
   readOptions,
@@ -8,7 +7,6 @@ import {
   runMutation,
   writeSuccess,
 } from '../command-helpers.js';
-import { createReadContext, withCliDatabase } from '../context.js';
 import { scopedInput } from '../io.js';
 import { readScope } from '../options.js';
 
@@ -24,13 +22,20 @@ export function registerSettingsCommands(program: Command): void {
       const { options, body } = await readCommand(command, readOptions);
       const scope = readScope(options);
       requireEmptyInput(scopedInput(options, body));
-      const result = await withCliDatabase((connection) =>
-        getSettings(createReadContext({ connection }), scope),
+      const [{ getSettings }, context] = await Promise.all([
+        import('../../core/projects/settings.js'),
+        import('../context.js'),
+      ]);
+      const result = await context.withCliDatabase((connection) =>
+        getSettings(context.createReadContext({ connection }), scope),
       );
       writeSuccess(result, options);
     });
   family
     .command('update')
     .description('Change timezone with original settings and configuration revision guards')
-    .action(async (_options: unknown, command: Command) => runMutation(command, updateSettings));
+    .action(async (_options: unknown, command: Command) => {
+      const { updateSettings } = await import('../../core/projects/settings.js');
+      return runMutation(command, updateSettings);
+    });
 }

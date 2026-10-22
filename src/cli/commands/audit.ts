@@ -1,8 +1,4 @@
 import type { Command } from 'commander';
-import { listAudit } from '../../core/queries/audit.js';
-import { parseInput } from '../../core/validation.js';
-import { auditListInputSchema } from '../../schema/audit.js';
-import { createReadContext, withCliDatabase } from '../context.js';
 import {
   queryInput,
   readCommand,
@@ -26,9 +22,15 @@ export function registerAuditCommands(program: Command): void {
         'limit',
         'cursor',
       ]);
+      const [{ listAudit }, { parseInput }, { auditListInputSchema }, context] = await Promise.all([
+        import('../../core/queries/audit.js'),
+        import('../../core/validation.js'),
+        import('../../schema/audit.js'),
+        import('../context.js'),
+      ]);
       const input = parseInput(auditListInputSchema, queryInput(options, body));
-      const result = await withCliDatabase((connection) =>
-        listAudit(createReadContext({ connection }), input),
+      const result = await context.withCliDatabase((connection) =>
+        listAudit(context.createReadContext({ connection }), input),
       );
       writeSuccess(result, options);
     });

@@ -4,7 +4,7 @@ import { responseMetaSchema } from '../../schema/envelopes.js';
 import { paginationSecrets } from '../../schema/pagination.js';
 import type { DatabaseTransaction } from '../database/types.js';
 import { domainError } from '../errors.js';
-import { formatTimestamp } from '../time.js';
+import { formatTimestamp } from '../clock.js';
 
 export function queryState(transaction: DatabaseTransaction) {
   const row = transaction
