@@ -253,8 +253,8 @@ Coverage mappings do not turn unexecuted or timed-out final gates into passes.
 
 ## Performance optimization validation
 
-The optimization adds ten agenda filter-intersection cases and one additional timezone case,
-bringing the functional inventory to **1,658 cases**. Existing DST, ordering, pagination,
+The optimization adds ten agenda filter-intersection cases and two additional timezone cases,
+bringing the functional inventory to **1,659 cases**. Existing DST, ordering, pagination,
 stale-cursor, indexed-occurrence, input/error, recovery and browser contracts remain in place.
 The query-plan collector now explains both SELECT and WITH statements, so materialized
 agenda queries retain the existing occurrence-index assertion. No case or suite time budget
@@ -274,3 +274,11 @@ commit. The [measurement extract](benchmarks/2026-10-22-optimization.json) prese
 optimization runs, including missed goals, with exact commits and artifact/report hashes.
 These newer measurements and test additions do not rewrite the historical T107 local
 release results above.
+
+The [complete optimization CI run](https://github.com/mikhailsal/ai-tasks/actions/runs/39844274752)
+passed all eight jobs: **1,659 functional cases / 122 files**, **26 contention cases / six
+files**, **168 Chromium/WebKit scenarios**, executable quickstart, and quality/build/bundle
+checks. Its `9cdab9d` revision has identical application, benchmark, dependency and build
+sources to the measured `c8ac95c` revision; the intervening commit records evidence and
+adjusts browser package mirror priorities. Subsequent documentation-only corrections do
+not change those tested sources.
