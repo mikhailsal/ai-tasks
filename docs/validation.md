@@ -12,6 +12,11 @@ Earlier failures and their corrective reruns remain recorded below. Final author
 formatting is checked by the [release format record](../artifacts/checks/T107-format-release.json)
 and [log](../artifacts/logs/T107-format-release.log).
 
+Subsequent [GitHub Actions workflows](ci.md) provide isolated correctness jobs and manual
+benchmarks. Their workflow lint and complete shard inventories were validated locally;
+hosted execution remains pending publication of the workflows and application sources.
+The T107 passing results below describe the local release checks.
+
 ## Environment and limits
 
 The [environment record](../artifacts/checks/T107-environment.json) identifies Linux

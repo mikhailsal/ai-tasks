@@ -1,0 +1,43 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: 'true'
+
+jobs:
+  benchmark:
+    name: Isolated production measurements
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: npm run build
+      - name: Measure cold CLI, materialized queries, full builds and process contention
+        run: npm run bench 2>&1 | tee artifacts/checks/benchmark.log
+      - name: Verify the final browser output
+        run: npm run check:bundle-size | tee artifacts/checks/bundle.log
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: benchmark-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/checks/
+            artifacts/benchmarks/
+          retention-days: 14
+          if-no-files-found: warn

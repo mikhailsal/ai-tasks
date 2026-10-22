@@ -1,0 +1,32 @@
+name: Set up AI Tasks
+description: Install the pinned Node/npm toolchain and locked native dependencies
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+        cache-dependency-path: package-lock.json
+    - name: Install pinned npm and dependencies
+      shell: bash
+      run: |
+        npm_version="$(node -p "require('./package.json').engines.npm")"
+        npm install --global "npm@$npm_version"
+        npm ci
+        npm run check:runtime
+    - name: Record runner environment
+      shell: bash
+      run: |
+        mkdir -p artifacts/checks
+        {
+          printf '%s\n' "Commit: $GITHUB_SHA" "Runner image: ${ImageOS:-unknown} ${ImageVersion:-unknown}"
+          node --version
+          npm --version
+          uname -srmo
+          lscpu
+          free -m
+          df -T . /tmp
+          lsblk -d -o NAME,MODEL,ROTA
+        } > artifacts/checks/runner.txt

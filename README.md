@@ -109,3 +109,7 @@ Run build-dependent suites sequentially: builds replace `dist/`, and live compil
 must finish before it is rebuilt. Browser JavaScript, including the service worker and lazy
 chunks, must total **less than 150,000 gzip bytes**. See [release validation](docs/validation.md)
 for recorded results and any remaining gates.
+
+GitHub Actions definitions cover pull requests and `main` pushes with isolated functional,
+contention and Chromium/WebKit jobs. Benchmarks have a separate manual workflow. See
+[CI setup and evidence](docs/ci.md) for runner profiles, test budgets and artifact retention.
