@@ -130,7 +130,7 @@ test('settings conflict review follows a newly selected attribution project and 
         .get(),
     ).toBe(1);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -211,7 +211,7 @@ test('a failed recurrence background refresh remains visible, retains the mounte
         .get(),
     ).toBe(0);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -265,7 +265,7 @@ test('archiving active recurring work with debts and future pending records reje
     expect(browserOccurrences(server, id).find((item) => item.id === future.id)).toEqual(future);
     expect(browserWriteSnapshot(server)).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

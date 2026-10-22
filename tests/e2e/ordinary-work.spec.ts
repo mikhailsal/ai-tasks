@@ -365,7 +365,7 @@ test('rejects DST gaps and requires an explicit offset branch for a repeated loc
       deadline: '2026-10-25T01:30:00.000Z',
     });
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

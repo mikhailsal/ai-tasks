@@ -273,7 +273,7 @@ test('stale nested dependency removal requires explicit retry while retaining di
       receipt: before.receipt + 1,
     });
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -353,7 +353,7 @@ test('lost dependency removal response survives reload and replays exact body on
       receipt: before.receipt + 1,
     });
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

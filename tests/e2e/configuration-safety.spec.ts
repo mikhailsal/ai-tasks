@@ -125,6 +125,7 @@ test('a transient configuration draft write failure retains input and recovers e
     ).toBe(0);
     expect(migrations).toBe(0);
   } finally {
+    await page.context().close();
     await server.close();
   }
 });

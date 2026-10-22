@@ -166,7 +166,7 @@ test('an open project editor survives a real restore and cache refresh with its 
     expect(patches).toEqual([]);
     expect(navigations).toBe(0);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

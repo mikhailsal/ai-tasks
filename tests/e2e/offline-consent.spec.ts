@@ -91,7 +91,7 @@ test('an open transition consent stays disabled offline, retains its text and sa
     ).toEqual({ count: 1 });
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

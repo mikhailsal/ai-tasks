@@ -98,8 +98,9 @@ exposed browser failures:
   a fresh server response contained the new timezone. Pristine drafts now follow new source
   snapshots; dirty/restored proposals keep their original fields and revision guards. The
   saved message follows refresh completion.
-- A successful DST scenario could hang in cleanup while its page kept requesting a server
-  being closed. The fixture closes its page before the custom server.
+- Successful browser scenarios could hang in cleanup while browser clients were still
+  connected to a custom server. Tests close the complete browser context before the server,
+  including its service worker, extra tabs and shared API request connection pool.
 - Chromium's request event omitted a replay body in the offline test while the retained
   network trace showed two identical successful PATCH requests. That test now observes the
   exact fetch body across replacement documents and additionally checks the replay response

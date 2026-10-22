@@ -99,7 +99,7 @@ test('production deep links and same-origin audit links retain exact project/ent
     expect(outbound).toEqual([]);
     expect(errors).toEqual([]);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -122,7 +122,7 @@ test('unknown production API paths and missing assets remain safe JSON404 rather
       expect(await response.text()).not.toContain('<!doctype');
     }
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

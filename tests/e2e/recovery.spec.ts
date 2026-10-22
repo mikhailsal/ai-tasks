@@ -97,7 +97,7 @@ test('managed backups use explicit project scope, complete revision review and m
     }
     expect(server.snapshot()).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -201,7 +201,7 @@ test('lost restore acceptance resolves through operation status during maintenan
     ).toEqual({ description: '  **Исходник** 👩🏽‍💻\n\nСохранить точно.' });
   } finally {
     if (held) releaseDatabaseLock(held);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -258,7 +258,7 @@ test('post-backup permanent marker conflicts remain visible and prevent restore 
     ).toBeDisabled();
     expect(server.snapshot()).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

@@ -81,7 +81,7 @@ test('stale manual tick reconciliation retains tick intent and never reconfigure
     expect(recurrenceBefore[0]).toHaveLength(2);
     expect(recurrenceTables()).toEqual(recurrenceBefore);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

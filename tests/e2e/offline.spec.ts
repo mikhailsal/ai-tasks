@@ -81,7 +81,7 @@ test('cold offline reload and reopening retain the latest fetched safe HTML and 
     await reopened.close();
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -121,7 +121,7 @@ test('uncached detail and evicted read snapshots explain absence instead of inve
     );
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -157,7 +157,7 @@ test('a real read-cache quota failure is visible, keeps the online result and ne
     await expect(page.getByRole('heading', { name: cachedTitle, exact: true })).toBeVisible();
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -251,7 +251,7 @@ test('every write family remains disabled offline and reconnecting never queues 
     expect(server.snapshot()).toEqual(before);
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -295,7 +295,7 @@ test('flapping reconnect preserves a dirty draft and its old revision against a 
     await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(proposed);
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -365,7 +365,7 @@ test('a committed lost response survives offline reopening and retries only the 
     ).toBe(2);
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -442,7 +442,7 @@ test('a real restore changes epoch while offline and retains old drafts for expl
     expect(writes).toEqual([]);
   } finally {
     await context.setOffline(false);
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

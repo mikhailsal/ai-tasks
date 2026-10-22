@@ -67,7 +67,7 @@ test('priorities keep projects and all four models distinct with configured labe
     await mobile(page, page.getByRole('button', { name: 'Применить фильтры', exact: true }));
     expect(server.snapshot()).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -117,7 +117,7 @@ test('agenda is project-first with five disjoint sections and one recurring pare
     await expect(page.getByLabel('Поиск', { exact: true })).toHaveValue('agenda:');
     expect(server.snapshot()).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -169,7 +169,7 @@ test('agenda paging retains server as_of despite browser time changes and expose
     expect(current.meta.read_revision).not.toBe(first.meta.read_revision);
     await expect(page.getByRole('alert')).toHaveCount(0);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -214,7 +214,7 @@ test('workload distinguishes parent inventory and occurrence outcomes and explai
     await mobile(page, page.getByRole('button', { name: 'Применить период', exact: true }));
     expect(server.snapshot()).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

@@ -178,7 +178,7 @@ test('settings UI attributes a global timezone change to an archived project and
       'America/New_York',
     );
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -247,7 +247,7 @@ test('lost completion response is retried with the identical persisted operation
       actual_completed_at: selected.deadline + 60000,
     });
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -324,7 +324,7 @@ test('actual-time draft retains its original timezone through settings conflict 
     });
     expect(completeAuditCount(server, selected.id)).toBe(1);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

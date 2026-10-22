@@ -108,7 +108,7 @@ test('recurring creation requires explicit anchor, policy and window and keeps t
     }
     await minimumTarget(page.getByRole('button', { name: 'Активно', exact: true }));
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -175,7 +175,7 @@ test('manual tick exposes explicit debt selection, per-row actual and frozen ins
       page.getByRole('button', { name: 'Обработать наступившие сроки', exact: true }),
     ).toBeEnabled();
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -223,7 +223,7 @@ test('paused cancellation requires reason, selects future pending only and leave
     expect(browserOccurrences(server, id).find((row) => row.id === debt.id)).toEqual(debt);
     expect(browserParent(server.fixture, id).status_id).toBe('paused');
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -262,7 +262,7 @@ test('timezone conflict preserves recurrence draft and original base across relo
     await expect(page.getByLabel('Окно подтверждения, мс', { exact: true })).toHaveValue('123456');
     expect(browserWriteSnapshot(server)).toEqual(before);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -323,7 +323,7 @@ test('direct recurring restore requires transition-specific consent and restores
         .all(id),
     ).toEqual([]);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

@@ -205,7 +205,7 @@ test('keyboard editing and long hostile Markdown remain usable and safe at 320px
     const body: unknown = await page.evaluate('document.body.innerText');
     expect(z.string().parse(body)).not.toMatch(/Submit|Loading|Save changes|Unknown error/u);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });
@@ -247,7 +247,7 @@ test('backup validation and explicit restore confirmation expose the complete pr
     ).toBeDisabled();
     await checkMobile(page);
   } finally {
-    await page.close();
+    await page.context().close();
     await server.close();
   }
 });

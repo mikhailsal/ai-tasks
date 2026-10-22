@@ -96,6 +96,7 @@ test('explicit project lifecycle reconciliation uses the newly reviewed database
         .get(project.slug),
     ).toMatchObject({ archived_at: expect.any(Number) });
   } finally {
+    await page.context().close();
     await server.close();
   }
 });
@@ -149,6 +150,7 @@ test('known project save keeps source and offers cleanup recovery without anothe
       projectResourceSchema.parse(successEnvelopeSchema.parse(await response.json()).data),
     ).toMatchObject({ description, revision: 1 });
   } finally {
+    await page.context().close();
     await server.close();
   }
 });
@@ -217,6 +219,7 @@ test('project archive submits every child revision across pages without changing
         .all(project.slug),
     ).toEqual(before);
   } finally {
+    await page.context().close();
     await server.close();
   }
 });

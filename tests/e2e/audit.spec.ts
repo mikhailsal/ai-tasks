@@ -83,6 +83,7 @@ test('historical audit shows original removed status/category, exact consent and
     );
     expect(await description.locator('pre').last().textContent()).toBe(source);
   } finally {
+    await page.context().close();
     await server.close();
   }
 });
@@ -163,6 +164,7 @@ test('audit filters and paging preserve scope and expose stale cursors as a firs
     ).toEqual(changed.meta.audit_ids);
     await expect(page.getByRole('article')).toHaveCount(1);
   } finally {
+    await page.context().close();
     await server.close();
   }
 });
