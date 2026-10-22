@@ -124,6 +124,15 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+      - name: Prefer the Ubuntu archive for browser system packages
+        run: |
+          if [[ -f /etc/apt/apt-mirrors.txt ]]; then
+            printf '%s\n' \
+              $'https://archive.ubuntu.com/ubuntu/\tpriority:1' \
+              $'http://azure.archive.ubuntu.com/ubuntu/\tpriority:2' \
+              $'https://security.ubuntu.com/ubuntu/\tpriority:3' |
+              sudo tee /etc/apt/apt-mirrors.txt
+          fi
       - name: Install the selected browser and Linux libraries
         env:
           BROWSER: ${{ matrix.browser }}

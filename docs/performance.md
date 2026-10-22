@@ -130,3 +130,54 @@ and timing differences demonstrate that the shared runner label does not guarant
 performance. Two runs do not establish long-term stability or isolate local overload as the
 cause of the earlier misses. Use these measurements as initial evidence, retain environment
 metadata on future runs, and compare like hardware before treating a change as a regression.
+
+## Optimization and repeated hosted measurements
+
+Profiling identified eager CLI dependency loading, repeated project-configuration decoding,
+repeated agenda order expressions, and native-wrapper module resolution. The implementation
+now loads command execution dependencies on demand, keeps ordinary clock reads separate from
+Temporal, opens Drizzle without unused relational-schema metadata, selects narrow task page
+keys before hydrating resources, and validates each project's configuration once per page in
+the same read transaction. Agenda alone materializes computed category/deadline fields in
+SQLite; the simpler task order retains its faster nonmaterialized plan. DST boundaries are
+computed once per agenda call and remain tied to the cursor's `as_of` instant.
+
+Namespace imports from `zod/mini` permit unused exports/locales to be removed from production
+bundles. Validation remains in place. Canonical timezone names use the runtime's supported
+name set; aliases, case variants and older Intl implementations retain DateTimeFormat
+validation. Server output is minified with source maps. SQLite's JavaScript wrappers are
+bundled while native loading remains external: native paths resolve against the installed,
+exactly pinned package, preserving upstream platform/libc selection and Debug/Release
+fallback. A guarded build transform requires review if the pinned binding layout changes.
+
+The following are **all six optimization benchmark runs**, including the earlier misses.
+The workload, fixture sizes, 100/500/10 sample counts, complete process timing, JSON
+serialization/parsing and nearest-rank rules above were unchanged. Values are **p95 ms**.
+The [durable extract](benchmarks/2026-10-22-optimization.json) retains environment, commit,
+sample counts, p50/p95/maximum, output sizes, integrity/purity facts and evidence hashes.
+
+| Revision / run                                                                             | CPU model |   Cold CLI | Standard list | Standard agenda |   Full build |
+| ------------------------------------------------------------------------------------------ | --------- | ---------: | ------------: | --------------: | -----------: |
+| `39d2d60` / [39837991740](https://github.com/mikhailsal/ai-tasks/actions/runs/39837991740) | EPYC 9V74 |    125.225 |        11.039 |          13.602 |     1382.332 |
+| `39d2d60` / [39838110452](https://github.com/mikhailsal/ai-tasks/actions/runs/39838110452) | EPYC 7763 |    149.975 |        13.059 |          16.698 |     1778.702 |
+| `758d351` / [39841138199](https://github.com/mikhailsal/ai-tasks/actions/runs/39841138199) | EPYC 7763 |    121.594 |        13.499 |          13.100 |     1764.554 |
+| `758d351` / [39841156434](https://github.com/mikhailsal/ai-tasks/actions/runs/39841156434) | EPYC 7763 |    116.678 |        13.388 |          12.956 |     1717.539 |
+| `c8ac95c` / [39843395733](https://github.com/mikhailsal/ai-tasks/actions/runs/39843395733) | EPYC 9V45 | **82.949** |     **8.109** |       **8.639** | **1237.564** |
+| `c8ac95c` / [39843425239](https://github.com/mikhailsal/ai-tasks/actions/runs/39843425239) | EPYC 9V45 | **81.440** |     **8.764** |       **9.877** | **1402.005** |
+| Goal                                                                                       |           |   **<100** |       **<15** |         **<15** |    **<5000** |
+
+The final two runs met every goal. Their bounded commands completed in 43.173s and 43.097s;
+each contention phase completed all 60 calls across 24 ready workers without failures.
+Standard read payloads remain 81,614/90,563 bytes with 200 rows, `read_revision=1` and
+`total_changes_delta=0`. Both browser outputs passed at **148,661 gzip bytes**.
+The second run's maximum CLI latency was 114.134ms: all samples are retained and the goal
+applies to p95, rather than every invocation. Optional CPU profiling ran separately after
+measurements and was excluded from all reported latency samples.
+
+Both final VMs exposed four vCPUs and about 15.61 GiB RAM, with the same pinned Node/npm/SQLite
+versions. The earlier unoptimized EPYC 9V45 run measured CLI p95 136.684ms, versus
+81.440–82.949ms here; these are separate VMs, not a controlled paired experiment.
+Two successful runs establish the observed result on that hosted CPU profile, not a
+long-term guarantee or a reference-hardware calibration. The final revision has not yet
+been measured on EPYC 7763 or Intel. Keep CPU/environment metadata when comparing future
+runs; do not discard slower results or treat a successful workflow exit as a timing pass.

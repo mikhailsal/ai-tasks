@@ -15,9 +15,11 @@ and [log](../artifacts/logs/T107-format-release.log).
 Published [GitHub Actions workflows](ci.md) now execute isolated correctness jobs and manual
 benchmarks. The [first hosted findings](ci.md#initial-hosted-findings) record the clean-build
 prerequisite and browser hydration/fixture issues exposed by initial runs, with corrections.
-The [two hosted benchmark reports](performance.md#github-hosted-comparison) show faster but
-hardware-dependent results: cold CLI still missed 100ms, standard reads met 15ms on AMD only,
-and full builds met 5s on both runners. The T107 results below describe the local release
+The [initial hosted benchmark reports](performance.md#github-hosted-comparison) missed the CLI
+goal. After profiling and optimization, [two repeated runs](performance.md#optimization-and-repeated-hosted-measurements)
+met all goals: CLI p95 81.440–82.949ms, standard reads 8.109–9.877ms, and full builds
+1.238–1.402s. Both final runners used EPYC 9V45; other CPU models remain unmeasured at the
+final revision. The T107 results below describe the local release
 checks; the [CI run list](https://github.com/mikhailsal/ai-tasks/actions/workflows/ci.yml)
 provides the result for each published commit.
 
@@ -248,3 +250,27 @@ See [acceptance coverage](../tests/acceptance-coverage.md) and
 [tests/README.md](../tests/README.md), including its retained
 [T102 fail/fix history](../tests/README.md#t102-integration-regressions-and-fixture-corrections).
 Coverage mappings do not turn unexecuted or timed-out final gates into passes.
+
+## Performance optimization validation
+
+The optimization adds ten agenda filter-intersection cases and one additional timezone case,
+bringing the functional inventory to **1,658 cases**. Existing DST, ordering, pagination,
+stale-cursor, indexed-occurrence, input/error, recovery and browser contracts remain in place.
+The query-plan collector now explains both SELECT and WITH statements, so materialized
+agenda queries retain the existing occurrence-index assertion. No case or suite time budget
+was increased.
+
+For the final application/build revision `c8ac95c`, bounded local checks passed **63 cases
+across three database/backup/query-plan files**, **42 compiled CLI cases across four files**,
+and the executable quickstart (17.090s supervisor). TypeScript, targeted lint, formatting,
+production builds and the 148,661-byte browser budget passed. An isolated package-layout
+probe also verified identical project-list output when native loading falls back from a
+missing prebuild to `build/Release/better_sqlite3.node`. The probe used the same native
+binary under the fallback path; it does not claim a separate source compilation.
+
+The full [published CI workflow](https://github.com/mikhailsal/ai-tasks/actions/workflows/ci.yml)
+executes the complete functional, contention, quickstart and Chromium/WebKit suites for each
+commit. The [measurement extract](benchmarks/2026-10-22-optimization.json) preserves all six
+optimization runs, including missed goals, with exact commits and artifact/report hashes.
+These newer measurements and test additions do not rewrite the historical T107 local
+release results above.

@@ -1,0 +1,857 @@
+{
+  "description": "All hosted optimization runs, including missed goals. Workload sizes, sample counts, serialization and percentile rules are unchanged. Different CPU models are not controlled comparisons. Full reports are retained in run artifacts; hashes below identify the downloaded evidence.",
+  "runs": [
+    {
+      "run_id": 39837991740,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39837991740",
+      "commit": "39d2d60c322f26b98aff32c578e4d6879fb97fae",
+      "artifact_id": 12450829599,
+      "artifact_zip_sha256": "14b628425426a31927fda4624320a93b4818f27db92c9bc7d824f5dc3a6dea9c",
+      "report_sha256": "3bf0a91929fc76627ed6a326caf3c25c2ffb169e366a6dc71d5cb30c21e3230c",
+      "started_at": "2026-10-22T19:12:25.570Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+        "memory_total_bytes": 16766414848,
+        "memory_free_bytes_at_start": 15224016896,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 6.17.0-1022-azure x86_64 GNU/Linux\nnvme0n1    0 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62375236  88872236  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 57760,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T19:12:25.539Z",
+        "duration_ms": 57861,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 1000,
+          "occurrences": 10000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ]
+      },
+      "diagnostic_seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 10000,
+          "occurrences": 100000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "measurement_role": "independent diagnostic fixture; measured separately below"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 118.18239100000028,
+        "p95_ms": 125.22512000000097,
+        "max_ms": 141.58273800000097
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 9.471558000001096,
+          "p95_ms": 11.03890599999795,
+          "max_ms": 15.827109000001656,
+          "rows": 200,
+          "serialized_bytes": 81614
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 12.508839000001899,
+          "p95_ms": 13.60244800000146,
+          "max_ms": 14.789138999996794,
+          "rows": 200,
+          "serialized_bytes": 90563
+        }
+      },
+      "standard_query_facts": {
+        "input": {
+          "all_projects": true,
+          "limit": 200
+        },
+        "timing": "query + JSON.stringify + JSON.parse + exact materialized row count",
+        "percentile_method": "nearest rank",
+        "total_changes_delta": 0,
+        "read_revision_before": 1,
+        "read_revision_after": 1,
+        "connection_count": 1,
+        "lock_mode": "shared"
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 41.65519000000495,
+          "p95_ms": 43.21815099999367,
+          "max_ms": 43.703574999999546,
+          "rows": 200,
+          "serialized_bytes": 84122
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 67.03471400000126,
+          "p95_ms": 68.2435919999989,
+          "max_ms": 69.5855889999948,
+          "rows": 200,
+          "serialized_bytes": 90261
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1359.5472179999997,
+        "p95_ms": 1382.3315430000002,
+        "max_ms": 1382.3315430000002,
+        "definition": "Full npm run build (server and browser output)."
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 4686.615744000002,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 349.85906499999965,
+          "p95_ms": 1944.3993110000001,
+          "max_ms": 2064.561525
+        }
+      },
+      "bundle_check": "> ai-tasks@0.1.0 check:bundle-size\n> node scripts/check-bundle-size.mjs\n\n{\n  \"assets\": [\n    {\n      \"file\": \"assets/index-BANbBZKx.js\",\n      \"bytes\": 515527,\n      \"gzip_bytes\": 147793\n    },\n    {\n      \"file\": \"sw.js\",\n      \"bytes\": 1357,\n      \"gzip_bytes\": 786\n    }\n  ],\n  \"total_gzip_bytes\": 148579,\n  \"budget_bytes\": 150000,\n  \"gzip_options\": {\n    \"level\": 9\n  },\n  \"node\": \"24.22.0\",\n  \"zlib\": \"1.3.2.1-motley-285e94b\",\n  \"passed\": true\n}"
+    },
+    {
+      "run_id": 39838110452,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39838110452",
+      "commit": "39d2d60c322f26b98aff32c578e4d6879fb97fae",
+      "artifact_id": 12451772386,
+      "artifact_zip_sha256": "feb5f44ea6afff17cb76c52c745e6512663babbe94f94ecd499c54bbd6c0037f",
+      "report_sha256": "5a98f47c11ed5e1495b40e1d544bb92ca124eb7613b15561eb10bb5e3041ee20",
+      "started_at": "2026-10-22T19:13:54.078Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "memory_total_bytes": 16766414848,
+        "memory_free_bytes_at_start": 15242043392,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 6.17.0-1022-azure x86_64 GNU/Linux\nsda     1 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62375308  88872164  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 70503,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T19:13:54.039Z",
+        "duration_ms": 70622,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 1000,
+          "occurrences": 10000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ]
+      },
+      "diagnostic_seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 10000,
+          "occurrences": 100000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "measurement_role": "independent diagnostic fixture; measured separately below"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 145.92525899999964,
+        "p95_ms": 149.97466899999927,
+        "max_ms": 164.2440349999997
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 11.786498999998003,
+          "p95_ms": 13.05880800000159,
+          "max_ms": 20.75820599999861,
+          "rows": 200,
+          "serialized_bytes": 81614
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 15.463822999998229,
+          "p95_ms": 16.698335999997653,
+          "max_ms": 18.695174000000407,
+          "rows": 200,
+          "serialized_bytes": 90563
+        }
+      },
+      "standard_query_facts": {
+        "input": {
+          "all_projects": true,
+          "limit": 200
+        },
+        "timing": "query + JSON.stringify + JSON.parse + exact materialized row count",
+        "percentile_method": "nearest rank",
+        "total_changes_delta": 0,
+        "read_revision_before": 1,
+        "read_revision_after": 1,
+        "connection_count": 1,
+        "lock_mode": "shared"
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 48.42263899999671,
+          "p95_ms": 49.57325100000162,
+          "max_ms": 49.789554999995744,
+          "rows": 200,
+          "serialized_bytes": 84122
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 81.37840000000142,
+          "p95_ms": 82.88539599999785,
+          "max_ms": 83.05526200000168,
+          "rows": 200,
+          "serialized_bytes": 90261
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1748.6249890000036,
+        "p95_ms": 1778.7024239999955,
+        "max_ms": 1778.7024239999955,
+        "definition": "Full npm run build (server and browser output)."
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 5795.639986000002,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 375.19041800000014,
+          "p95_ms": 2574.3302419999995,
+          "max_ms": 2611.9132630000004
+        }
+      },
+      "bundle_check": "> ai-tasks@0.1.0 check:bundle-size\n> node scripts/check-bundle-size.mjs\n\n{\n  \"assets\": [\n    {\n      \"file\": \"assets/index-BANbBZKx.js\",\n      \"bytes\": 515527,\n      \"gzip_bytes\": 147793\n    },\n    {\n      \"file\": \"sw.js\",\n      \"bytes\": 1357,\n      \"gzip_bytes\": 786\n    }\n  ],\n  \"total_gzip_bytes\": 148579,\n  \"budget_bytes\": 150000,\n  \"gzip_options\": {\n    \"level\": 9\n  },\n  \"node\": \"24.22.0\",\n  \"zlib\": \"1.3.2.1-motley-285e94b\",\n  \"passed\": true\n}"
+    },
+    {
+      "run_id": 39841138199,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39841138199",
+      "commit": "758d351ca00fc4a26e9f5b393d0437f8b4db4f40",
+      "artifact_id": 12453595300,
+      "artifact_zip_sha256": "70730ecbf075121e003075600624c0873d291a950858b356930b91f23bb1c117",
+      "report_sha256": "2f75606d9c78f26d2ea44f621b158c6a3c642000f3d3277ed5f771e45801dffc",
+      "started_at": "2026-10-22T19:34:07.098Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "memory_total_bytes": 16766414848,
+        "memory_free_bytes_at_start": 15272226816,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 6.17.0-1022-azure x86_64 GNU/Linux\nsda     1 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62373836  88873636  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 63068,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T19:34:07.061Z",
+        "duration_ms": 63178,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 1000,
+          "occurrences": 10000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ]
+      },
+      "diagnostic_seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 10000,
+          "occurrences": 100000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "measurement_role": "independent diagnostic fixture; measured separately below"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 115.62265999999909,
+        "p95_ms": 121.5936610000008,
+        "max_ms": 146.7505220000021
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 10.843602000000828,
+          "p95_ms": 13.499371000001702,
+          "max_ms": 18.835236999999324,
+          "rows": 200,
+          "serialized_bytes": 81614
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 12.163269000000582,
+          "p95_ms": 13.100494000002072,
+          "max_ms": 18.4298970000018,
+          "rows": 200,
+          "serialized_bytes": 90563
+        }
+      },
+      "standard_query_facts": {
+        "input": {
+          "all_projects": true,
+          "limit": 200
+        },
+        "timing": "query + JSON.stringify + JSON.parse + exact materialized row count",
+        "percentile_method": "nearest rank",
+        "total_changes_delta": 0,
+        "read_revision_before": 1,
+        "read_revision_after": 1,
+        "connection_count": 1,
+        "lock_mode": "shared"
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 48.509163000002445,
+          "p95_ms": 50.557153999994625,
+          "max_ms": 53.437081999996735,
+          "rows": 200,
+          "serialized_bytes": 84122
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 59.98715700000321,
+          "p95_ms": 61.4775540000046,
+          "max_ms": 62.65735199999472,
+          "rows": 200,
+          "serialized_bytes": 90261
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1735.0675629999969,
+        "p95_ms": 1764.5541060000032,
+        "max_ms": 1764.5541060000032,
+        "definition": "Full npm run build (server and browser output)."
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 5256.232481999999,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 341.79251399999976,
+          "p95_ms": 2284.9867050000003,
+          "max_ms": 2293.9547110000003
+        }
+      },
+      "bundle_check": "> ai-tasks@0.1.0 check:bundle-size\n> node scripts/check-bundle-size.mjs\n\n{\n  \"assets\": [\n    {\n      \"file\": \"assets/index--Bu0Zu7s.js\",\n      \"bytes\": 515744,\n      \"gzip_bytes\": 147876\n    },\n    {\n      \"file\": \"sw.js\",\n      \"bytes\": 1357,\n      \"gzip_bytes\": 785\n    }\n  ],\n  \"total_gzip_bytes\": 148661,\n  \"budget_bytes\": 150000,\n  \"gzip_options\": {\n    \"level\": 9\n  },\n  \"node\": \"24.22.0\",\n  \"zlib\": \"1.3.2.1-motley-285e94b\",\n  \"passed\": true\n}"
+    },
+    {
+      "run_id": 39841156434,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39841156434",
+      "commit": "758d351ca00fc4a26e9f5b393d0437f8b4db4f40",
+      "artifact_id": 12451819887,
+      "artifact_zip_sha256": "8bcd61e50c860685deec785d682117d8acd14f0db46066ceba8533de648cc2e8",
+      "report_sha256": "00d837440c9e3309d0c9348d90f3ea899ab1d685fd60cab85b963609ef5706c4",
+      "started_at": "2026-10-22T19:35:54.235Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "memory_total_bytes": 16766414848,
+        "memory_free_bytes_at_start": 15411892224,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 6.17.0-1022-azure x86_64 GNU/Linux\nsda     1 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62373728  88873744  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 61514,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T19:35:54.200Z",
+        "duration_ms": 61617,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 1000,
+          "occurrences": 10000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ]
+      },
+      "diagnostic_seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 10000,
+          "occurrences": 100000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "measurement_role": "independent diagnostic fixture; measured separately below"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 111.58464699999968,
+        "p95_ms": 116.67796099999941,
+        "max_ms": 126.39041999999972
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 10.767009000002872,
+          "p95_ms": 13.38840600000185,
+          "max_ms": 18.478566999998293,
+          "rows": 200,
+          "serialized_bytes": 81614
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 12.062184000002162,
+          "p95_ms": 12.955505999998422,
+          "max_ms": 18.482303999997384,
+          "rows": 200,
+          "serialized_bytes": 90563
+        }
+      },
+      "standard_query_facts": {
+        "input": {
+          "all_projects": true,
+          "limit": 200
+        },
+        "timing": "query + JSON.stringify + JSON.parse + exact materialized row count",
+        "percentile_method": "nearest rank",
+        "total_changes_delta": 0,
+        "read_revision_before": 1,
+        "read_revision_after": 1,
+        "connection_count": 1,
+        "lock_mode": "shared"
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 45.83444099999906,
+          "p95_ms": 47.22827999999572,
+          "max_ms": 48.930693000002066,
+          "rows": 200,
+          "serialized_bytes": 84122
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 56.72976399999607,
+          "p95_ms": 59.671400999999605,
+          "max_ms": 61.3263980000047,
+          "rows": 200,
+          "serialized_bytes": 90261
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1676.0602720000024,
+        "p95_ms": 1717.538843000002,
+        "max_ms": 1717.538843000002,
+        "definition": "Full npm run build (server and browser output)."
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 5115.731374999996,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 331.4797840000001,
+          "p95_ms": 2154.4759969999996,
+          "max_ms": 2280.8341789999995
+        }
+      },
+      "bundle_check": "> ai-tasks@0.1.0 check:bundle-size\n> node scripts/check-bundle-size.mjs\n\n{\n  \"assets\": [\n    {\n      \"file\": \"assets/index--Bu0Zu7s.js\",\n      \"bytes\": 515744,\n      \"gzip_bytes\": 147876\n    },\n    {\n      \"file\": \"sw.js\",\n      \"bytes\": 1357,\n      \"gzip_bytes\": 785\n    }\n  ],\n  \"total_gzip_bytes\": 148661,\n  \"budget_bytes\": 150000,\n  \"gzip_options\": {\n    \"level\": 9\n  },\n  \"node\": \"24.22.0\",\n  \"zlib\": \"1.3.2.1-motley-285e94b\",\n  \"passed\": true\n}"
+    },
+    {
+      "run_id": 39843395733,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39843395733",
+      "commit": "c8ac95c73661409ed2e2cc5823ca72d6b61c02b7",
+      "artifact_id": 12454421300,
+      "artifact_zip_sha256": "678a4f256717715769ff3d45b1cf5ade34412fafdc280a1da0eae10574693a75",
+      "report_sha256": "b3a165c8bf7fe14dc59dad6008807a1f14edabd56cb9b75f38764d54483efb30",
+      "started_at": "2026-10-22T19:49:29.485Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+        "memory_total_bytes": 16760344576,
+        "memory_free_bytes_at_start": 15282286592,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 7.0.0-1017-azure x86_64 GNU/Linux\nnvme0n1    0 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62658500  88588972  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 43076,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T19:49:29.459Z",
+        "duration_ms": 43173,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 1000,
+          "occurrences": 10000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ]
+      },
+      "diagnostic_seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 10000,
+          "occurrences": 100000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "measurement_role": "independent diagnostic fixture; measured separately below"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 80.64385100000072,
+        "p95_ms": 82.94872800000121,
+        "max_ms": 83.54935599999953
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 6.986951999999292,
+          "p95_ms": 8.109136999999464,
+          "max_ms": 13.711547999999311,
+          "rows": 200,
+          "serialized_bytes": 81614
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 7.809395000000222,
+          "p95_ms": 8.638589999998658,
+          "max_ms": 12.44050900000002,
+          "rows": 200,
+          "serialized_bytes": 90563
+        }
+      },
+      "standard_query_facts": {
+        "input": {
+          "all_projects": true,
+          "limit": 200
+        },
+        "timing": "query + JSON.stringify + JSON.parse + exact materialized row count",
+        "percentile_method": "nearest rank",
+        "total_changes_delta": 0,
+        "read_revision_before": 1,
+        "read_revision_after": 1,
+        "connection_count": 1,
+        "lock_mode": "shared"
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 31.053603999996994,
+          "p95_ms": 31.69166899999982,
+          "max_ms": 32.03506800000105,
+          "rows": 200,
+          "serialized_bytes": 84122
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 37.80603300000075,
+          "p95_ms": 38.84890799999994,
+          "max_ms": 39.33873799999856,
+          "rows": 200,
+          "serialized_bytes": 90261
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1213.082489999997,
+        "p95_ms": 1237.5643710000004,
+        "max_ms": 1237.5643710000004,
+        "definition": "Full npm run build (server and browser output)."
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 3202.878146999996,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 209.52187999999978,
+          "p95_ms": 1390.500782,
+          "max_ms": 1457.1466100000002
+        }
+      },
+      "bundle_check": "> ai-tasks@0.1.0 check:bundle-size\n> node scripts/check-bundle-size.mjs\n\n{\n  \"assets\": [\n    {\n      \"file\": \"assets/index--Bu0Zu7s.js\",\n      \"bytes\": 515744,\n      \"gzip_bytes\": 147876\n    },\n    {\n      \"file\": \"sw.js\",\n      \"bytes\": 1357,\n      \"gzip_bytes\": 785\n    }\n  ],\n  \"total_gzip_bytes\": 148661,\n  \"budget_bytes\": 150000,\n  \"gzip_options\": {\n    \"level\": 9\n  },\n  \"node\": \"24.22.0\",\n  \"zlib\": \"1.3.2.1-motley-285e94b\",\n  \"passed\": true\n}"
+    },
+    {
+      "run_id": 39843425239,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39843425239",
+      "commit": "c8ac95c73661409ed2e2cc5823ca72d6b61c02b7",
+      "artifact_id": 12453822434,
+      "artifact_zip_sha256": "ddb68bbb4a2cb5becf745450d9a4d3e43c3e9712c343532f128a7be994edfd34",
+      "report_sha256": "e36b2248c704baa8ac399ed1c2954eecddc48c5718e056ced353596a8a516b4e",
+      "started_at": "2026-10-22T19:50:49.081Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+        "memory_total_bytes": 16766406656,
+        "memory_free_bytes_at_start": 14980263936,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 6.17.0-1022-azure x86_64 GNU/Linux\nnvme0n1    0 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62371680  88875792  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 42999,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T19:50:49.054Z",
+        "duration_ms": 43097,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 1000,
+          "occurrences": 10000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ]
+      },
+      "diagnostic_seed": {
+        "counts": {
+          "projects": 20,
+          "tasks": 10000,
+          "occurrences": 100000,
+          "audits": 50000,
+          "epoch": "00000000-0000-4000-8000-000000000001"
+        },
+        "foreign_key_violations": 0,
+        "integrity_check": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "measurement_role": "independent diagnostic fixture; measured separately below"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 77.49308799999926,
+        "p95_ms": 81.44034800000009,
+        "max_ms": 114.13375799999994
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 6.8506539999998495,
+          "p95_ms": 8.763630000001285,
+          "max_ms": 17.43895600000178,
+          "rows": 200,
+          "serialized_bytes": 81614
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 8.030008999998245,
+          "p95_ms": 9.877340999999433,
+          "max_ms": 24.749601999999868,
+          "rows": 200,
+          "serialized_bytes": 90563
+        }
+      },
+      "standard_query_facts": {
+        "input": {
+          "all_projects": true,
+          "limit": 200
+        },
+        "timing": "query + JSON.stringify + JSON.parse + exact materialized row count",
+        "percentile_method": "nearest rank",
+        "total_changes_delta": 0,
+        "read_revision_before": 1,
+        "read_revision_after": 1,
+        "connection_count": 1,
+        "lock_mode": "shared"
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 32.528512999997474,
+          "p95_ms": 33.4823690000012,
+          "max_ms": 34.14243400000123,
+          "rows": 200,
+          "serialized_bytes": 84122
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 39.696140000000014,
+          "p95_ms": 43.58294800000294,
+          "max_ms": 59.88843300000008,
+          "rows": 200,
+          "serialized_bytes": 90261
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1163.9358589999974,
+        "p95_ms": 1402.0048019999995,
+        "max_ms": 1402.0048019999995,
+        "definition": "Full npm run build (server and browser output)."
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 3280.373625,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 213.83110299999998,
+          "p95_ms": 1418.8508740000002,
+          "max_ms": 1474.911287
+        }
+      },
+      "bundle_check": "> ai-tasks@0.1.0 check:bundle-size\n> node scripts/check-bundle-size.mjs\n\n{\n  \"assets\": [\n    {\n      \"file\": \"assets/index--Bu0Zu7s.js\",\n      \"bytes\": 515744,\n      \"gzip_bytes\": 147876\n    },\n    {\n      \"file\": \"sw.js\",\n      \"bytes\": 1357,\n      \"gzip_bytes\": 785\n    }\n  ],\n  \"total_gzip_bytes\": 148661,\n  \"budget_bytes\": 150000,\n  \"gzip_options\": {\n    \"level\": 9\n  },\n  \"node\": \"24.22.0\",\n  \"zlib\": \"1.3.2.1-motley-285e94b\",\n  \"passed\": true\n}"
+    }
+  ]
+}

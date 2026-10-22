@@ -49,6 +49,10 @@ owns that VM and all production output while executing its ten full builds, cold
 samples, warm materialized queries and independent-process workload. The final emitted
 browser JavaScript is checked again after the benchmark.
 
+The optional **profile** input captures eight separate cold CLI CPU profiles after the
+normal measurements. Profiled invocations do not contribute to benchmark samples; raw
+profiles and a frame-cost summary are uploaded with that run's benchmark evidence.
+
 Performance goals remain diagnostic rather than required PR checks. A hosted runner avoids
 competition with this workstation's processes, but CPU models, image revisions, virtualization
 and service load can vary. Compare repeated runs on the same runner profile and retain the
@@ -109,3 +113,24 @@ exposed browser failures:
 These corrections preserve the suite assertions and all existing case/job time budgets.
 The latest CI run verifies the complete suites after these changes; earlier failed runs and
 retained traces remain linked above.
+
+## Performance follow-up
+
+The [complete optimization record](performance.md#optimization-and-repeated-hosted-measurements)
+retains all six subsequent measurement runs. Both final runs met the unchanged CLI, standard
+query and full-build goals on EPYC 9V45 runners. Performance remains diagnostic; successful
+execution alone does not indicate that a goal was met.
+
+The [intermediate CI run](https://github.com/mikhailsal/ai-tasks/actions/runs/39841138446)
+exposed a query-plan test collector that only explained SELECT statements. It now includes
+WITH statements and again verifies the occurrence index inside the materialized agenda
+query. The existing index assertion was retained.
+
+Browser installation also encountered repeated slow package downloads from
+`azure.archive.ubuntu.com`, before application tests started. Browser jobs now prefer
+`https://archive.ubuntu.com/ubuntu/` in the runner's existing APT mirror list, retaining Azure
+and security archives as fallbacks. This reverses the first two priorities in the
+[upstream runner-image configuration](https://github.com/actions/runner-images/blob/main/images/ubuntu/scripts/build/configure-apt-sources.sh).
+The selected browser, system dependencies, package signature verification and all test/job
+budgets remain unchanged. This download issue is separate from the performance measurements;
+the benchmark workflow does not install browsers or change APT mirrors.
