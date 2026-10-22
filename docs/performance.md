@@ -1,6 +1,6 @@
 # Performance profile
 
-The complete `npm run bench` run on 2026-10-22 exited **0** in **161.857s** under the separate
+The complete local `npm run bench` run on 2026-10-22 exited **0** in **161.857s** under the separate
 300s supervisor budget (162.322s outer command; 161.578s harness). See the
 [raw report](../artifacts/benchmarks/2026-10-22T13-07-16.719Z.json), [command record](../artifacts/checks/T107-benchmark.json),
 [log](../artifacts/logs/T107-benchmark.log), and
@@ -95,3 +95,38 @@ The seed, full build, materialization and process harness sources are
 [benchmark.mjs](../scripts/benchmark.mjs), [benchmark-query.ts](../scripts/benchmark-query.ts),
 [benchmark-process-worker.mjs](../scripts/benchmark-process-worker.mjs), and
 [benchmark-data.ts](../tests/fixtures/benchmark-data.ts).
+
+## GitHub-hosted comparison
+
+Two isolated manual runs on 2026-10-22 succeeded: [run 1](https://github.com/mikhailsal/ai-tasks/actions/runs/39805292957)
+and [run 2](https://github.com/mikhailsal/ai-tasks/actions/runs/39805564273). Their application,
+lockfile and benchmark sources are identical; the second commit only corrects the functional
+CI build prerequisite. Each fresh `ubuntu-24.04` VM exposed four vCPUs and approximately
+15.61 GiB RAM, with Node 24.22.0, npm 11.19.1 and SQLite 3.53.4. Run 1 received an Intel
+Xeon Platinum 8573C; run 2 received an AMD EPYC 9V45. These are not the 8 GiB reference profile.
+
+All entries below are **p95 milliseconds**, with unchanged workloads and nearest-rank
+percentiles. The [committed measurement extract](benchmarks/2026-10-22-github.json) retains
+p50, p95, maximum, sample counts, environment, commit IDs and artifact/report SHA-256 hashes.
+Full sample reports, runner metadata and logs are attached to each run for fourteen days.
+
+| Workload                      | Local VMware | GitHub Intel | GitHub AMD | Goal       |
+| ----------------------------- | -----------: | -----------: | ---------: | ---------- |
+| Cold CLI, 100 samples         |      679.494 |      188.574 |    136.684 | <100ms     |
+| Standard list, 500 samples    |       52.520 |       19.805 |     12.037 | <15ms      |
+| Standard agenda, 500 samples  |       61.180 |       23.004 |     14.104 | <15ms      |
+| Diagnostic list, 50 samples   |      141.975 |       53.012 |     33.439 | Diagnostic |
+| Diagnostic agenda, 50 samples |      158.949 |       79.636 |     55.510 | Diagnostic |
+| Full build, 10 samples        |     5735.397 |     1615.284 |   1154.768 | <5000ms    |
+
+The bounded benchmark commands completed in 80.290s and 53.368s, within 300s. Each
+independent-process phase completed all 60 calls across 24 ready workers with zero failures
+(5.199s and 3.604s). Both final browser bundles passed at 148,542 gzip bytes, matching the
+local emitted assets and remaining below the 150,000-byte budget.
+
+Both hosted runs improved on the local timings. Full builds met their goal in both runs;
+standard queries met theirs on AMD only; cold CLI missed its goal in both. The CPU profiles
+and timing differences demonstrate that the shared runner label does not guarantee identical
+performance. Two runs do not establish long-term stability or isolate local overload as the
+cause of the earlier misses. Use these measurements as initial evidence, retain environment
+metadata on future runs, and compare like hardware before treating a change as a regression.

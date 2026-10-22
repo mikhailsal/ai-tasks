@@ -12,10 +12,14 @@ Earlier failures and their corrective reruns remain recorded below. Final author
 formatting is checked by the [release format record](../artifacts/checks/T107-format-release.json)
 and [log](../artifacts/logs/T107-format-release.log).
 
-Subsequent [GitHub Actions workflows](ci.md) provide isolated correctness jobs and manual
-benchmarks. Their workflow lint and complete shard inventories were validated locally;
-hosted execution remains pending publication of the workflows and application sources.
-The T107 passing results below describe the local release checks.
+Published [GitHub Actions workflows](ci.md) now execute isolated correctness jobs and manual
+benchmarks. The [first hosted findings](ci.md#initial-hosted-findings) record the clean-build
+prerequisite and browser hydration/fixture issues exposed by initial runs, with corrections.
+The [two hosted benchmark reports](performance.md#github-hosted-comparison) show faster but
+hardware-dependent results: cold CLI still missed 100ms, standard reads met 15ms on AMD only,
+and full builds met 5s on both runners. The T107 results below describe the local release
+checks; the [CI run list](https://github.com/mikhailsal/ai-tasks/actions/workflows/ci.yml)
+provides the result for each published commit.
 
 ## Environment and limits
 

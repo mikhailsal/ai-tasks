@@ -1,0 +1,179 @@
+{
+  "description": "Extracted measurements; raw reports remain in GitHub Actions artifacts and local artifacts/github. Both commits contain identical application and benchmark sources.",
+  "runs": [
+    {
+      "run_id": 39805292957,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39805292957",
+      "commit": "7a39d8d2da4d3e204aa52937b79279a1022cca47",
+      "artifact_zip_sha256": "28c2d1dec376533672b77e2b82855eef3867fbe8e460432446852c0ab7ae3d6e",
+      "report_sha256": "c48916e945db1f4dd70fcf92c7fa88f1a1e56e243207e09987cea43c1475900e",
+      "started_at": "2026-10-22T15:29:49.482Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+        "memory_total_bytes": 16759300096,
+        "memory_free_bytes_at_start": 15111577600,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 7.0.0-1017-azure x86_64 GNU/Linux\nsda     1 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 63508004  87739468  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 80200,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T15:29:49.447Z",
+        "duration_ms": 80290,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 183.9370710000003,
+        "p95_ms": 188.5736309999993,
+        "max_ms": 190.97548299999835
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 18.109414000005927,
+          "p95_ms": 19.80525800000032,
+          "max_ms": 24.341884999998
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 21.375089000001026,
+          "p95_ms": 23.003680000001623,
+          "max_ms": 23.906072999998287
+        }
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 51.62744099999691,
+          "p95_ms": 53.01204400000279,
+          "max_ms": 58.70737100000406
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 77.60505700000067,
+          "p95_ms": 79.63558600000397,
+          "max_ms": 84.8208650000015
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1586.0726149999973,
+        "p95_ms": 1615.283712000004,
+        "max_ms": 1615.283712000004
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 5198.536510000005,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 330.149582,
+          "p95_ms": 2293.6805059999997,
+          "max_ms": 2377.8613549999995
+        }
+      }
+    },
+    {
+      "run_id": 39805564273,
+      "url": "https://github.com/mikhailsal/ai-tasks/actions/runs/39805564273",
+      "commit": "bf81b46d024d81c351f49727dd88a3c24d5b794d",
+      "artifact_zip_sha256": "8694080050dc86feaf0534210491d653c00943e30649cc15f2496cb3b3b3167e",
+      "report_sha256": "144a40a058f3087c9a39a086b04a376b042dcd522d410b92bc60634c4a8847f3",
+      "started_at": "2026-10-22T15:31:32.966Z",
+      "environment": {
+        "node": "v24.22.0",
+        "platform": "linux/x64",
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+        "memory_total_bytes": 16760340480,
+        "memory_free_bytes_at_start": 15139475456,
+        "sqlite": "3.53.4",
+        "filesystem_probe": "Linux 7.0.0-1017-azure x86_64 GNU/Linux\nnvme0n1    0 disk \nFilesystem     Type 1K-blocks     Used Available Use% Mounted on\n/dev/root      ext4 151263856 62659888  88587584  42% /",
+        "reference_profile": "4 vCPU, 8 GiB RAM, local SSD; current host may differ"
+      },
+      "status": "completed",
+      "exit_code": 0,
+      "harness_duration_ms": 53273,
+      "supervisor": {
+        "suite": "benchmark",
+        "command": ["node", "scripts/benchmark.mjs"],
+        "started_at": "2026-10-22T15:31:32.937Z",
+        "duration_ms": 53368,
+        "budget_ms": 300000,
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "node": "24.22.0",
+        "platform": "linux"
+      },
+      "cold_cli": {
+        "samples": 100,
+        "p50_ms": 123.17970300000161,
+        "p95_ms": 136.68423900000198,
+        "max_ms": 145.72537999999986
+      },
+      "standard_queries": {
+        "task_list": {
+          "samples": 500,
+          "p50_ms": 10.57249899999806,
+          "p95_ms": 12.036551000001054,
+          "max_ms": 17.91363199999978
+        },
+        "agenda": {
+          "samples": 500,
+          "p50_ms": 12.636981999999989,
+          "p95_ms": 14.103876999997738,
+          "max_ms": 15.643341999999393
+        }
+      },
+      "diagnostic_queries": {
+        "task_list": {
+          "samples": 50,
+          "p50_ms": 31.973147000004246,
+          "p95_ms": 33.438702999999805,
+          "max_ms": 34.053374000002805
+        },
+        "agenda": {
+          "samples": 50,
+          "p50_ms": 51.62315600000147,
+          "p95_ms": 55.509830000002694,
+          "max_ms": 84.0373150000014
+        }
+      },
+      "production_build": {
+        "samples": 10,
+        "p50_ms": 1082.8945749999984,
+        "p95_ms": 1154.767995000002,
+        "max_ms": 1154.767995000002
+      },
+      "contention": {
+        "writers": 4,
+        "readers": 20,
+        "ready_workers": 24,
+        "duration_ms": 3604.1382870000016,
+        "failures": 0,
+        "measured_calls": {
+          "samples": 60,
+          "p50_ms": 227.2710589999997,
+          "p95_ms": 1627.2247780000002,
+          "max_ms": 1720.1490430000001
+        }
+      }
+    }
+  ]
+}

@@ -1,16 +1,17 @@
 # GitHub Actions
 
-The workflows target the public `mikhailsal/ai-tasks` repository. They are prepared locally;
-the first hosted execution and its results become available after the workflows and the
-application sources are pushed to GitHub. Local validation is recorded separately from a
-successful hosted run.
+The workflows are published in the public `mikhailsal/ai-tasks` repository and have executed
+on GitHub-hosted runners. Follow the [CI runs](https://github.com/mikhailsal/ai-tasks/actions/workflows/ci.yml)
+for the result associated with each commit. Manual [benchmark runs](https://github.com/mikhailsal/ai-tasks/actions/workflows/benchmark.yml)
+and their [measured comparison](performance.md#github-hosted-comparison) are recorded separately
+from correctness checks.
 
 Local workflow validation passed actionlint 1.7.12, ShellCheck for every shell step, and
 Prettier. Actual test collection confirms functional shards of 747 and 900 cases across
 61 files each, and browser shards of 44 and 40 cases per engine. The combined inventories
 contain all 1,647 functional and 168 browser cases without missing or overlapping cases;
 see the [collection record](../artifacts/checks/CI-workflow-validation.json). Collection
-does not execute the tests or substitute for the first hosted run.
+does not execute the tests or substitute for hosted execution.
 
 ## Correctness checks
 
@@ -83,3 +84,27 @@ Sources checked when preparing these workflows:
 
 Existing local release results and performance limitations remain in
 [validation](validation.md) and [performance](performance.md).
+
+## Initial hosted findings
+
+The [initial CI run](https://github.com/mikhailsal/ai-tasks/actions/runs/39805167936)
+exposed a missing build prerequisite: three functional shell contracts require browser output,
+so both functional jobs now run the complete production build before tests. A clean checkout
+made that dependency visible. The [next run](https://github.com/mikhailsal/ai-tasks/actions/runs/39805537347)
+passed all 1,647 functional cases, the quickstart, 26 contention cases and quality checks, then
+exposed browser failures:
+
+- After reload, a pristine settings editor could retain old persisted-query values even though
+  a fresh server response contained the new timezone. Pristine drafts now follow new source
+  snapshots; dirty/restored proposals keep their original fields and revision guards. The
+  saved message follows refresh completion.
+- A successful DST scenario could hang in cleanup while its page kept requesting a server
+  being closed. The fixture closes its page before the custom server.
+- Chromium's request event omitted a replay body in the offline test while the retained
+  network trace showed two identical successful PATCH requests. That test now observes the
+  exact fetch body across replacement documents and additionally checks the replay response
+  against the original receipt. Real transport and database assertions remain in place.
+
+These corrections preserve the suite assertions and all existing case/job time budgets.
+The latest CI run verifies the complete suites after these changes; earlier failed runs and
+retained traces remain linked above.
