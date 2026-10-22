@@ -74,7 +74,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - run: npm run build:server
+      - run: npm run build
       - name: Run all unit, integration and compiled contracts
         env:
           SHARD: ${{ matrix.shard }}
