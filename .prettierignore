@@ -1,0 +1,12 @@
+node_modules/
+dist/
+web/dist/
+coverage/
+playwright-report/
+test-results/
+artifacts/
+package-lock.json
+drizzle/meta/
+.specify/
+.agents/
+specs/
