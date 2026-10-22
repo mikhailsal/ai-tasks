@@ -94,7 +94,7 @@ the application shell as well as cached data. Persistence technology belongs in 
 - **Mutation coverage**: Tests MUST cover successful state and audit changes, applicable input
   validation failures, ownership rejection for existing project-owned entities, and rollback
   without partial state or success audit records. Non-applicable cases MUST be justified in
-  the specification; they MUST NOT be replaced with artificial scenarios.
+  the plan's verification matrix; they MUST NOT be replaced with artificial scenarios.
 - **Actual contention**: The database integration suite MUST exercise overlapping writes from
   independent workers or processes, each with its own connection to the same temporary file.
   A start barrier or equivalent coordination MUST establish contention; `Promise.all` around
@@ -168,24 +168,34 @@ the application shell as well as cached data. Persistence technology belongs in 
 
 ## Development Workflow and Quality Gates
 
-1. **Specification (`/speckit.specify`)**: Define scope, observable behavior, acceptance
-   scenarios, and applicable automated test requirements explicitly. Describe CLI signatures
-   and mobile interactions only for affected interfaces; mark other interfaces N/A with a
-   reason. Detailed JSON/API schemas belong in planning contracts. State which mutation
-   coverage cases apply and why any are N/A, so test generation is explicitly requested.
+1. **Specification (`/speckit.specify`)**: Specifications MUST define user needs, scope,
+   observable behavior, technology-independent success criteria, and testable acceptance
+   scenarios in language understandable to nontechnical stakeholders. Describe affected
+   human and assistant interactions by their outcomes. Specifications MUST NOT prescribe
+   languages, frameworks, database engines, API schemas, CLI signatures, source layout,
+   test tools, or other implementation mechanisms. Technical requirements from the user
+   or this constitution MUST be retained in the plan and contracts rather than copied into
+   the specification. Acceptance scenarios MUST state expected successes, failures and
+   relevant boundaries without selecting the test harness or implementation.
 2. **Planning (`/speckit.plan`)**: The `Constitution Check` MUST cover every applicable
    principle before research and again after design. Record each obligation, its planned
    implementation, verification method, and any justified N/A or approved exception.
-   Include contracts, migration/recovery needs, and performance measurement methods where
-   relevant. Planning checks assess design compliance; they MUST NOT claim runtime or lint
-   verification that has not occurred.
+   The plan and contracts MUST define affected CLI signatures, JSON/API schemas, technical
+   constraints, migration/recovery needs, and performance measurement methods. The plan
+   MUST explicitly require every applicable Principle VI test, define its mechanism and
+   execution budget, and map it to the specification's observable acceptance outcomes.
+   Its verification matrix MUST state which mutation coverage cases apply and justify
+   every N/A. Technical checks without a direct user-facing acceptance scenario MUST trace
+   to the governing constitutional obligation. Planning checks assess design compliance;
+   they MUST NOT claim runtime or lint verification that has not occurred.
 3. **Task generation and analysis (`/speckit.tasks`, `/speckit.analyze`)**: Every applicable
    constitutional obligation MUST map to implementation or verification tasks, or reference
-   an existing check that already covers it. Specifications MUST explicitly request the
-   tests required by Principle VI; generic template wording that tests are optional MUST
-   NOT remove those tasks. Before implementation, verify traceability from acceptance
-   criteria and constitutional obligations to tasks. Resolve missing coverage and conflicting
-   requirements before dependent work starts.
+   an existing check that already covers it. Test work MUST be derived from acceptance
+   scenarios, the plan's verification matrix, and Principle VI. Neither absence of technical
+   test instructions in a specification nor generic template wording that tests are optional
+   waives these obligations. Before implementation, verify traceability from acceptance
+   criteria, planned verification and constitutional obligations to tasks. Resolve missing
+   coverage and conflicting requirements before dependent work starts.
 4. **Implementation (`/speckit.implement`)**: Run relevant checks after each coherent change.
    Run the complete configured required set, including typecheck, lint, build, and applicable
    test suites, at feature acceptance and before merge. Documentation-only changes MAY use
@@ -219,9 +229,18 @@ condition. Reviewers MUST distinguish approved exceptions from unresolved violat
 Repeated exceptions MUST trigger reconsideration of the rule. A human maintainer MUST accept
 the change before merge; agents MUST NOT infer acceptance from their own review.
 
-Version 2.0.0 replaces the committed 1.0.0 principles and the uncommitted 1.1.0 draft with
-project-specific architecture, applicable verification requirements, and reproducible
-performance governance. Existing feature artifacts MUST be rechecked against this version
-before further dependent implementation; this documentation amendment changes no runtime data.
+Version 3.0.0, explicitly authorized by the user on 2026-10-21, corrects the 2.0.0 workflow
+requirement that specifications contain CLI signatures and technical testing instructions.
+That requirement conflicted with Spec Kit's original implementation-free, stakeholder-facing
+specification criteria. This is a MAJOR change to artifact responsibilities; engineering,
+coverage, execution and acceptance obligations remain mandatory.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-20
+Existing features MUST move technical specification content into their plan and contracts,
+retain requirement identifiers and observable acceptance outcomes, recheck constitutional
+traceability, and re-review checklist criteria without changing those criteria. Update active
+version references and readiness assessments before dependent implementation. Historical
+records MAY retain their original version when clearly identified as historical. No runtime
+or database migration is needed for this documentation amendment. Project templates and
+Spec Kit command rules remain unchanged.
+
+**Version**: 3.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21
