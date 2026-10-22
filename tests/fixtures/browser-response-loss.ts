@@ -52,3 +52,36 @@ export async function waitForBrowserResponseLoss(page: Page) {
   await observed.dispose();
   return responseSchema.parse((await responseLossState(page)).response);
 }
+
+/** Observe the exact fetch body before transport, including after offline reloads. */
+export async function observeBrowserMutationBodies(
+  page: Page,
+  target: { method: 'PATCH' | 'POST'; path: string },
+) {
+  const bodies: string[] = [];
+  const binding = '__aiTasksTestMutationBody';
+  await page.exposeFunction(binding, (body: unknown) => bodies.push(z.string().parse(body)));
+  // Install before navigation so every replacement document has the same observer.
+  await page.addInitScript(
+    ({ method, path, binding }) => {
+      const original = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const address = input instanceof Request ? input.url : String(input);
+        const verb = init?.method ?? (input instanceof Request ? input.method : 'GET');
+        if (
+          verb.toUpperCase() === method &&
+          new URL(address, window.location.href).pathname === path
+        ) {
+          const body = init?.body ?? (input instanceof Request ? await input.clone().text() : null);
+          if (typeof body !== 'string') throw new Error('Expected an exact JSON mutation body');
+          const observer: unknown = Reflect.get(window, binding);
+          if (typeof observer !== 'function') throw new Error('Missing mutation observer');
+          await observer(body);
+        }
+        return original(input, init);
+      };
+    },
+    { ...target, binding },
+  );
+  return bodies;
+}

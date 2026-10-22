@@ -23,6 +23,7 @@ import {
 
 import {
   installBrowserResponseLoss,
+  observeBrowserMutationBodies,
   waitForBrowserResponseLoss,
 } from '../fixtures/browser-response-loss.js';
 
@@ -305,18 +306,13 @@ test('a committed lost response survives offline reopening and retries only the 
 }) => {
   const server = await offlineBrowserServer();
   try {
+    const path = `/api/v1/projects/alpha/tasks/${server.taskId}`;
+    const bodies = await observeBrowserMutationBodies(page, { method: 'PATCH', path });
     await loadedTask(page, server);
     await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
     const proposed = 'Сохранено один раз, ответ потерян';
     await page.getByLabel('Описание', { exact: true }).fill(proposed);
     await waitForDraft(page, server.taskId, proposed);
-    const bodies: string[] = [];
-    const path = `/api/v1/projects/alpha/tasks/${server.taskId}`;
-    page.on('request', (request) => {
-      if (request.method() !== 'PATCH' || new URL(request.url()).pathname !== path) return;
-      const body = request.postData();
-      if (body !== null) bodies.push(body);
-    });
     await installBrowserResponseLoss(page, { method: 'PATCH', path });
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
     const lost = await waitForBrowserResponseLoss(page);
@@ -337,7 +333,11 @@ test('a committed lost response survives offline reopening and retries only the 
     await context.setOffline(false);
     await expect(retry).toBeEnabled();
     expect(bodies).toHaveLength(1);
+    const replay = page.waitForResponse(
+      (reply) => reply.request().method() === 'PATCH' && new URL(reply.url()).pathname === path,
+    );
     await retry.click();
+    expect(mutationSuccessEnvelopeSchema.parse(await (await replay).json())).toEqual(receipt);
     await expect(retry).toHaveCount(0);
     expect(bodies).toHaveLength(2);
     expect(bodies[1]).toBe(bodies[0]);

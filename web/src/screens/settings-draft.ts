@@ -25,6 +25,7 @@ export function useSettingsDraft<Fields extends JsonValue>(
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
   const queue = useRef(Promise.resolve());
+  const source = useRef(JSON.stringify(initial));
   async function read(active: () => boolean = () => true) {
     try {
       const stored = await loadDraft(key);
@@ -50,6 +51,14 @@ export function useSettingsDraft<Fields extends JsonValue>(
       active = false;
     };
   }, [key, schema]);
+  // Follow a new source snapshot only while pristine. A reset may already hold
+  // newer authoritative data while the query still exposes its previous snapshot.
+  useEffect(() => {
+    const snapshot = JSON.stringify(initial);
+    if (!ready || snapshot === source.current) return;
+    source.current = snapshot;
+    if (!dirty) setDraft(createDraft({ key, ...initial }));
+  }, [ready, dirty, key, initial]);
   function persist(record = draft) {
     if (!ready) return Promise.reject(new Error('Сначала загрузите сохранённый черновик.'));
     const pending = queue.current.catch(() => {}).then(() => saveDraft(record));

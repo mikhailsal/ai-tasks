@@ -83,6 +83,7 @@ export function useSettingsCommands(editor: Editor, page: SettingsPage) {
     sending.current = true;
     setPreparing(true);
     setError('');
+    setSaved(false);
     try {
       await editor.persist(record);
       const request = exact
@@ -94,10 +95,10 @@ export function useSettingsCommands(editor: Editor, page: SettingsPage) {
           });
       if (!request) return;
       await operation.run(request, reviewedEpoch);
-      setSaved(true);
       setRefreshNeeded(true);
       review.setConflict(undefined);
       await refresh();
+      setSaved(true);
     } catch (failure) {
       setError(errorMessage(failure));
       if (isProjectConflict(failure))
