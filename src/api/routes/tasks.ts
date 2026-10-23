@@ -13,6 +13,19 @@ export function registerTaskRoutes(app: FastifyInstance, helper: DataHelper): vo
   app.get('/api/v1/tasks', async (request) =>
     helper.request({ operation: 'task.list', input: queryInput(request.query, taskQueryKeys) }),
   );
+  app.get('/api/v1/projects/:project_slug/board', async (request) => {
+    const params = routeParams(request.params);
+    return helper.request({
+      operation: 'task.board',
+      input: {
+        ...queryInput(
+          request.query,
+          taskQueryKeys.filter((key) => key !== 'project_slug' && key !== 'all_projects'),
+        ),
+        project_slug: params.project_slug,
+      },
+    });
+  });
   const base = '/api/v1/projects/:project_slug/tasks';
   app.get(`${base}/:task_id`, async (request) => {
     emptyQuery(request.query);
@@ -28,6 +41,12 @@ export function registerTaskRoutes(app: FastifyInstance, helper: DataHelper): vo
     url: base,
     operation: 'task.create',
     created: true,
+  });
+  registerMutationRoute(app, helper, {
+    method: 'POST',
+    url: `${base}/:task_id/position`,
+    operation: 'task.position',
+    task: true,
   });
   registerMutationRoute(app, helper, {
     method: 'PATCH',

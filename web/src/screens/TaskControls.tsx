@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Button } from '../components/Button.js';
+import { Modal } from '../components/Modal.js';
 import { EmojiField } from '../components/EmojiField.js';
 import type { TaskPage } from './task-model.js';
 import type { TaskAction } from './use-task-commands.js';
@@ -11,6 +12,16 @@ type Confirmation = {
   category: string;
   restoring?: boolean;
 };
+
+function transitionVariant(source: string | undefined, target: string) {
+  if (target === 'cancelled') return 'danger';
+  if (target === 'archived') return 'ghost';
+  if (target === 'active') return 'primary';
+  const stages = ['not_started', 'in_progress', 'review', 'completed'];
+  const sourceStage = stages.indexOf(source ?? '');
+  const targetStage = stages.indexOf(target);
+  return sourceStage >= 0 && targetStage > sourceStage ? 'primary' : 'secondary';
+}
 
 function TransitionConsent({
   taskTitle,
@@ -25,16 +36,13 @@ function TransitionConsent({
   onConfirm: (text: string) => void;
   disabled: boolean;
 }) {
-  const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
   const [text, setText] = useState('');
   useEffect(() => {
     setText('');
-    if (request && !dialog.current?.open) dialog.current?.showModal();
-    if (!request && dialog.current?.open) dialog.current.close();
   }, [request]);
   return (
-    <dialog ref={dialog} aria-labelledby={id} onCancel={onCancel}>
+    <Modal open={Boolean(request)} labelledBy={id} onCancel={onCancel}>
       <h2 id={id}>Подтвердите переход</h2>
       <p>{taskTitle}</p>
       {request?.category === 'completed' && <p>Завершение задачи</p>}
@@ -49,13 +57,17 @@ function TransitionConsent({
         rows={3}
         disabled={disabled}
       />
-      <div className="actions">
+      <div className="action-row">
         <Button onClick={onCancel}>Отмена</Button>
-        <Button disabled={disabled || !text.trim()} onClick={() => onConfirm(text)}>
+        <Button
+          variant={request?.category === 'cancelled' ? 'danger' : 'primary'}
+          disabled={disabled || !text.trim()}
+          onClick={() => onConfirm(text)}
+        >
           Подтвердить
         </Button>
       </div>
-    </dialog>
+    </Modal>
   );
 }
 
@@ -119,9 +131,9 @@ export function TaskControls({
   }
   return (
     <section aria-label="Действия с задачей">
-      <div className="actions">
+      <div className="action-row">
         {task.archived_at !== null ? (
-          <Button disabled={disabled || !canRestore} onClick={restore}>
+          <Button variant="primary" disabled={disabled || !canRestore} onClick={restore}>
             Восстановить
           </Button>
         ) : (
@@ -134,6 +146,7 @@ export function TaskControls({
               return (
                 <Button
                   key={edge.to}
+                  variant={transitionVariant(source?.category, target.category)}
                   disabled={disabled || blocked}
                   onClick={() =>
                     edge.requires_confirmation
@@ -152,6 +165,7 @@ export function TaskControls({
             })}
             {task.kind === 'ordinary' && (
               <Button
+                variant="ghost"
                 disabled={disabled}
                 onClick={() => onAction({ suffix: 'archive', payload: {} })}
               >
@@ -187,7 +201,7 @@ export function MarkerCollision({
 }) {
   const [replacement, setReplacement] = useState('');
   return (
-    <section aria-label="Выбор эмодзи при возврате">
+    <Modal open label="Выбор эмодзи при возврате" onCancel={onCancel}>
       <h2>Эмодзи уже занят</h2>
       <p>Выберите другой эмодзи или явно верните задачу с ⚪.</p>
       <EmojiField
@@ -196,8 +210,9 @@ export function MarkerCollision({
         onChange={setReplacement}
         disabled={disabled}
       />
-      <div className="actions">
+      <div className="action-row">
         <Button
+          variant="primary"
           disabled={disabled || !replacement}
           onClick={() =>
             onAction({
@@ -227,10 +242,8 @@ export function MarkerCollision({
         >
           Восстановить с ⚪
         </Button>
-        <Button disabled={disabled} onClick={onCancel}>
-          Отмена
-        </Button>
+        <Button onClick={onCancel}>Отмена</Button>
       </div>
-    </section>
+    </Modal>
   );
 }

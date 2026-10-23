@@ -143,7 +143,7 @@ test('known project save keeps source and offers cleanup recovery without anothe
     ).toBeDisabled();
     await page.evaluate("sessionStorage.setItem('fail-project-draft-delete', 'no')");
     await page.getByRole('button', { name: 'Завершить сохранение', exact: true }).click();
-    await expect(page).toHaveURL(`${server.origin}/projects/${slug}`);
+    await expect(page).toHaveURL(`${server.origin}/projects/${slug}/board`);
     expect(mutations).toBe(1);
     const response = await page.request.get(`${server.origin}/api/v1/projects/${slug}`);
     expect(

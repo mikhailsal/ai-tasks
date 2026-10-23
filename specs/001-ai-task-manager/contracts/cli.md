@@ -141,3 +141,7 @@ codes, noninteractive EOF behavior, UTF-8/emoji/Markdown round-trip, stdin/file 
 unknown-field rejection, explicit scope, and no environment-dependent locale/date sorting.
 Compare equivalent CLI and HTTP operations against migrated temporary SQLite databases.
 Inject domain time in test fixtures; production CLI exposes no `--now` override.
+
+## Additive mobile board commands (002)
+
+`task board --project <slug> --kind <ordinary|recurring> --status <id>` reads a configured board column. `task position <task-id> --project <slug> --input -` uses the existing flat guarded mutation input to reorder or transfer. Task, agenda and priority list commands accept `--deadline-preset` and `--deadline-day`; statistics keep their separate from/to contract. Existing JSON/stream/scope/idempotency behavior remains unchanged. See [board API/CLI details](../../002-mobile-ux/contracts/board-api.md).

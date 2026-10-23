@@ -25,6 +25,8 @@ export const cliOptionsSchema = z.strictObject({
   emoji: z.optional(z.string()),
   archive: z.optional(z.string()),
   includeTerminal: z.optional(z.boolean()),
+  deadlinePreset: z.optional(z.string()),
+  deadlineDay: z.optional(z.string()),
 });
 export type CliOptions = z.infer<typeof cliOptionsSchema>;
 const valueOptions = [
@@ -46,6 +48,8 @@ const valueOptions = [
   ['--kind <kind>', 'Task kind filter'],
   ['--emoji <emoji>', 'Emoji filter'],
   ['--archive <mode>', 'Archive mode: exclude, include, or only'],
+  ['--deadline-preset <preset>', 'Deadline: overdue, today, from_tomorrow, next_3_days, undated'],
+  ['--deadline-day <date>', 'Exact local deadline day in application timezone: YYYY-MM-DD'],
 ] as const;
 export function addCommonOptions(command: Command): Command {
   command

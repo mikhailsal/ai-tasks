@@ -144,7 +144,11 @@ export function ProjectEditor({
           archived={archived}
           comparisonDisabled={comparisonDisabled}
         />
-        <Button type="submit" disabled={disabled || oldEpoch || editor.current !== undefined}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={disabled || oldEpoch || editor.current !== undefined}
+        >
           {editor.busy ? 'Сохранение…' : saveLabel}
         </Button>{' '}
         <Button

@@ -20,7 +20,39 @@ export function OfflineBanner() {
     }
   }
   return (
-    <aside className="panel stack" aria-label="Соединение и сохранённые данные">
+    <aside
+      className={`connection-status${!state.online || state.maintenance ? ' connection-warning' : ''}`}
+      aria-label="Соединение и сохранённые данные"
+    >
+      <div className="connection-row">
+        <span className="connection-dot" aria-hidden="true" />
+        <p className="sync-time">
+          Последнее успешное обновление:{' '}
+          {state.lastSuccessfulAt === null ? (
+            'нет сохранённых данных'
+          ) : (
+            <time
+              dateTime={new Date(state.lastSuccessfulAt).toISOString()}
+              title={new Date(state.lastSuccessfulAt).toLocaleString('ru-RU')}
+            >
+              {new Date(state.lastSuccessfulAt).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </time>
+          )}
+        </p>
+        <Button
+          variant="ghost"
+          className="sync-refresh"
+          aria-label="Обновить сохранённые данные"
+          title="Обновить сохранённые данные"
+          disabled={!navigator.onLine || refreshing}
+          onClick={() => void refresh()}
+        >
+          <span aria-hidden="true">↻</span>
+        </Button>
+      </div>
       {!state.online && (
         <p role="status">
           Нет соединения. Доступны ранее сохранённые данные; изменения не отправляются.
@@ -32,17 +64,6 @@ export function OfflineBanner() {
       {state.online && state.reconciling && (
         <p role="status">Обновляем данные перед сохранением. Черновики сохраняют прежнюю версию.</p>
       )}
-      <p>
-        Последнее успешное обновление:{' '}
-        {state.lastSuccessfulAt === null ? (
-          'нет сохранённых данных'
-        ) : (
-          <time dateTime={new Date(state.lastSuccessfulAt).toISOString()}>
-            {new Date(state.lastSuccessfulAt).toLocaleString('ru-RU')}
-          </time>
-        )}
-        .
-      </p>
       {state.unavailableProjects.length > 0 && (
         <p role="alert">
           В восстановленной базе отсутствуют проекты: {state.unavailableProjects.join(', ')}. Их
@@ -52,11 +73,10 @@ export function OfflineBanner() {
       {state.cacheError && <p role="alert">{state.cacheError}</p>}
       {error && <p role="alert">{error}</p>}
       {state.shellUpdateAvailable && (
-        <p>Доступна новая версия приложения. Перезагрузите страницу после сохранения черновиков.</p>
+        <p className="shell-notice">
+          Доступна новая версия приложения. Перезагрузите страницу после сохранения черновиков.
+        </p>
       )}
-      <Button disabled={!navigator.onLine || refreshing} onClick={() => void refresh()}>
-        Обновить сохранённые данные
-      </Button>
     </aside>
   );
 }

@@ -170,18 +170,23 @@ function SettingsEditor({ page, metadata }: { page: SettingsPage; metadata: Meta
   }
   return (
     <div className="stack">
-      <p>
-        Текущий часовой пояс: {page.settings.data.timezone}. Версия настроек:{' '}
-        {page.settings.data.revision}.
+      <p>Текущий часовой пояс: {page.settings.data.timezone}.</p>
+      <p className="field-hint">
+        Общий для всех проектов. Сохранённые сроки не изменятся. Выберите проект для записи в
+        истории.
       </p>
-      <p>
-        Изменение общее для всех проектов. Выберите проект для явного указания в истории, в том
-        числе архивный.
-      </p>
-      <p>
-        Новые календарные поколения, включая черновики и архив, используют новый пояс. Сохранённые
-        сроки и снимки повторений остаются прежними; интервалы после выполнения не меняются.
-      </p>
+      <details className="secondary-details">
+        <summary>Как применяется часовой пояс</summary>
+        <p>Версия настроек: {page.settings.data.revision}.</p>
+        <p>
+          Изменение общее для всех проектов. Выберите проект для явного указания в истории, в том
+          числе архивный.
+        </p>
+        <p>
+          Новые календарные поколения, включая черновики и архив, используют новый пояс. Сохранённые
+          сроки и снимки повторений остаются прежними; интервалы после выполнения не меняются.
+        </p>
+      </details>
       {!navigator.onLine && (
         <p role="alert">Нет соединения. Настройки можно читать, сохранение недоступно.</p>
       )}
@@ -209,6 +214,7 @@ function SettingsEditor({ page, metadata }: { page: SettingsPage; metadata: Meta
         />
         <Button
           type="submit"
+          variant="primary"
           disabled={
             disabled ||
             !editor.draft.fields.project_slug ||

@@ -1,3 +1,4 @@
+import { syncBoardMembership } from '../tasks/board-order.js';
 import { eq, inArray } from 'drizzle-orm';
 import { projectConfigs, projects, taskEmojiReservations, tasks } from '../../schema/entities.js';
 import { jsonValueSchema, type JsonValue } from '../../schema/values.js';
@@ -145,7 +146,10 @@ export function applyMigration(
   const affected = changed.map((task) => {
     events.push(...applyRecurringMigration(transaction, task, options.now));
     const after = writeTask(transaction, task, options.now);
-    events.push(taskEvent(plan, task, { project, after }));
+    const event = taskEvent(plan, task, { project, after });
+    const boardChange = syncBoardMembership(transaction, { before: task.before, after });
+    if (boardChange) event.changes.push(boardChange);
+    events.push(event);
     return { task_id: after.id, revision: after.revision };
   });
   return {

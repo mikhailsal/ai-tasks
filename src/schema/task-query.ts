@@ -23,7 +23,17 @@ export function explicitTaskReadScope(input: {
 export const taskListInputSchema = z
   .strictObject({
     ...taskReadFilterShape,
+    deadline_preset: z.optional(
+      z.enum(['overdue', 'today', 'from_tomorrow', 'next_3_days', 'undated']),
+    ),
+    deadline_day: z.optional(z.iso.date()),
     limit: z._default(z.int().check(z.minimum(1)).check(z.maximum(200)), 50),
     cursor: z.optional(z.string().check(z.minLength(1)).check(z.maxLength(4096))),
   })
-  .check(z.refine(explicitTaskReadScope, 'Supply exactly one explicit project scope'));
+  .check(z.refine(explicitTaskReadScope, 'Supply exactly one explicit project scope'))
+  .check(
+    z.refine(
+      (input) => input.deadline_day === undefined || input.deadline_preset === undefined,
+      'Supply either an exact deadline day or a deadline preset',
+    ),
+  );

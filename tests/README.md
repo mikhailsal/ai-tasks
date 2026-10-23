@@ -4,17 +4,17 @@ Use Linux, Node 24.22.0 and npm 11.19.1 (`nvm use` when nvm is available).
 Install with `npm ci`. Native prerequisites are checked by `npm run check:runtime`.
 Production CLI execution uses compiled `dist/cli.js`, without a TypeScript loader.
 
-| Command                     | Scope                                                             | Budget                            |
-| --------------------------- | ----------------------------------------------------------------- | --------------------------------- |
-| `npm run typecheck`         | strict server/config/test and browser TypeScript                  | normal compiler completion        |
-| `npm run lint`              | boundaries, cycles, types and complexity                          | normal linter completion          |
-| `npm run format:check`      | authored code/configuration/documentation                         | normal formatter completion       |
-| `npm run test:functional`   | unit, real SQLite integration, compiled CLI and Fastify contracts | 10s/case, 180s/job                |
-| `npm run test:contention`   | independent processes and real file/SQLite locks                  | 30s/case, 180s/job                |
-| `npm run test:e2e`          | production Chromium/WebKit mobile application                     | 30s/case, 600s/job                |
-| `npm run build`             | compiled server entries and production browser assets             | measured; 5s is a goal            |
-| `npm run check:bundle-size` | all emitted browser JavaScript, individually gzip level 9         | total strictly below 150000 bytes |
-| `npm run bench`             | separate declared workloads                                       | 300s/job                          |
+| Command                     | Scope                                                             | Budget                                                                       |
+| --------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `npm run typecheck`         | strict server/config/test and browser TypeScript                  | normal compiler completion                                                   |
+| `npm run lint`              | boundaries, cycles, types and complexity                          | normal linter completion                                                     |
+| `npm run format:check`      | authored code/configuration/documentation                         | normal formatter completion                                                  |
+| `npm run test:functional`   | unit, real SQLite integration, compiled CLI and Fastify contracts | 10s/case, 180s/job                                                           |
+| `npm run test:contention`   | independent processes and real file/SQLite locks                  | 30s/case, 180s/job                                                           |
+| `npm run test:e2e`          | production Chromium/WebKit mobile application                     | 30s/case, 600s/job                                                           |
+| `npm run build`             | compiled server entries and production browser assets             | measured; 5s is a goal                                                       |
+| `npm run check:bundle-size` | all emitted browser JavaScript, individually gzip level 9         | total strictly below 170000 bytes (temporary 002 exception; baseline 150000) |
+| `npm run bench`             | separate declared workloads                                       | 300s/job                                                                     |
 
 `scripts/run-suite.mjs` saves command, runtime, start time, duration, budget, exit code,
 signal and timeout status under ignored `artifacts/checks/`. A timeout exits 124 and
@@ -141,7 +141,7 @@ CLI/HTTP contracts, actual compiled project creation and hostile Markdown previe
 plus the compiled migration rendering-policy refresh regression. Strict root/web
 typecheck, full lint and formatting also pass. The compiled package bin is executable
 (mode 755) and `./dist/cli.js version --json` emits exactly one success document.
-The current shell-only browser bundle is 104290 gzip-level9 bytes; story screens and
+The current shell-only browser bundle is 104290 gzip-level 9 bytes; story screens and
 T035 browser verification remain pending. Source parser regressions preserve unknown
 query fields and reject malformed raw UTF-8 before source can be rewritten.
 
@@ -179,7 +179,7 @@ Useful RED artifacts are the browser records at 20-08-43.934Z (project cases),
 20-10-57.877Z (archived draft), 20-12-10.394Z (duplicate create/stale consent). Earlier
 missing-scope/permanent-marker setup failures were repaired and do not count as behavior
 evidence. After the shared RFC3339 lowercase-input consistency fix, the browser bundle
-measures 121098 gzip-level9 bytes, below the strict 150000-byte budget. The timestamp
+measures 121098 gzip-level 9 bytes, below the strict 150000-byte budget. The timestamp
 regression preserves original request spelling for idempotency while returning canonical UTC.
 
 Ordinary-only demonstration at T035 (later stories remain required):
@@ -267,7 +267,7 @@ The first T047 production build correctly rejected the missing browser allowlist
 the new pure configuration-migration schema. That module was reviewed and explicitly
 allowlisted; no server-module boundary was weakened. The prematurely started browser run
 was stopped before acceptance and is not RED/pass evidence (artifact21-10-41.354Z). The
-corrected full build succeeds and exact gzip-level9 JavaScript measures130703bytes
+corrected full build succeeds and exact gzip-level 9 JavaScript measures130703bytes
 (`assets/index-CRa_gqiM.js`), strictly below150000. Browser acceptance remains in progress.
 
 T047 initial actual production acceptance passes all12 new Chromium journeys in46.132s
@@ -298,7 +298,7 @@ contention cases in6.680s (`2026-10-21T21-23-35.637Z-contention.json`), and all6
 Chromium/WebKit browser cases in178.742s (`2026-10-21T21-18-52.103Z-browser.json`).
 All commands exit0 within their declared budgets, with no skipped tests. Full strict
 typecheck, architectural lint and formatting pass. Production build and exact bundle
-check pass at130703 gzip-level9 JavaScript bytes. This closes ordinary configuration and
+check pass at130703 gzip-level 9 JavaScript bytes. This closes ordinary configuration and
 dependency acceptance; recurrence, history, read views, offline/recovery and release gates
 remain required.
 
@@ -395,7 +395,7 @@ T057 pre-browser whole checks pass797 functional cases/43 files in96.019s
 in27.355s (`2026-10-21T21-53-21.119Z-contention.json`). The per-command read matrix
 retains both transports with every case below its unchanged10s budget. Full production
 build, strict TypeScript, architectural lint and formatting pass. Browser JavaScript is
-461970bytes raw /134104bytes gzip-level9 (`assets/index-TA6R0LMT.js`), below150000.
+461970bytes raw /134104bytes gzip-level 9 (`assets/index-TA6R0LMT.js`), below150000.
 All10 new Chromium/WebKit audit/delivery cases pass in38.883s
 (`2026-10-21T21-56-04.169Z-browser.json`), including actual Vite proxy reads/writes.
 The full76-case browser regression remains in progress before T057 closure.
@@ -403,7 +403,7 @@ The full76-case browser regression remains in progress before T057 closure.
 T057 joined US3 checkpoint passes all76 Chromium/WebKit production browser cases in
 173.019s, artifact`2026-10-21T21-56-55.415Z-browser.json`. Together with797 functional
 cases/43 files (96.019s),20 real contention cases (27.355s), full strict typecheck/lint/
-format/build and134104 gzip-level9 browser JavaScript bytes, this closes US3. All commands
+format/build and134104 gzip-level 9 browser JavaScript bytes, this closes US3. All commands
 exit0 within unchanged budgets and no tests are silently skipped. Accepted automation,
 semantic history, independent writer races, runtime failure/drain and explicit stale
 pagination are independently demonstrable. Recurrence/settings, aggregate read views,
@@ -464,7 +464,7 @@ identical persisted operations once after reload, untouched debts remain exact, 
 actual-time drafts retain their original zone through settings conflict/reload. Manual tick
 conflict reconciliation preserves tick intent and never configures a schedule. Scoped
 strict TypeScript/lint/format and production build pass; emitted JavaScript is504790 raw /
-145103 gzip-level9 bytes (`assets/index-D1ah_vyl.js`), below150000. Background service
+145103 gzip-level 9 bytes (`assets/index-D1ah_vyl.js`), below150000. Background service
 worker supervision and joined story/race regression remain T077.
 
 T077 adapter prerequisite rerun passes all25 compiled recurrence/settings parity cases in one
@@ -489,7 +489,7 @@ under `artifacts/red/2026-10-22T00-06-28-browser/`. Their fixes must pass the fi
 these failures are not hidden by the earlier focused UI acceptance.
 
 T077 full strict typecheck/lint/format/build gates pass. Browser JavaScript is506089 raw /
-145439 gzip-level9 bytes (`assets/index-qW20uEyh.js`). All6 new Chromium/WebKit integration
+145439 gzip-level 9 bytes (`assets/index-qW20uEyh.js`). All6 new Chromium/WebKit integration
 cases pass38.224s (`2026-10-22T00-14-58.802Z-browser.json`), including the two actual RED
 regressions and atomic archive refusal with reachable debt/future blockers. Runtime source
 also passes10 coordinator/actual-paging cases in4.710s
@@ -515,7 +515,7 @@ T077 joined US5 checkpoint PASSES:1280 functional cases/79 files in141.272s
 in33.678s (`2026-10-22T00-23-27.802Z-contention.json`), and all100 Chromium/WebKit browser
 cases in246.430s (`2026-10-22T00-24-01.828Z-browser.json`). Each command exits0 within its
 unchanged suite/case budgets. Full strict source/web typecheck, architectural lint, formatting,
-production build and145439-byte gzip-level9 JavaScript gate pass; test-only bounded-case and
+production build and145439-byte gzip-level 9 JavaScript gate pass; test-only bounded-case and
 fixture corrections additionally pass scoped type/lint/format. Actual server startup now
 processes recurrence before readiness with ai-cli:<slug>/recurrence-worker attribution,
 suppresses child readiness output, supervises unexpected worker death, and drains all workers
@@ -545,7 +545,7 @@ US4 T086 source gate passes: Priorities shares project-grouped server paging; Wo
 
 US4 T085 source gate passes: Agenda uses server buckets/as_of, shared per-project merged pagination, configured model/status task cards and actual emoji copying; cursor errors retain loaded rows and offer explicit first-page refresh. Structured shared filters retain URL state, reject invalid values, clear cursors on apply and show applied scope/archive/terminal state outside collapsed controls. Filter units pass11/11 (`2026-10-22T01-20-58.258Z-functional.json`,3.191s). Scoped lint/format, strict helper types and root joined browser TypeScript pass. T087 owns navigation/build/browser acceptance.
 
-US4 T087 navigation wiring and the first eight Chromium/WebKit read-view journeys pass (`2026-10-22T01-44-10.227Z-browser.json`,105.426s). The initial completed UI exceeded the unchanged exact JavaScript gate:151807 gzip-level9 bytes, then151385 after shared rendering controls. Standard Terser variants were measured and rejected because they increased output; the original OXC configuration remains. The shared schema/consumer layer now uses the public `zod/mini` API from the same pinned Zod version. Every existing constraint is retained through functional composition, including safe integers, numeric/length bounds, trim/pipe ordering, defaults, strict objects, custom checks and lossless descriptor-based JSON validation. Error normalization recognizes public `core.$ZodError`; category schemas are exported explicitly rather than reaching through array internals. Six independent classic/Mini equivalence cases protect boundary semantics. Full strict source/web typecheck and the production build pass. Emitted `assets/index-DghUDL4N.js` is472612 raw/136113 gzip-level9 bytes on Node24.22.0/zlib1.3.2.1-motley-285e94b. Full functional/lint and post-conversion browser regression remain pending; this size result alone does not close T087.
+US4 T087 navigation wiring and the first eight Chromium/WebKit read-view journeys pass (`2026-10-22T01-44-10.227Z-browser.json`,105.426s). The initial completed UI exceeded the unchanged exact JavaScript gate:151807 gzip-level 9 bytes, then151385 after shared rendering controls. Standard Terser variants were measured and rejected because they increased output; the original OXC configuration remains. The shared schema/consumer layer now uses the public `zod/mini` API from the same pinned Zod version. Every existing constraint is retained through functional composition, including safe integers, numeric/length bounds, trim/pipe ordering, defaults, strict objects, custom checks and lossless descriptor-based JSON validation. Error normalization recognizes public `core.$ZodError`; category schemas are exported explicitly rather than reaching through array internals. Six independent classic/Mini equivalence cases protect boundary semantics. Full strict source/web typecheck and the production build pass. Emitted `assets/index-DghUDL4N.js` is472612 raw/136113 gzip-level 9 bytes on Node24.22.0/zlib1.3.2.1-motley-285e94b. Full functional/lint and post-conversion browser regression remain pending; this size result alone does not close T087.
 
 T087 regression follow-up: the first joined functional run (`2026-10-22T01-49-36.835Z-functional.json`,180.947s) and isolated rerun (`2026-10-22T02-01-22.879Z-functional.json`,181.290s) both hit the unchanged180s job limit. Compound replay/settings CLI cases were split into bounded cases without dropping protocol assertions; a supervised four-process startup also missed its existing8s fixture readiness deadline under parallel load. No case/job/production deadline was increased. Vitest's supported SSR dependency optimizer now bundles only the real Zod Mini/Temporal/Drizzle JavaScript dependencies, leaving native better-sqlite3 external. A focused nine-file144-case schema/read/EXPLAIN gate passes (`2026-10-22T02-08-50.031Z-functional.json`,33.022s). Fixtures now start the actual compiled API helper on first HTTP data access, rather than also starting an unused child in CLI-only cases; setup-only US2/recurrence seeding uses the same production core commands with unchanged human-web/Date.now attribution. Actual CLI and HTTP operations under assertion remain intact. The complete rerun PASSES all1404 cases/90 files (`2026-10-22T02-11-41.603Z-functional.json`,145.137s), including all47 read-view contracts,36 inventory/replay cases,39 recurrence/settings contracts, completion upgrade tests, and real EXPLAIN/query-purity checks.
 
@@ -782,7 +782,7 @@ All36 focused accounting/filesystem/CLI cases pass in6.147s, exit0:
 `artifacts/checks/2026-10-22T05-40-46.175Z-functional.json`. The production checker and
 boundary tests use the same exported strict budget decision:149999 passes;150000 and
 150001 fail. Nested lazy/SW/precache and alternate-case .js/.mjs/.cjs are independently
-gzipped at level9, source maps are excluded, and server-looking JavaScript inside browser
+gzipped at level 9, source maps are excluded, and server-looking JavaScript inside browser
 output is still counted. Canonical regular roots/directories/files, O_NOFOLLOW reads and
 strict unique inventory paths reject aliases, symlinks, FIFOs, missing/extra assets, invalid
 UTF-8/JSON and native binaries. A real oversized CLI fixture exits nonzero with the measured
@@ -794,3 +794,5 @@ fails the build instead of disappearing through the bootstrap existsSync filter.
 entries cover CLI/API/data helper/migration/lock wrapper/lock module/restore helper/recovery
 owner; worker run is a compiled CLI command, not a nonexistent standalone worker entry.
 The next complete production build remains part of T107 verification.
+
+Feature 002: the user explicitly approved a temporary strict 170000-byte JS ceiling on 2026-10-23. See [exception and expiry](../specs/002-mobile-ux/plan.md#complexity-tracking). All historical 150000-byte reports above retain their original meaning. Current exact boundary tests reject 170000/170001 and accept 169999; inventory, all-chunk accounting and gzip level 9 are unchanged.

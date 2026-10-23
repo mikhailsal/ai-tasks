@@ -61,7 +61,7 @@ test('production deep links and same-origin audit links retain exact project/ent
     expect(document?.headers()['www-authenticate']).toBeUndefined();
     await expect(page.getByRole('heading', { name: task.title, exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /войти|зарегистрироваться/iu })).toHaveCount(0);
-    const link = page.getByRole('link', { name: /история изменений|история задачи/iu });
+    const link = page.getByRole('link', { name: 'Вся история', exact: true });
     await expect(link).toBeVisible();
     const href = await link.getAttribute('href');
     if (!href) throw new Error('Expected a navigable task audit link');

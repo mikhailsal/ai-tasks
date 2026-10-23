@@ -1,3 +1,4 @@
+import { syncBoardMembership } from '../tasks/board-order.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { ProjectConfigInput } from '../../schema/configuration.js';
 import { tasks, type projects } from '../../schema/entities.js';
@@ -113,7 +114,10 @@ export function applyRecurringProjectLifecycle(
       .get();
     if (!after)
       throw domainError('INTERNAL_ERROR', 'Recurring child restoration returned no result');
-    events.push(restoredChildEvent(child.task, after, options));
+    const event = restoredChildEvent(child.task, after, options);
+    const boardChange = syncBoardMembership(transaction, { before: child.task, after });
+    if (boardChange) event.changes.push(boardChange);
+    events.push(event);
   }
   return events;
 }

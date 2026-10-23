@@ -1,24 +1,28 @@
 import { useId } from 'react';
 import type { TaskFields, TaskPage } from './task-model.js';
 import { Button } from '../components/Button.js';
-import { DeadlineField } from '../components/DeadlineField.js';
-import { EmojiField } from '../components/EmojiField.js';
-import { Field } from '../components/Field.js';
 import { MarkdownEditor } from '../components/MarkdownEditor.js';
-import { PriorityField } from '../components/PriorityField.js';
-import { RecurrenceFields } from '../components/RecurrenceFields.js';
+import { TaskIdentityFields } from './TaskIdentityFields.js';
+import { TaskFacts } from './TaskFacts.js';
+import { TaskParameters } from './TaskParameters.js';
 
 export function TaskForm({
   page,
   fields,
   onChange,
   onSave,
+  onCancel,
+  cancelDisabled,
+  dirty,
   disabled,
 }: {
   page: TaskPage;
   fields: TaskFields;
   onChange: (fields: TaskFields) => void;
   onSave: () => void;
+  onCancel: () => void;
+  cancelDisabled: boolean;
+  dirty: boolean;
   disabled: boolean;
 }) {
   const kindId = useId();
@@ -31,7 +35,12 @@ export function TaskForm({
       }}
     >
       <fieldset disabled={disabled}>
-        <legend>{page.task ? 'Изменить задачу' : 'Новая задача'}</legend>
+        <legend className="task-sr-only">{page.task ? 'Изменить задачу' : 'Новая задача'}</legend>
+        <TaskIdentityFields
+          fields={fields}
+          heading={page.task?.title ?? 'Новая задача'}
+          onChange={onChange}
+        />
         {!page.task && (
           <div className="field">
             <label htmlFor={kindId}>Тип задачи</label>
@@ -50,46 +59,25 @@ export function TaskForm({
             </select>
           </div>
         )}
-        <Field
-          label="Название задачи"
-          value={fields.title}
-          onChange={(event) => onChange({ ...fields, title: event.target.value })}
-          required
-        />
-        <EmojiField
-          label="Эмодзи задачи"
-          value={fields.emoji}
-          onChange={(emoji) => onChange({ ...fields, emoji })}
-        />
-        <PriorityField
-          model={page.configuration.priority_model}
-          value={fields.priority}
-          onChange={(priority) => onChange({ ...fields, priority })}
-        />
-        {fields.kind === 'ordinary' ? (
-          <DeadlineField
-            value={fields.deadline}
-            timezone={fields.timezone}
-            onChange={(deadline) => onChange({ ...fields, deadline })}
-          />
-        ) : !page.task ? (
-          <RecurrenceFields
-            value={fields.recurrence}
-            timezone={fields.timezone}
-            onChange={(recurrence) => onChange({ ...fields, recurrence })}
-          />
-        ) : (
-          <p>
-            Изменения инструкции применятся к будущим повторениям. Расписание изменяется отдельно.
-          </p>
-        )}
+        <TaskFacts page={page} />
+        <p className="task-draft-caption">
+          {dirty ? 'Есть несохранённые изменения' : 'Поля можно редактировать сразу'}
+        </p>
         <MarkdownEditor
           value={fields.description}
           projectSlug={page.project.slug}
           onChange={(description) => onChange({ ...fields, description })}
         />
-        <Button type="submit">Сохранить</Button>
+        <TaskParameters page={page} fields={fields} onChange={onChange} />
       </fieldset>
+      <div className="task-draft-actions">
+        <Button onClick={onCancel} disabled={cancelDisabled}>
+          Отмена
+        </Button>
+        <Button variant="primary" type="submit" disabled={disabled}>
+          Сохранить
+        </Button>
+      </div>
     </form>
   );
 }

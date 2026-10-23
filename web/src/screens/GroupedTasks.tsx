@@ -46,27 +46,30 @@ export function GroupedTasks({ view, search }: { view: 'agenda' | 'priorities'; 
   return (
     <section>
       <h1>{view === 'agenda' ? 'План' : 'Приоритеты'}</h1>
-      <ReadFilters search={search} path={`/${view}`} />
-      {metadata && (
-        <>
-          <p>
-            Состояние на:{' '}
-            <time dateTime={metadata.as_of}>{viewTime(metadata.as_of, metadata.timezone)}</time>
-          </p>
-          <p>Часовой пояс: {metadata.timezone}</p>
-          {lastRefresh && (
+      <ReadFilters search={search} path={`/${view}`} collapsible />
+      <details className="details-panel" open={Boolean(query.error) || undefined}>
+        <summary>Данные и обновление</summary>
+        {metadata && (
+          <>
             <p>
-              Последнее обновление:{' '}
-              <time dateTime={lastRefresh}>{viewTime(lastRefresh, metadata.timezone)}</time>
+              Снимок данных:{' '}
+              <time dateTime={metadata.as_of}>{viewTime(metadata.as_of, metadata.timezone)}</time>
             </p>
-          )}
-        </>
-      )}
+            <p>Часовой пояс: {metadata.timezone}</p>
+            {lastRefresh && (
+              <p>
+                Последнее успешное обновление:{' '}
+                <time dateTime={lastRefresh}>{viewTime(lastRefresh, metadata.timezone)}</time>
+              </p>
+            )}
+          </>
+        )}
+        <Button disabled={query.isFetching} onClick={() => void restart()}>
+          Обновить с первой страницы
+        </Button>
+      </details>
       {query.isPending && <p role="status">Загрузка задач…</p>}
       {query.error && <p role="alert">{errorMessage(query.error)}</p>}
-      <Button disabled={query.isFetching} onClick={() => void restart()}>
-        Обновить с первой страницы
-      </Button>
       {query.isSuccess && groups.length === 0 && <p>Задач пока нет.</p>}
       {metadata &&
         groups.map((group) => (

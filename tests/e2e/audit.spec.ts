@@ -144,6 +144,7 @@ test('audit filters and paging preserve scope and expose stale cursors as a firs
     await expect(page.getByRole('article')).toHaveCount(2);
     expect(new URL(page.url()).searchParams.has('cursor')).toBe(false);
     expect(first.data.next_cursor).not.toBeNull();
+    await page.locator('summary').filter({ hasText: 'Фильтры истории' }).click();
     await page.getByLabel('Область истории', { exact: true }).selectOption('project');
     await page.getByLabel('Slug проекта', { exact: true }).fill('alpha');
     await page.getByLabel('UUID сущности', { exact: true }).fill(task.id);

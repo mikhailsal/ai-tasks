@@ -188,18 +188,20 @@ test('keyboard editing and long hostile Markdown remain usable and safe at 320px
     const rendered = page.getByRole('region', { name: 'Описание задачи', exact: true });
     await expect(rendered.locator('script,img,[onerror],a[href^="javascript:"]')).toHaveCount(0);
     await checkMobile(page);
-    const edit = page.getByRole('button', { name: 'Редактировать', exact: true });
-    await edit.focus();
-    await expect(edit).toBeFocused();
-    await page.keyboard.press('Enter');
+    const emoji = page.getByLabel('Эмодзи задачи', { exact: true });
+    await emoji.focus();
+    await expect(emoji).toBeFocused();
+    await page.keyboard.press('Tab');
     const title = page.getByLabel('Название задачи', { exact: true });
-    await title.focus();
+    await expect(title).toBeVisible();
     await expect(title).toBeFocused();
-    await page.keyboard.press('End');
+    await page.keyboard.press('ControlOrMeta+End');
     await page.keyboard.insertText(' — клавиатура');
     await expect(title).toHaveValue(`${cachedTitle} — клавиатура`);
     await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Эмодзи задачи', { exact: true })).toBeFocused();
+    await expect(
+      page.getByRole('navigation', { name: 'Быстрые фильтры задачи' }).getByRole('link').first(),
+    ).toBeFocused();
     await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(cachedSource);
     await checkMobile(page);
     const body: unknown = await page.evaluate('document.body.innerText');

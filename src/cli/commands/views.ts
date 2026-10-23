@@ -34,7 +34,14 @@ function registerView<Schema extends z.ZodMiniType>(
     });
 }
 export function registerViewCommands(program: Command): void {
-  const pagedOptions = [...readOptions, ...filters, 'limit', 'cursor'] as const;
+  const pagedOptions = [
+    ...readOptions,
+    ...filters,
+    'limit',
+    'cursor',
+    'deadlinePreset',
+    'deadlineDay',
+  ] as const;
   registerView(program, {
     name: 'agenda',
     description: 'Read project-grouped local calendar buckets at one captured instant',

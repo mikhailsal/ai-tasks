@@ -78,7 +78,7 @@ test('a restored dirty draft keeps its source and exposes Restore after an exter
     (await mutate(request, '/tasks', { kind: 'ordinary', title: 'Архив и черновик' })).data,
   );
   await page.goto(`/projects/${slug}/tasks/${task.id}`);
-  await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+  await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
   await page.getByLabel('Описание', { exact: true }).fill('Мой несохранённый исходник **целиком**');
   await page.reload();
   await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(

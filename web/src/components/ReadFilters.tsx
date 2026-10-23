@@ -15,23 +15,61 @@ function FilterDetails({ children, open }: { children: ReactNode; open: boolean 
     </details>
   );
 }
+
+function invalidReadFilters(search: string, statistics: boolean): boolean {
+  const terminal = new URLSearchParams(search).get('include_terminal');
+  if (terminal !== null && !['true', 'false'].includes(terminal)) return true;
+  try {
+    readFilterSearch(readFilterDraft(search), search, statistics);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+function additionalFilterSummary(search: string): string {
+  const query = new URLSearchParams(search);
+  const labels: [string, string][] = [
+    ['q', 'Поиск'],
+    ['status_id', 'Статус'],
+    ['emoji', 'Эмодзи'],
+  ];
+  const selected = labels.flatMap(([key, label]) => {
+    const value = query.get(key);
+    return value ? [`${label}: ${value}`] : [];
+  });
+  const kind = query.get('kind');
+  if (kind)
+    selected.push(
+      `Тип: ${kind === 'ordinary' ? 'обычные' : kind === 'recurring' ? 'повторяющиеся' : kind}`,
+    );
+  const category = query.get('category');
+  if (category) selected.push(`Категория: ${categoryLabels[category] ?? category}`);
+  if (query.has('priority')) selected.push('Применён фильтр приоритета');
+  return selected.join('. ');
+}
+
 export function ReadFilters({
   search,
   path,
   statistics = false,
+  collapsible = false,
 }: {
   search: string;
   path: string;
   statistics?: boolean;
+  collapsible?: boolean;
 }) {
   const [draft, setDraft] = useState(() => readFilterDraft(search));
   const [error, setError] = useState('');
   const applied = appliedReadFilters(search, statistics);
+  const additional = additionalFilterSummary(search);
+  const invalid = invalidReadFilters(search, statistics);
   useEffect(() => {
     setDraft(readFilterDraft(search));
     setError('');
   }, [search]);
-  return (
+  const form = (
     <form
       aria-label="Фильтры задач"
       className="stack"
@@ -50,7 +88,7 @@ export function ReadFilters({
         label="Поиск"
         value={draft.q}
         onChange={(event) => setDraft({ ...draft, q: event.target.value })}
-        hint="Часть названия или исходного Markdown без учёта регистра. Знаки % и _ ищутся буквально."
+        hint="По названию или тексту описания, без учёта регистра."
       />
       <Choice
         allowUnknown
@@ -71,10 +109,8 @@ export function ReadFilters({
         />
       )}
       <AppLink href="/projects">Выбрать проект в списке</AppLink>
-      <p aria-label="Применённые фильтры">
-        {applied.scope}. {applied.archive}. {applied.visibility}.
-      </p>
-      <FilterDetails open={draft.priority.mode === 'invalid'}>
+      <FilterDetails open={invalid}>
+        <p className="subtle">Знаки % и _ в поиске ищутся буквально.</p>
         <Choice
           allowUnknown
           label="Тип задачи"
@@ -139,7 +175,24 @@ export function ReadFilters({
         )}
       </FilterDetails>
       {error && <p role="alert">{error}</p>}
-      <Button type="submit">Применить фильтры</Button>
+      <Button type="submit" variant="primary">
+        Применить фильтры
+      </Button>
     </form>
+  );
+  return (
+    <>
+      <p aria-label="Применённые фильтры" className="subtle">
+        {applied.scope}. {applied.archive}. {applied.visibility}.{additional && ` ${additional}.`}
+      </p>
+      {collapsible ? (
+        <details className="details-panel" open={invalid || Boolean(error) || undefined}>
+          <summary>Фильтры и поиск</summary>
+          {form}
+        </details>
+      ) : (
+        form
+      )}
+    </>
   );
 }

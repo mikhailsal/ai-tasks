@@ -1,4 +1,4 @@
-import { createServer as createProbe } from 'node:net';
+import { availablePort } from './available-port.js';
 import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import { createApp } from '../../src/api/app.js';
@@ -9,21 +9,7 @@ import { acquireDatabaseLock, releaseDatabaseLock } from '../../src/runtime/data
 import { createDatabaseFixture } from './database.js';
 import { createTestClock } from './clock.js';
 
-export async function availablePort(excluded?: number) {
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const probe = createProbe();
-    await new Promise<void>((resolve, reject) => {
-      probe.once('error', reject);
-      probe.listen(0, '127.0.0.1', resolve);
-    });
-    const address = probe.address();
-    await new Promise<void>((resolve, reject) =>
-      probe.close((error) => (error ? reject(error) : resolve())),
-    );
-    if (address && typeof address !== 'string' && address.port !== excluded) return address.port;
-  }
-  throw new Error('No distinct loopback port for delivery fixture');
-}
+export { availablePort } from './available-port.js';
 
 export async function deliveryServer(
   options: { developmentOrigin?: string; excludePort?: number } = {},

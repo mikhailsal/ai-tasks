@@ -76,6 +76,7 @@ export const taskResourceSchema = z.strictObject({
   priority: priorityValueSchema,
   deadline: z.nullable(timestampSchema),
   display_deadline: z.nullable(timestampSchema),
+  blocked: z.optional(z.boolean()),
   archived_at: z.nullable(timestampSchema),
   revision: revisionSchema,
   config_revision: revisionSchema,

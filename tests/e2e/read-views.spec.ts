@@ -21,6 +21,13 @@ async function mobile(page: Page, control: Locator) {
   expect(bounds?.width).toBeGreaterThanOrEqual(44);
   expect(bounds?.height).toBeGreaterThanOrEqual(44);
 }
+async function openReadPanel(
+  page: Page,
+  name: 'Фильтры и поиск' | 'Данные и обновление' | 'Период нагрузки',
+) {
+  const summary = page.locator('summary').filter({ hasText: name });
+  if ((await summary.locator('..').getAttribute('open')) === null) await summary.click();
+}
 function nextView(page: Page, view: string) {
   return page.waitForResponse(
     (reply) =>
@@ -44,6 +51,15 @@ test('priorities keep projects and all four models distinct with configured labe
     ).toEqual(seed.projectOrder.map((slug) => `Проект ${slug}`));
     await expect(project(page, 'classic')).toContainText('Классический');
     await expect(project(page, 'classic')).toContainText('Критический');
+    const tag = project(page, 'classic')
+      .getByRole('link', { name: /^Приоритет: /u })
+      .first();
+    const tagHref = await tag.getAttribute('href');
+    if (!tagHref) throw new Error('Missing priority filter link');
+    const tagTarget = new URL(tagHref, server.origin);
+    expect(tagTarget.pathname).toBe('/projects/classic/board');
+    expect(tagTarget.searchParams.get('q')).toBe('rank:');
+    expect(tagTarget.searchParams.has('priority')).toBe(true);
     await expect(project(page, 'beta-named')).toContainText('Первый');
     await expect(project(page, 'beta-named')).toContainText('Второй');
     await expect(project(page, 'max-numeric')).toContainText('больше — важнее');
@@ -64,6 +80,7 @@ test('priorities keep projects and all four models distinct with configured labe
         (key) => `/projects/beta-named/tasks/${seed.idsByMeaning[key]}`,
       ),
     );
+    await openReadPanel(page, 'Фильтры и поиск');
     await mobile(page, page.getByRole('button', { name: 'Применить фильтры', exact: true }));
     expect(server.snapshot()).toEqual(before);
   } finally {
@@ -112,8 +129,10 @@ test('agenda is project-first with five disjoint sections and one recurring pare
     await expect(
       classic.getByRole('button', { name: 'Скопировать эмодзи проекта', exact: true }),
     ).toBeVisible();
+    await openReadPanel(page, 'Фильтры и поиск');
     await mobile(page, page.getByRole('button', { name: 'Применить фильтры', exact: true }));
     await page.reload();
+    await openReadPanel(page, 'Фильтры и поиск');
     await expect(page.getByLabel('Поиск', { exact: true })).toHaveValue('agenda:');
     expect(server.snapshot()).toEqual(before);
   } finally {
@@ -162,6 +181,7 @@ test('agenda paging retains server as_of despite browser time changes and expose
     expect((await stale).status()).toBe(409);
     await expect(page.getByRole('alert')).toContainText('Список изменился');
     await expect(page.getByText('Задач пока нет.', { exact: true })).toHaveCount(0);
+    await openReadPanel(page, 'Данные и обновление');
     const refreshed = nextView(page, 'agenda');
     await page.getByRole('button', { name: 'Обновить с первой страницы', exact: true }).click();
     const current = agendaPageSchema.parse(await (await refreshed).json());
@@ -193,6 +213,7 @@ test('workload distinguishes parent inventory and occurrence outcomes and explai
     await expect(occurrences).toContainText('Всего: 6');
     await expect(occurrences).toContainText('Выполнено поздно: 1');
     const local = deadlineDraft(new Date(seed.completedAt).toISOString(), 'Europe/Berlin');
+    await openReadPanel(page, 'Период нагрузки');
     await page.getByLabel('Дата от (включительно)', { exact: true }).fill(local.date);
     await page.getByLabel('Время от (включительно)', { exact: true }).fill(local.time);
     await page.getByLabel('Дата до (не включительно)', { exact: true }).fill(local.date);

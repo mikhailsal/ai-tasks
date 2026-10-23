@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { boardReturnHref } from '../data/board-links.js';
 import * as z from 'zod/mini';
 import { ApiClientError, mutateApi } from '../data/api.js';
 import {
@@ -40,8 +42,17 @@ async function readTaskReview(editor: Editor, projectSlug: string) {
   editor.setPage(current);
   return current;
 }
+function openCreatedTask(projectSlug: string, id: string, loaded: TaskPage) {
+  const params = new URLSearchParams(window.location.search);
+  const context = params.has('return_to')
+    ? `?${new URLSearchParams({ return_to: boardReturnHref(projectSlug, loaded.task?.kind ?? 'ordinary') })}`
+    : '';
+  window.history.replaceState(null, '', `/projects/${projectSlug}/tasks/${id}${context}`);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
 export function useTaskCommands(editor: Editor, projectSlug: string) {
   const sending = useRef(false);
+  const queryClient = useQueryClient();
   const [conflictAction, setConflictAction] = useState<TaskAction | null>(null);
   const [pending, setPending] = useState(false);
   const [conflict, setConflict] = useState<TaskPage | null>(null);
@@ -70,14 +81,14 @@ export function useTaskCommands(editor: Editor, projectSlug: string) {
       // Mutation receipts are identity/replay evidence; display HTML comes only from a fresh GET.
       const loaded = await loadTaskPage(projectSlug, id);
       await editor.saved(loaded, intent === 'action');
+      await queryClient.invalidateQueries({ queryKey: ['project-board', projectSlug] });
       await deleteProposal(editor.key);
       editor.setPendingProposal(undefined);
       setConflict(null);
       setConflictAction(null);
       setCollision(null);
       if (!editor.page.task) {
-        window.history.replaceState(null, '', `/projects/${projectSlug}/tasks/${id}`);
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        openCreatedTask(projectSlug, id, loaded);
       }
       return 'SUCCESS';
     } catch (failure) {
@@ -176,18 +187,17 @@ export function useTaskCommands(editor: Editor, projectSlug: string) {
       setError(errorMessage(failure));
     }
   }
+  function cancelReview() {
+    if (sending.current || editor.pendingProposal) return;
+    setConflict(null);
+    setConflictAction(null);
+    setCollision(null);
+    setError('');
+  }
   function retry() {
     if (editor.pendingProposal)
       void submit(editor.pendingProposal, taskProposalIntent(editor.pendingProposal));
   }
-  const actions = { save, reconcile, review, action, retry };
-  return {
-    pending,
-    error,
-    conflict,
-    conflictAction,
-    collision,
-    setCollision,
-    ...actions,
-  };
+  const actions = { save, reconcile, review, action, retry, cancelReview };
+  return { pending, error, conflict, conflictAction, collision, setCollision, ...actions };
 }

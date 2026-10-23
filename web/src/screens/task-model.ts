@@ -49,7 +49,10 @@ export async function loadTaskPage(projectSlug: string, taskId?: string) {
   };
 }
 export type TaskPage = Awaited<ReturnType<typeof loadTaskPage>>;
-export function fieldsFromPage(page: TaskPage): TaskFields {
+export function fieldsFromPage(
+  page: TaskPage,
+  initialKind: TaskFields['kind'] = 'ordinary',
+): TaskFields {
   return {
     title: page.task?.title ?? '',
     description: page.task?.description ?? '',
@@ -57,11 +60,11 @@ export function fieldsFromPage(page: TaskPage): TaskFields {
     priority: page.task?.priority ?? null,
     deadline: deadlineDraft(page.task?.deadline ?? null, page.timezone),
     timezone: page.timezone,
-    ...taskKindFields(page),
+    ...taskKindFields(page, initialKind),
   };
 }
-function taskKindFields(page: TaskPage) {
-  const kind = page.task?.kind ?? 'ordinary';
+function taskKindFields(page: TaskPage, initialKind: TaskFields['kind']) {
+  const kind = page.task?.kind ?? initialKind;
   return {
     kind,
     recurrence:

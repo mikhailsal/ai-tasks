@@ -152,7 +152,7 @@ test('a failed recurrence background refresh remains visible, retains the mounte
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
     const window = page.getByLabel('Окно подтверждения, мс', { exact: true });
     await window.fill('123456');
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     await page
       .getByLabel('Название задачи', { exact: true })
       .fill('Проверка оборудования после правки');

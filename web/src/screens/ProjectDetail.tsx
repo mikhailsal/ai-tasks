@@ -9,7 +9,8 @@ import { ProjectEditor } from './ProjectEditor.js';
 import { ProjectLifecycle } from './ProjectLifecycle.js';
 import { presetLabels } from './project-fields.js';
 import { ProjectDescriptionPreview } from './ProjectDescriptionPreview.js';
-import { AppLink } from '../app/router.js';
+import { boardReturnHref } from '../data/board-links.js';
+import { AppLink, navigate } from '../app/router.js';
 export function ProjectDetail({
   source,
   metadata,
@@ -21,7 +22,10 @@ export function ProjectDetail({
   online: boolean;
   refresh(): void;
 }) {
-  const [editing, setEditing] = useState(false);
+  const params = new URLSearchParams(window.location.search);
+  const kind = params.get('kind') === 'recurring' ? 'recurring' : 'ordinary';
+  const back = boardReturnHref(source.data.slug, kind);
+  const [editing, setEditing] = useState(params.get('edit') === 'true');
   const configuration = useQuery({
     queryKey: ['project-configuration', source.data.slug, source.data.config_revision],
     queryFn: ({ signal }) => readConfiguration(source.data.slug, signal),
@@ -32,19 +36,20 @@ export function ProjectDetail({
         source={source}
         metadata={metadata}
         online={online}
-        onCancel={() => setEditing(false)}
+        onCancel={() => navigate(back)}
         onSaved={() => {
-          setEditing(false);
           refresh();
+          navigate(back);
         }}
       />
     );
   return (
     <>
+      <AppLink href={back}>Назад на доску проекта</AppLink>
       <h1>
         {source.data.emoji} {source.data.name}
       </h1>
-      <p>
+      <p className="subtle">
         Slug проекта: <span>{source.data.slug}</span>
       </p>
       <p>Приоритет проекта: {source.data.priority}</p>
@@ -53,6 +58,29 @@ export function ProjectDetail({
         label="Скопировать эмодзи проекта"
         failure="Не удалось скопировать эмодзи. Выделите его и скопируйте вручную."
       />
+      <div className="actions">
+        {source.data.archived_at !== null ? (
+          <section>
+            <p role="status">
+              Проект в архиве. Доступны чтение, история и восстановление. Редактирование и создание
+              задач недоступны.
+            </p>
+            <Button disabled>Создать задачу</Button> <Button disabled>Редактировать проект</Button>
+          </section>
+        ) : (
+          <>
+            <Button onClick={() => setEditing(true)} disabled={!online}>
+              Редактировать проект
+            </Button>{' '}
+            <a
+              className="button button-primary"
+              href={`/projects/${encodeURIComponent(source.data.slug)}/tasks/new`}
+            >
+              Создать задачу
+            </a>
+          </>
+        )}
+      </div>
       <h2>Описание проекта</h2>
       <p style={{ whiteSpace: 'pre-wrap' }}>
         {source.data.description || 'Описание пока не добавлено.'}
@@ -78,24 +106,8 @@ export function ProjectDetail({
         </section>
       )}
       {configuration.error && <p role="alert">{errorMessage(configuration.error)}</p>}
-      {source.data.archived_at !== null ? (
-        <section>
-          <p role="status">
-            Проект в архиве. Доступны чтение, история и восстановление. Редактирование и создание
-            задач недоступны.
-          </p>
-          <Button disabled>Создать задачу</Button> <Button disabled>Редактировать проект</Button>
-        </section>
-      ) : (
-        <>
-          <Button onClick={() => setEditing(true)} disabled={!online}>
-            Редактировать проект
-          </Button>{' '}
-          <a href={`/projects/${encodeURIComponent(source.data.slug)}/tasks/new`}>Создать задачу</a>
-        </>
-      )}
       <p>
-        <a href={`/?project_slug=${encodeURIComponent(source.data.slug)}`}>Задачи проекта</a>
+        <a href={back}>Задачи проекта</a>
       </p>
       <p>
         <AppLink href={`/audit?project_slug=${encodeURIComponent(source.data.slug)}`}>

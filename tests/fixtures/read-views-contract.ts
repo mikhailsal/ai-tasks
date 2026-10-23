@@ -6,7 +6,7 @@ import { responseEnvelopeSchema } from '../../src/schema/envelopes.js';
 import type { JsonValue } from '../../src/schema/values.js';
 import { createOrdinaryFixture, ordinaryInput } from './ordinary-work.js';
 import { seedReadViews, readViewsSnapshot, type ReadViewSeedOptions } from './read-views.js';
-import { availablePort } from './http-delivery.js';
+import { availablePort } from './available-port.js';
 import { createLazyDataHelper } from './lazy-data-helper.js';
 
 export type ReadView = 'agenda' | 'priorities' | 'stats';

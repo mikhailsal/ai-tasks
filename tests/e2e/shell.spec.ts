@@ -26,9 +26,9 @@ test('opens the Russian production shell and real metadata without authenticatio
     contract_version: 1,
   });
   await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
-  await expect(page.getByRole('heading', { name: 'Задачи', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Проекты', exact: true })).toBeVisible();
   const navigation = page.getByRole('navigation', { name: 'Основная навигация' });
-  await expect(navigation.getByRole('link', { name: 'Задачи', exact: true })).toHaveAttribute(
+  await expect(navigation.getByRole('link', { name: 'Проекты', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -58,7 +58,7 @@ test('serves direct project links as the app while unknown API paths remain JSON
 
 test('keeps a centered single content column on mobile and wide screens', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Задачи', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Проекты', exact: true })).toBeVisible();
   const mobile = page.viewportSize();
   if (!mobile) throw new Error('The browser project must provide a mobile viewport');
   for (const viewport of [mobile, { width: 1280, height: 900 }]) {
@@ -80,9 +80,9 @@ test('provides 44px navigation targets, keyboard focus and history navigation', 
   page,
 }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Задачи', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Проекты', exact: true })).toBeVisible();
   const navigation = page.getByRole('navigation', { name: 'Основная навигация' });
-  const tasks = navigation.getByRole('link', { name: 'Задачи', exact: true });
+  const tasks = navigation.getByRole('link', { name: 'Обзор', exact: true });
   const projects = navigation.getByRole('link', { name: 'Проекты', exact: true });
   for (const link of [tasks, projects]) {
     const target = await link.boundingBox();
@@ -95,15 +95,15 @@ test('provides 44px navigation targets, keyboard focus and history navigation', 
   await expect(skip).toBeFocused();
   await expect(skip).toHaveCSS('outline-width', '3px');
   await page.keyboard.press('Tab');
-  await expect(tasks).toBeFocused();
-  await expect(tasks).toHaveCSS('outline-style', 'solid');
-  await page.keyboard.press('Tab');
   await expect(projects).toBeFocused();
+  await expect(projects).toHaveCSS('outline-style', 'solid');
+  await page.keyboard.press('Tab');
+  await expect(tasks).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL('/projects');
-  await expect(page.getByRole('heading', { name: 'Проекты', exact: true })).toBeVisible();
-  await page.goBack();
+  await expect(page).toHaveURL(/\/tasks/);
   await expect(page.getByRole('heading', { name: 'Задачи', exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'Проекты', exact: true })).toBeVisible();
 });
 
 test('shows a clear connection failure and recovers through the real metadata endpoint', async ({
@@ -126,6 +126,6 @@ test('shows a clear connection failure and recovers through the real metadata en
   );
   await retry.click();
   expect((await metadataResponse).status()).toBe(200);
-  await expect(page.getByRole('heading', { name: 'Задачи', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Проекты', exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

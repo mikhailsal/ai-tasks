@@ -17,6 +17,8 @@ export const taskQueryKeys = [
   'category',
   'emoji',
   'priority',
+  'deadline_preset',
+  'deadline_day',
 ];
 export function routeParams(value: unknown, task = false) {
   return task ? taskParamsSchema.parse(value) : projectParamsSchema.parse(value);

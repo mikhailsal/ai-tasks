@@ -12,7 +12,7 @@ import { metaEnvelopeSchema } from '../../src/schema/meta.js';
 import { responseEnvelopeSchema, successEnvelopeSchema } from '../../src/schema/envelopes.js';
 import { jsonValueSchema, type JsonValue } from '../../src/schema/values.js';
 import { createOrdinaryFixture, ordinaryInput, type OrdinaryFixture } from './ordinary-work.js';
-import { availablePort } from './http-delivery.js';
+import { availablePort } from './available-port.js';
 import { observeWorkerDatabase } from './worker-process.js';
 
 export const backupInfo = z.object({

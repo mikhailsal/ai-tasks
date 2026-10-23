@@ -21,10 +21,13 @@ import {
 } from './task-model.js';
 
 export function useTaskDraft(projectSlug: string, taskId?: string) {
-  const key = `task:${projectSlug}:${taskId ?? 'new'}`;
+  const initialKind =
+    new URLSearchParams(window.location.search).get('kind') === 'recurring'
+      ? 'recurring'
+      : 'ordinary';
+  const key = `task:${projectSlug}:${taskId ?? (initialKind === 'recurring' ? 'new:recurring' : 'new')}`;
   const [page, setPage] = useState<TaskPage | null>(null);
   const [draft, setDraft] = useState<DraftRecord<TaskFields> | null>(null);
-  const [editing, setEditing] = useState(!taskId);
   const [dirty, setDirty] = useState(false);
   const dirtyRef = useRef(false);
   const [error, setError] = useState('');
@@ -51,11 +54,14 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     setPendingProposal(undefined);
     setDirty(false);
     dirtyRef.current = false;
-    setEditing(!taskId);
     async function initialize() {
       const loaded = await loadTaskPage(projectSlug, taskId);
       if (!active) return;
-      let record = createDraft({ key, fields: fieldsFromPage(loaded), base: baseFromPage(loaded) });
+      let record = createDraft({
+        key,
+        fields: fieldsFromPage(loaded, initialKind),
+        base: baseFromPage(loaded),
+      });
       try {
         const [stored, proposal] = await Promise.all([loadDraft(key), loadProposal(key)]);
         if (!active) return;
@@ -67,7 +73,6 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
           });
           setDirty(true);
           dirtyRef.current = true;
-          setEditing(true);
         }
         setPendingProposal(proposal);
       } catch (failure) {
@@ -85,7 +90,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     return () => {
       active = false;
     };
-  }, [key, projectSlug, taskId, attempt]);
+  }, [key, projectSlug, taskId, attempt, initialKind]);
   useEffect(() => {
     if (!draft || !dirty) return;
     const record = draft;
@@ -100,6 +105,19 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     setDirty(true);
     dirtyRef.current = true;
   }
+  function cancel() {
+    if (!page || pendingProposal) return;
+    setDraft(
+      createDraft({ key, fields: fieldsFromPage(page, initialKind), base: baseFromPage(page) }),
+    );
+    setDirty(false);
+    dirtyRef.current = false;
+    storageQueue.current = storageQueue.current
+      .catch(() => {})
+      .then(() => deleteDraft(key))
+      .then(() => setStorageError(''))
+      .catch((failure) => setStorageError(errorMessage(failure)));
+  }
   async function persist() {
     if (!draft) return;
     await storageQueue.current;
@@ -110,15 +128,22 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     setPage(loaded);
     if (preserveDirty && dirty) return;
     await deleteDraft(key);
-    setDraft(createDraft({ key, fields: fieldsFromPage(loaded), base: baseFromPage(loaded) }));
+    setDraft(
+      createDraft({ key, fields: fieldsFromPage(loaded, initialKind), base: baseFromPage(loaded) }),
+    );
     setDirty(false);
     dirtyRef.current = false;
-    setEditing(false);
   }
   function refreshed(loaded: TaskPage) {
     setPage(loaded);
     if (!dirtyRef.current)
-      setDraft(createDraft({ key, fields: fieldsFromPage(loaded), base: baseFromPage(loaded) }));
+      setDraft(
+        createDraft({
+          key,
+          fields: fieldsFromPage(loaded, initialKind),
+          base: baseFromPage(loaded),
+        }),
+      );
   }
   return {
     key,
@@ -126,8 +151,6 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     setPage,
     draft,
     setDraft,
-    editing,
-    setEditing,
     dirty,
     error,
     setError,
@@ -135,6 +158,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     pendingProposal,
     setPendingProposal,
     change,
+    cancel,
     persist,
     saved,
     refreshed,

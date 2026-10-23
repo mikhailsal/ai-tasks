@@ -35,6 +35,8 @@ const commands = [
   z.strictObject({ operation: z.literal('project.archive'), ...mutation }),
   z.strictObject({ operation: z.literal('project.restore'), ...mutation }),
   z.strictObject({ operation: z.literal('task.list'), input: queryInput }),
+  z.strictObject({ operation: z.literal('task.board'), input: queryInput }),
+  z.strictObject({ operation: z.literal('task.position'), ...taskMutation }),
   z.strictObject({ operation: z.literal('task.get'), scope: projectScope, task_id: uuidSchema }),
   z.strictObject({ operation: z.literal('task.create'), ...mutation }),
   z.strictObject({ operation: z.literal('task.update'), ...taskMutation }),

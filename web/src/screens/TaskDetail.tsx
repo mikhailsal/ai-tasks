@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
+import { AppLink } from '../app/router.js';
+import { boardReturnHref } from '../data/board-links.js';
+import { TaskHistory } from './TaskHistory.js';
+import './task-detail.css';
 import { useMutationAvailability } from '../app/MutationBoundary.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
 import { ConflictReview } from '../components/ConflictReview.js';
@@ -110,6 +114,44 @@ function TaskRecurrence({
   );
 }
 
+function TaskOperationReview({
+  editor,
+  commands,
+  formUnavailable,
+  actionUnavailable,
+  epoch,
+}: {
+  editor: ReturnType<typeof useTaskDraft>;
+  commands: ReturnType<typeof useTaskCommands>;
+  formUnavailable: boolean;
+  actionUnavailable: boolean;
+  epoch: string;
+}) {
+  const page = editor.page;
+  const draft = editor.draft;
+  if (!page || !draft) return null;
+  return (
+    <>
+      {commands.conflict && (
+        <ConflictReview
+          current={fieldsFromPage(commands.conflict)}
+          proposed={commands.conflictAction ? commands.conflictAction.payload : draft.fields}
+          disabled={commands.conflictAction ? actionUnavailable : formUnavailable}
+          onRetry={() => void commands.reconcile()}
+        />
+      )}
+      {commands.collision && (
+        <MarkerCollision
+          request={commands.collision}
+          disabled={[actionUnavailable, epoch !== page.epoch].some(Boolean)}
+          onAction={(action) => void commands.action(action)}
+          onCancel={() => commands.setCollision(null)}
+        />
+      )}
+    </>
+  );
+}
+
 export function TaskDetail({
   projectSlug,
   taskId,
@@ -144,9 +186,14 @@ export function TaskDetail({
     recurrenceBlocked,
   });
   return (
-    <div className="stack">
-      <h1>{title}</h1>
-      <a href={`/projects/${projectSlug}`}>К проекту: {page.project.name}</a>
+    <div className="task-page">
+      <AppLink
+        className="task-board-back"
+        label="Назад на доску проекта"
+        href={boardReturnHref(projectSlug, editor.draft.fields.kind)}
+      >
+        ← {page.project.emoji} {page.project.name}
+      </AppLink>
       <TaskNotices
         editor={editor}
         commands={commands}
@@ -154,24 +201,28 @@ export function TaskDetail({
         metadata={metadata}
         archived={archived}
       />
-      {editor.editing && (
-        <TaskForm
-          page={page}
-          fields={editor.draft.fields}
-          onChange={editor.change}
-          onSave={() => void commands.save()}
-          disabled={[
-            formUnavailable,
-            metadata.database_epoch !== editor.draft.base.database_epoch,
-          ].some(Boolean)}
-        />
-      )}
+      <TaskForm
+        page={page}
+        fields={editor.draft.fields}
+        onChange={editor.change}
+        onSave={() => void commands.save()}
+        onCancel={() => {
+          editor.cancel();
+          commands.cancelReview();
+        }}
+        cancelDisabled={commands.pending || Boolean(editor.pendingProposal)}
+        dirty={editor.dirty}
+        disabled={[
+          formUnavailable,
+          metadata.database_epoch !== editor.draft.base.database_epoch,
+        ].some(Boolean)}
+      />
+      <TaskHistory key={task?.id ?? 'new'} page={page} />
       {task && (
         <TaskSavedDetails
           page={page}
           disabled={[actionUnavailable, metadata.database_epoch !== page.epoch].some(Boolean)}
           archived={archived}
-          onEdit={() => editor.setEditing(true)}
           onAction={(action) => void commands.action(action)}
         />
       )}
@@ -182,22 +233,13 @@ export function TaskDetail({
         editor={editor}
         report={setRecurrenceBlocked}
       />
-      {commands.conflict && (
-        <ConflictReview
-          current={fieldsFromPage(commands.conflict)}
-          proposed={commands.conflictAction ? commands.conflictAction.payload : editor.draft.fields}
-          disabled={commands.conflictAction ? actionUnavailable : formUnavailable}
-          onRetry={() => void commands.reconcile()}
-        />
-      )}
-      {commands.collision && (
-        <MarkerCollision
-          request={commands.collision}
-          disabled={[actionUnavailable, metadata.database_epoch !== page.epoch].some(Boolean)}
-          onAction={(action) => void commands.action(action)}
-          onCancel={() => commands.setCollision(null)}
-        />
-      )}
+      <TaskOperationReview
+        editor={editor}
+        commands={commands}
+        formUnavailable={formUnavailable}
+        actionUnavailable={actionUnavailable}
+        epoch={metadata.database_epoch}
+      />
     </div>
   );
 }

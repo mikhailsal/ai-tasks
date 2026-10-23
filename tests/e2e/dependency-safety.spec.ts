@@ -163,7 +163,7 @@ async function dirtyDescription(
   text: string,
 ) {
   await page.goto(`${server.origin}/projects/${graph.slug}/tasks/${graph.parent.id}`);
-  await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+  await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
   await page.getByLabel('Описание', { exact: true }).fill(text);
 }
 async function assertOriginalDirtyBase(

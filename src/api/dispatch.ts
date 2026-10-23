@@ -1,3 +1,6 @@
+import { readBoardColumn } from '../core/queries/board.js';
+import { moveBoardTask } from '../core/tasks/board.js';
+import { boardColumnInputSchema } from '../schema/board.js';
 import { createReadContext } from '../core/context.js';
 import type { CoreContext } from '../core/database/types.js';
 import { previewDescription } from '../core/markdown/preview.js';
@@ -95,6 +98,10 @@ function projectDispatch(context: CoreContext, command: ProjectCommand) {
 function taskDispatch(context: CoreContext, command: TaskCommand) {
   const read = createReadContext({ connection: context.connection, now: context.now });
   switch (command.operation) {
+    case 'task.board':
+      return readBoardColumn(read, parseInput(boardColumnInputSchema, command.input));
+    case 'task.position':
+      return moveBoardTask(context, command.scope.project_slug, command.task_id, command.input);
     case 'task.list':
       return listTasks(read, parseInput(taskListInputSchema, command.input));
     case 'task.get':

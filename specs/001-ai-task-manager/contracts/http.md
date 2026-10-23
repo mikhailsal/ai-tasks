@@ -146,3 +146,7 @@ with CONFIG_CONFLICT when the shared timezone/settings changed. Project archive/
 payloads include `affected_tasks:[{task_id,expected_revision}]` for every affected child;
 child lifecycle or revision failure rejects the entire operation. Project restoration pauses
 formerly active recurring children but preserves draft and individually archived children.
+
+## Additive mobile board contracts (002)
+
+Task, agenda and priority list reads additionally accept mutually exclusive `deadline_preset` and exact local `deadline_day` filters. Task summaries may include a derived `blocked` boolean; task details retain their required field. Existing no-filter behavior and ordinary task ordering are unchanged. `GET /api/v1/projects/:project_slug/board` reads a configured column with shared ordering/revision, and `POST /api/v1/projects/:project_slug/tasks/:task_id/position` reorders or performs a guarded atomic transfer. See the full [board read/write and deadline contract](../../002-mobile-ux/contracts/board-api.md).

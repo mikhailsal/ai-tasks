@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { metaEnvelopeSchema, type MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
+import { AppNavigation } from '../components/AppNavigation.js';
 import { CacheMiss } from '../components/CacheMiss.js';
 import { OfflineBanner } from '../components/OfflineBanner.js';
 import { getApi } from '../data/api.js';
+import { ProjectBoard } from '../screens/ProjectBoard.js';
 import { Projects } from '../screens/Projects.js';
 import { TaskDetail } from '../screens/TaskDetail.js';
 import { Tasks } from '../screens/Tasks.js';
@@ -25,6 +27,8 @@ function routeTitle(route: Route): string {
       return 'Проекты';
     case 'project':
       return 'Проект';
+    case 'project-board':
+      return 'Доска проекта';
     case 'project-configuration':
       return 'Настройки проекта';
     case 'task-new':
@@ -60,6 +64,15 @@ function Screen({
   switch (route.kind) {
     case 'projects':
       return <Projects metadata={metadata} />;
+    case 'project-board':
+      return (
+        <ProjectBoard
+          key={route.projectSlug}
+          slug={route.projectSlug}
+          search={route.search}
+          metadata={metadata}
+        />
+      );
     case 'project':
       return <Projects key={route.projectSlug} slug={route.projectSlug} metadata={metadata} />;
     case 'project-configuration':
@@ -88,7 +101,7 @@ function Screen({
         />
       );
     case 'tasks':
-      return <Tasks />;
+      return <Tasks metadata={metadata} />;
     case 'audit':
       return <Audit key={route.search} search={route.search} timezone={metadata.timezone} />;
     case 'agenda':
@@ -118,6 +131,16 @@ function Screen({
   }
 }
 
+function shellPresentation(route: Route) {
+  const board = route.kind === 'project-board';
+  const detail = route.kind === 'task' || route.kind === 'task-new';
+  return {
+    header: `app-header${board ? ' board-app-header' : ''}${detail ? ' detail-app-header' : ''}`,
+    main: board ? 'board-main' : detail ? 'task-main' : undefined,
+    footer: !board && !detail,
+  };
+}
+
 export function App() {
   const route = useRoute();
   const metadata = useQuery({
@@ -126,6 +149,7 @@ export function App() {
     retry: false,
   });
   const title = routeTitle(route);
+  const shell = shellPresentation(route);
   useEffect(() => {
     document.title = `${title} · Мои задачи`;
   }, [title]);
@@ -134,22 +158,16 @@ export function App() {
       <a className="skip-link" href="#main">
         Перейти к содержимому
       </a>
-      <header className="app-header">
-        <span className="app-brand">Мои задачи</span>
-        <nav aria-label="Основная навигация">
-          <AppLink href="/">Задачи</AppLink>
-          <AppLink href="/projects">Проекты</AppLink>
-          <AppLink href="/audit?all_projects=true">История</AppLink>
-        </nav>
-        <nav aria-label="Обзоры задач">
-          <AppLink href="/agenda?all_projects=true">План</AppLink>
-          <AppLink href="/priorities?all_projects=true">Приоритеты</AppLink>
-          <AppLink href="/workload?all_projects=true">Нагрузка</AppLink>
-        </nav>
-        <AppLink href="/settings">Настройки приложения</AppLink>
-        <AppLink href="/backups">Резервные копии</AppLink>
+      <header className={shell.header}>
+        <AppLink className="app-brand" href="/">
+          <span className="brand-mark" aria-hidden="true">
+            ✓
+          </span>
+          Мои задачи
+        </AppLink>
+        <AppNavigation path={window.location.pathname + window.location.search} />
       </header>
-      <main id="main" tabIndex={-1}>
+      <main id="main" tabIndex={-1} className={shell.main}>
         <OfflineBanner />
         <MutationBoundary {...(metadata.data ? { epoch: metadata.data.data.database_epoch } : {})}>
           {route.kind === 'backups' ? (
@@ -177,7 +195,9 @@ export function App() {
           )}
         </MutationBoundary>
       </main>
-      <footer className="app-footer">Спокойно, по одному делу.</footer>
+      {route.kind !== 'project-board' && route.kind !== 'task' && route.kind !== 'task-new' && (
+        <footer className="app-footer">Спокойно, по одному делу.</footer>
+      )}
     </>
   );
 }

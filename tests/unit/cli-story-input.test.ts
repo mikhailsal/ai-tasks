@@ -24,7 +24,10 @@ it('registers the complete US1 through US3 command families while preserving boo
   );
   for (const [family, commands] of [
     ['project', ['list', 'get', 'create', 'update', 'archive', 'restore']],
-    ['task', ['list', 'get', 'create', 'update', 'transition', 'archive', 'restore']],
+    [
+      'task',
+      ['board', 'list', 'position', 'get', 'create', 'update', 'transition', 'archive', 'restore'],
+    ],
     ['description', ['preview']],
     ['config', ['get', 'preview', 'migrate', 'presets']],
     ['dependency', ['list', 'add', 'remove']],

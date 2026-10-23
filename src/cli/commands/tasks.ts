@@ -1,3 +1,4 @@
+import { registerBoardRead } from './board.js';
 import type { Command } from 'commander';
 import {
   queryInput,
@@ -14,6 +15,7 @@ export function registerTaskCommands(program: Command): void {
     .command('task')
     .description('Manage ordinary and recurring tasks')
     .action(requireSubcommand);
+  registerBoardRead(family);
   family
     .command('list')
     .description('List tasks in an explicit scope')
@@ -29,6 +31,8 @@ export function registerTaskCommands(program: Command): void {
         'emoji',
         'archive',
         'includeTerminal',
+        'deadlinePreset',
+        'deadlineDay',
       ]);
       const [{ listTasks, taskListInputSchema }, { parseInput }, context] = await Promise.all([
         import('../../core/queries/tasks.js'),
@@ -40,6 +44,15 @@ export function registerTaskCommands(program: Command): void {
         listTasks(context.createReadContext({ connection }), input),
       );
       writeSuccess(result, options);
+    });
+  family
+    .command('position <task-id>')
+    .description('Move a task to an explicitly guarded board position')
+    .action(async (id: string, _options: unknown, command: Command) => {
+      const { moveBoardTask } = await import('../../core/tasks/board.js');
+      return runMutation(command, (context, slug, input) =>
+        moveBoardTask(context, slug, id, input),
+      );
     });
   family
     .command('get <task-id>')

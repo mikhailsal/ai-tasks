@@ -10,3 +10,5 @@ export * from './tasks.js';
 export * from './configuration-migration.js';
 export * from './pagination.js';
 export * from './audit.js';
+export * from './board.js';
+export * from './board-storage.js';

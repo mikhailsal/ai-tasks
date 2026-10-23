@@ -53,10 +53,14 @@ function AuditResults({
   return (
     <>
       <p>{projectSlug ? `Проект: ${projectSlug}` : 'Все проекты'}</p>
-      <p>
-        Время снимка страницы: <time dateTime={query.data.meta.as_of}>{query.data.meta.as_of}</time>
-        . Ответ получен: <time dateTime={query.data.meta.now}>{query.data.meta.now}</time>.
-      </p>
+      <details className="details-panel">
+        <summary>Данные страницы</summary>
+        <p>
+          Время снимка страницы:{' '}
+          <time dateTime={query.data.meta.as_of}>{query.data.meta.as_of}</time>. Ответ получен:{' '}
+          <time dateTime={query.data.meta.now}>{query.data.meta.now}</time>.
+        </p>
+      </details>
       {query.data.data.items.length === 0 ? (
         <p>По выбранным фильтрам записей нет.</p>
       ) : (
@@ -90,6 +94,13 @@ export function Audit({ search, timezone }: { search: string; timezone: string }
   const [filters, setFilters] = useState(() => auditFilters(search));
   const [filterError, setFilterError] = useState('');
   const { parsed, query } = useAuditPage(search);
+  const showFilters = [
+    filters.project,
+    filters.entity,
+    filters.operation,
+    filterError,
+    parsed.error,
+  ].some(Boolean);
   const stale = query.error instanceof ApiClientError && query.error.code === 'CURSOR_STALE';
   function firstPage() {
     if (new URLSearchParams(search).has('cursor')) navigate(auditPageHref(search));
@@ -102,55 +113,60 @@ export function Audit({ search, timezone }: { search: string; timezone: string }
         Неизменяемые записи о том, кто и что изменил. Можно выбрать исторический проект, даже если
         его уже нет в текущем списке.
       </p>
-      <form
-        aria-label="Фильтры истории"
-        onSubmit={(event) => {
-          event.preventDefault();
-          try {
-            setFilterError('');
-            navigate(auditFilterHref(filters));
-          } catch (failure) {
-            setFilterError(errorMessage(failure));
-          }
-        }}
-      >
-        <div className="field">
-          <label htmlFor="audit-scope">Область истории</label>
-          <select
-            id="audit-scope"
-            value={filters.scope}
-            onChange={(event) =>
-              setFilters({
-                ...filters,
-                scope: event.target.value === 'project' ? 'project' : 'all',
-              })
+      <details className="details-panel" open={showFilters || undefined}>
+        <summary>Фильтры истории</summary>
+        <form
+          aria-label="Фильтры истории"
+          onSubmit={(event) => {
+            event.preventDefault();
+            try {
+              setFilterError('');
+              navigate(auditFilterHref(filters));
+            } catch (failure) {
+              setFilterError(errorMessage(failure));
             }
-          >
-            <option value="all">Все проекты</option>
-            <option value="project">Один проект</option>
-          </select>
-        </div>
-        {filters.scope === 'project' && (
+          }}
+        >
+          <div className="field">
+            <label htmlFor="audit-scope">Область истории</label>
+            <select
+              id="audit-scope"
+              value={filters.scope}
+              onChange={(event) =>
+                setFilters({
+                  ...filters,
+                  scope: event.target.value === 'project' ? 'project' : 'all',
+                })
+              }
+            >
+              <option value="all">Все проекты</option>
+              <option value="project">Один проект</option>
+            </select>
+          </div>
+          {filters.scope === 'project' && (
+            <Field
+              label="Slug проекта"
+              value={filters.project}
+              onChange={(event) => setFilters({ ...filters, project: event.target.value })}
+              hint="Допускается slug из исторических записей."
+            />
+          )}
           <Field
-            label="Slug проекта"
-            value={filters.project}
-            onChange={(event) => setFilters({ ...filters, project: event.target.value })}
-            hint="Допускается slug из исторических записей."
+            label="UUID сущности"
+            value={filters.entity}
+            onChange={(event) => setFilters({ ...filters, entity: event.target.value })}
+            hint="Оставьте пустым, чтобы видеть все сущности в выбранной области."
           />
-        )}
-        <Field
-          label="UUID сущности"
-          value={filters.entity}
-          onChange={(event) => setFilters({ ...filters, entity: event.target.value })}
-          hint="Оставьте пустым, чтобы видеть все сущности в выбранной области."
-        />
-        <Field
-          label="UUID операции"
-          value={filters.operation}
-          onChange={(event) => setFilters({ ...filters, operation: event.target.value })}
-        />
-        <Button type="submit">Показать историю</Button>
-      </form>
+          <Field
+            label="UUID операции"
+            value={filters.operation}
+            onChange={(event) => setFilters({ ...filters, operation: event.target.value })}
+          />
+          <Button variant="primary" type="submit">
+            Показать историю
+          </Button>
+        </form>
+      </details>
       {(filterError || parsed.error) && <p role="alert">{filterError || parsed.error}</p>}
       {parsed.input && query.isPending && <p role="status">Загрузка истории…</p>}
       {query.error && (

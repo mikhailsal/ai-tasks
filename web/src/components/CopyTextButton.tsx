@@ -26,7 +26,7 @@ export function CopyTextButton({
   }
   return (
     <>
-      <Button aria-label={label} onClick={() => void copy()}>
+      <Button variant="ghost" aria-label={label} onClick={() => void copy()}>
         {children ?? label}
       </Button>
       {message && <p role="status">{message}</p>}

@@ -121,9 +121,12 @@ function migrate(id: string, config: ProjectConfigInput, from?: string, to?: str
   );
 }
 function replayCompletionMigration() {
+  // Reconstruct the populated schema immediately before 0002. Later migration
+  // records must also be removed: Drizzle resumes after the newest timestamp.
+  fixture.connection.sqlite.exec('DROP TABLE board_order; DROP TABLE board_columns');
   fixture.connection.sqlite.exec('ALTER TABLE tasks DROP COLUMN completion_recorded_at');
   fixture.connection.sqlite
-    .prepare('DELETE FROM __drizzle_migrations WHERE created_at=?')
+    .prepare('DELETE FROM __drizzle_migrations WHERE created_at>=?')
     .run(1792627200000);
   migrateDatabase(fixture.connection);
 }

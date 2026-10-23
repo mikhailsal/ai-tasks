@@ -22,6 +22,7 @@ const serverPackages = [
 ];
 const browserSchemaFiles = new Set([
   'audit.ts',
+  'board.ts',
   'values.ts',
   'envelopes.ts',
   'errors.ts',

@@ -50,7 +50,7 @@ export function BackupControls({
       ) : (
         <p>Актуальные данные недоступны. Состояние восстановления можно проверить ниже.</p>
       )}
-      <Button disabled={blocked || !project} onClick={onCreate}>
+      <Button variant="primary" disabled={blocked || !project} onClick={onCreate}>
         Создать резервную копию
       </Button>
       {created && <p role="status">Резервная копия создана.</p>}

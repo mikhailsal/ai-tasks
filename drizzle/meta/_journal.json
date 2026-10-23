@@ -22,6 +22,13 @@
       "when": 1792627200000,
       "tag": "0002_ordinary_completion_time",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792710618222,
+      "tag": "0003_shared_board_order",
+      "breakpoints": true
     }
   ]
 }

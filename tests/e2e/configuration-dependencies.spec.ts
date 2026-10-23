@@ -172,7 +172,9 @@ for (const { model, markers } of models) {
             ? { model: 'numeric', value: -1.875 }
             : { model: 'eisenhower', important: true, urgent: false };
     expect(data.priority).toEqual(expected);
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/projects/${slug}/tasks/${data.id}$`, 'u'));
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
+    await page.getByText('Приоритет и срок', { exact: true }).click();
     await page.getByRole('button', { name: 'Убрать приоритет', exact: true }).click();
     const cleared = page.waitForResponse(
       (reply) => reply.request().method() === 'PATCH' && reply.url().endsWith(`/tasks/${data.id}`),

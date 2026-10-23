@@ -1,81 +1,107 @@
 import { useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import type { TaskResource } from '../../../src/schema/tasks.js';
-import { Button } from '../components/Button.js';
-import { getApi } from '../data/api.js';
-import { errorMessage, taskPageSchema } from '../data/resources.js';
+import type { MetaData } from '../../../src/schema/meta.js';
+import { useMutationAvailability } from '../app/MutationBoundary.js';
 import { AppLink } from '../app/router.js';
+import { AddTaskButton } from '../components/AddTaskButton.js';
+import { Button } from '../components/Button.js';
+import { TaskCard } from '../components/TaskCard.js';
+import { useTaskGroups } from '../data/task-groups.js';
+import { errorMessage } from '../data/resources.js';
 
-const categoryLabels: Readonly<Record<string, string>> = {
-  not_started: 'Не начато',
-  in_progress: 'В работе',
-  review: 'На проверке',
-  completed: 'Завершено',
-  cancelled: 'Отменено',
-  draft: 'Черновик',
-  active: 'Активно',
-  paused: 'На паузе',
-  archived: 'В архиве',
-};
-
-function TaskCard({ task }: { task: TaskResource }) {
+function TaskListState({
+  pending,
+  error,
+  empty,
+  restart,
+}: {
+  pending: boolean;
+  error: unknown;
+  empty: boolean;
+  restart: () => Promise<void>;
+}) {
   return (
-    <li className="panel">
-      <AppLink href={`/projects/${task.project_slug}/tasks/${task.id}`}>
-        {task.emoji} {task.title}
-      </AppLink>
-      <p>
-        Проект: {task.project_slug} · {categoryLabels[task.category]}
-      </p>
-      {task.archived_at !== null && <p>Задача в архиве</p>}
-    </li>
+    <>
+      {pending && <p role="status">Загрузка задач…</p>}
+      {error ? (
+        <>
+          <p role="alert">{errorMessage(error)}</p>
+          <Button onClick={() => void restart()}>Обновить список</Button>
+        </>
+      ) : null}
+      {empty && (
+        <div className="panel empty-state">
+          <h2>Место для новых планов</h2>
+          <p>Задач пока нет. Выберите проект, чтобы добавить задачу.</p>
+        </div>
+      )}
+    </>
   );
 }
 
-/** US1 list entry; agenda/model grouping joins in its owning query story. */
-export function Tasks() {
+export function Tasks({ metadata }: { metadata: MetaData }) {
   const selected = new URLSearchParams(window.location.search).get('project_slug');
   const [includeTerminal, setIncludeTerminal] = useState(false);
-  const query = useInfiniteQuery({
-    queryKey: ['tasks', selected, includeTerminal],
-    initialPageParam: '',
-    queryFn: ({ pageParam, signal }) => {
-      const params = new URLSearchParams({
-        ...(selected === null ? { all_projects: 'true' } : { project_slug: selected }),
-        include_terminal: String(includeTerminal),
-        ...(pageParam ? { cursor: pageParam } : {}),
-      });
-      return getApi(`/tasks?${params.toString()}`, taskPageSchema, signal);
-    },
-    getNextPageParam: (page) => page.data.next_cursor ?? undefined,
-    retry: false,
+  const parameters = new URLSearchParams({
+    ...(selected === null ? { all_projects: 'true' } : { project_slug: selected }),
+    include_terminal: String(includeTerminal),
   });
-  const items = query.data?.pages.flatMap((page) => page.data.items) ?? [];
+  const {
+    query,
+    groups,
+    metadata: snapshot,
+    restart,
+  } = useTaskGroups('priorities', parameters.toString());
+  const online = useMutationAvailability(metadata.database_epoch, selected ?? undefined);
+  const items = groups.flatMap((group) => group.items.map((task) => ({ task, group })));
+  const project = groups.find((group) => group.project.slug === selected)?.project;
   return (
-    <section>
-      <h1>Задачи</h1>
-      <p>{selected === null ? 'Все проекты' : `Проект: ${selected}`}</p>
-      <div className="actions">
-        <AppLink href="/projects">Выбрать проект</AppLink>
-        {selected !== null && <AppLink href="/?all_projects=true">Все проекты</AppLink>}
+    <section className="home-screen">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Ваш рабочий день</p>
+          <h1>Задачи</h1>
+        </div>
+        <AddTaskButton {...(selected ? { projectSlug: selected } : {})} disabled={!online} />
       </div>
-      <Button aria-pressed={includeTerminal} onClick={() => setIncludeTerminal(!includeTerminal)}>
-        {includeTerminal ? 'Скрыть завершённые и отменённые' : 'Показать завершённые и отменённые'}
-      </Button>
-      {query.isPending && <p role="status">Загрузка задач…</p>}
-      {query.error && (
-        <>
-          <p role="alert">{errorMessage(query.error)}</p>
-          <Button onClick={() => void query.refetch()}>Обновить список</Button>
-        </>
-      )}
-      {query.isSuccess && items.length === 0 && (
-        <p>Задач пока нет. Выберите проект, чтобы добавить задачу.</p>
-      )}
+      <div className="list-toolbar">
+        <AppLink href="/projects">
+          {selected === null ? 'Все проекты' : (project?.name ?? 'Выбрать проект')}{' '}
+          <span aria-hidden="true">⌄</span>
+        </AppLink>
+        <details className="list-options">
+          <summary>Фильтры</summary>
+          <div className="stack">
+            <Button
+              aria-pressed={includeTerminal}
+              onClick={() => setIncludeTerminal(!includeTerminal)}
+            >
+              {includeTerminal
+                ? 'Скрыть завершённые и отменённые'
+                : 'Показать завершённые и отменённые'}
+            </Button>
+            {selected !== null && <AppLink href="/?all_projects=true">Все проекты</AppLink>}
+          </div>
+        </details>
+      </div>
+      {includeTerminal && <p className="subtle">Включая завершённые и отменённые</p>}
+      <TaskListState
+        pending={query.isPending}
+        error={query.error}
+        empty={query.isSuccess && items.length === 0}
+        restart={restart}
+      />
       <ul className="task-list">
-        {items.map((task) => (
-          <TaskCard key={task.id} task={task} />
-        ))}
+        {snapshot &&
+          items.map(({ task, group }) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              group={group}
+              timezone={snapshot.timezone}
+              asOf={snapshot.as_of}
+              compact
+            />
+          ))}
       </ul>
       {query.hasNextPage && (
         <Button disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>

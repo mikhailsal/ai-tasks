@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { TextDecoder } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
-const budget = 150_000;
+// User-approved temporary exception for 002-mobile-ux; baseline remains 150000.
+// Owner, expiry and removal checks: specs/002-mobile-ux/plan.md#complexity-tracking.
+const budget = 170_000;
 const gzipOptions = Object.freeze({ level: 9 });
 const javascriptExtension = /\.(?:js|mjs|cjs)$/iu;
 

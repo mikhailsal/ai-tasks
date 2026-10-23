@@ -1,7 +1,7 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { metaEnvelopeSchema } from '../../src/schema/meta.js';
-import { availablePort } from './http-delivery.js';
+import { availablePort } from './available-port.js';
 
 export async function startRecoverySupervisor(input: {
   databasePath: string;

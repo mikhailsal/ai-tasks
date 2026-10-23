@@ -1,3 +1,4 @@
+import { syncBoardMembership } from './board-order.js';
 import type { z } from 'zod/mini';
 import type { projects, tasks } from '../../schema/entities.js';
 import type { ProjectConfigInput } from '../../schema/configuration.js';
@@ -30,6 +31,8 @@ export function taskMutationResult(
       before: jsonValueSchema.parse(before === null ? null : Reflect.get(before, field)),
       after: jsonValueSchema.parse(value),
     }));
+  const boardChange = syncBoardMembership(transaction, options);
+  if (boardChange) changes.push(boardChange);
   const event: AuditEvent = {
     entity_type: 'task',
     entity_id: options.after.id,

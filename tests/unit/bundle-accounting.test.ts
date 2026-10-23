@@ -27,7 +27,7 @@ async function inventory(javascript: unknown, extra: Record<string, unknown> = {
 const reportSchema = z.strictObject({
   assets: z.array(z.strictObject({ file: z.string(), bytes: z.number(), gzip_bytes: z.number() })),
   total_gzip_bytes: z.number(),
-  budget_bytes: z.literal(150000),
+  budget_bytes: z.literal(170000),
   gzip_options: z.strictObject({ level: z.literal(9) }),
   node: z.string(),
   zlib: z.string(),
@@ -70,7 +70,7 @@ it('counts every nested lazy, worker, service-worker and alternate-extension Jav
     gzipSync(Object.values(sources).join(''), { level: 9 }).length,
   );
   expect(report).toMatchObject({
-    budget_bytes: 150000,
+    budget_bytes: 170000,
     gzip_options: { level: 9 },
     node: process.versions.node,
     zlib: process.versions.zlib,
@@ -79,9 +79,9 @@ it('counts every nested lazy, worker, service-worker and alternate-extension Jav
 });
 
 it.each([
-  [149999, true],
-  [150000, false],
-  [150001, false],
+  [169999, true],
+  [170000, false],
+  [170001, false],
 ] as const)('the production report decides exact summed boundary %i as %s', (total, passed) => {
   const assets = [
     { file: 'app.js', bytes: 400000, gzip_bytes: 100000 },
@@ -90,7 +90,7 @@ it.each([
   expect(bundleReport(assets)).toEqual({
     assets,
     total_gzip_bytes: total,
-    budget_bytes: 150000,
+    budget_bytes: 170000,
     gzip_options: { level: 9 },
     node: process.versions.node,
     zlib: process.versions.zlib,
@@ -126,7 +126,7 @@ it('the real CLI returns one failing report and nonzero exit for an actual overs
   expect(result.stderr).toBe('');
   const report = reportSchema.parse(JSON.parse(result.stdout));
   expect(report.total_gzip_bytes).toBe(gzipSync(source, { level: 9 }).length);
-  expect(report.total_gzip_bytes).toBeGreaterThanOrEqual(150000);
+  expect(report.total_gzip_bytes).toBeGreaterThanOrEqual(170000);
   expect(report.passed).toBe(false);
 });
 

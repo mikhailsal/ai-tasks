@@ -75,9 +75,9 @@ test('cold offline reload and reopening retain the latest fetched safe HTML and 
       'datetime',
       saved ?? '',
     );
-    await expect(
-      reopened.getByRole('button', { name: 'Редактировать', exact: true }),
-    ).toBeDisabled();
+    await expect(reopened.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
+    await expect(reopened.getByLabel('Название задачи', { exact: true })).toBeDisabled();
+    await expect(reopened.getByLabel('Описание', { exact: true })).toBeDisabled();
     await reopened.close();
   } finally {
     await context.setOffline(false);
@@ -100,7 +100,7 @@ test('uncached detail and evicted read snapshots explain absence instead of inve
     await expect(page.getByText('Никогда не загруженная задача', { exact: true })).toHaveCount(0);
     await context.setOffline(false);
     await loadedTask(page, server);
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     await page.getByLabel('Описание', { exact: true }).fill('Черновик отдельно от снимков');
     await waitForDraft(page, server.taskId, 'Черновик отдельно от снимков');
     await page.evaluate(`(async()=>{for(const entry of await indexedDB.databases()){
@@ -180,7 +180,7 @@ test('every write family remains disabled offline and reconnecting never queues 
       { path: '/projects/alpha/tasks/new', buttons: ['Сохранить'] },
       {
         path: taskPath(server.taskId),
-        buttons: ['Редактировать', 'В архив', 'Добавить зависимость'],
+        buttons: ['Сохранить', 'В архив', 'Добавить зависимость'],
       },
       {
         path: taskPath(server.dependentId),
@@ -263,7 +263,7 @@ test('flapping reconnect preserves a dirty draft and its old revision against a 
   const server = await offlineBrowserServer();
   try {
     await loadedTask(page, server);
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     const proposed = 'Мой несохранённый текст\n  **не заменять**  ';
     await page.getByLabel('Описание', { exact: true }).fill(proposed);
     await waitForDraft(page, server.taskId, proposed);
@@ -309,7 +309,7 @@ test('a committed lost response survives offline reopening and retries only the 
     const path = `/api/v1/projects/alpha/tasks/${server.taskId}`;
     const bodies = await observeBrowserMutationBodies(page, { method: 'PATCH', path });
     await loadedTask(page, server);
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     const proposed = 'Сохранено один раз, ответ потерян';
     await page.getByLabel('Описание', { exact: true }).fill(proposed);
     await waitForDraft(page, server.taskId, proposed);
@@ -385,7 +385,7 @@ test('a real restore changes epoch while offline and retains old drafts for expl
     expect(created.status).toBe(201);
     const backup = z.object({ id: z.uuid() }).parse(successfulRecovery(created));
     await loadedTask(page, server);
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     const proposed = 'Черновик прошлого экземпляра базы';
     await page.getByLabel('Описание', { exact: true }).fill(proposed);
     await waitForDraft(page, server.taskId, proposed);

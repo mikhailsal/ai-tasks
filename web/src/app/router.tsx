@@ -11,17 +11,37 @@ function queryScreenRoute(url: URL) {
   return undefined;
 }
 
+function entryRoute(url: URL) {
+  const pathname = url.pathname;
+  if (
+    pathname === '/' &&
+    !url.searchParams.has('all_projects') &&
+    !url.searchParams.has('project_slug')
+  )
+    return { kind: 'projects' } as const;
+  if (pathname === '/' || pathname === '/tasks') return { kind: 'tasks' } as const;
+  if (pathname === '/projects') return { kind: 'projects' } as const;
+  return undefined;
+}
+
 export function routeForPath(path: string) {
   const url = new URL(path, 'http://local.invalid');
   const pathname = url.pathname;
-  if (pathname === '/' || pathname === '/tasks') return { kind: 'tasks' } as const;
-  if (pathname === '/projects') return { kind: 'projects' } as const;
+  const entry = entryRoute(url);
+  if (entry) return entry;
   const queryScreen = queryScreenRoute(url);
   if (queryScreen) return queryScreen;
   const task = /^\/projects\/([^/]+)\/tasks\/([^/]+)$/u.exec(pathname);
+  const board = /^\/projects\/([^/]+)\/board$/u.exec(pathname);
   const project = /^\/projects\/([^/]+)$/u.exec(pathname);
   const configuration = /^\/projects\/([^/]+)\/configuration$/u.exec(pathname);
   try {
+    if (board?.[1])
+      return {
+        kind: 'project-board',
+        projectSlug: decodeURIComponent(board[1]),
+        search: url.search,
+      } as const;
     if (configuration?.[1])
       return {
         kind: 'project-configuration',
@@ -62,7 +82,19 @@ export function navigate(href: string): void {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
-export function AppLink({ href, children }: { href: string; children: ReactNode }) {
+export function AppLink({
+  href,
+  children,
+  className,
+  label,
+  active,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+  label?: string;
+  active?: boolean;
+}) {
   useRoute();
   const target = new URL(href, window.location.origin);
   const current =
@@ -74,7 +106,13 @@ export function AppLink({ href, children }: { href: string; children: ReactNode 
     navigate(href);
   }
   return (
-    <a href={href} onClick={follow} aria-current={current ? 'page' : undefined}>
+    <a
+      href={href}
+      className={className}
+      aria-label={label}
+      onClick={follow}
+      aria-current={(active ?? current) ? 'page' : undefined}
+    >
       {children}
     </a>
   );

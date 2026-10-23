@@ -38,7 +38,7 @@ export function Workload({ search }: { search: string }) {
   return (
     <section className="stack">
       <h1>Нагрузка</h1>
-      <ReadFilters search={search} path="/workload" statistics />
+      <ReadFilters search={search} path="/workload" statistics collapsible />
       {parsed.error && <p role="alert">{parsed.error}</p>}
       {!parsed.error && query.isPending && <p role="status">Загружаем показатели…</p>}
       {query.error && (
@@ -54,20 +54,28 @@ export function Workload({ search }: { search: string }) {
       {query.error && query.data && (
         <p>Показаны последние успешно загруженные показатели; время снимка сохранено.</p>
       )}
-      {query.data && <WorkloadRange search={search} timezone={query.data.meta.timezone} />}
+      {query.data && (
+        <details className="details-panel" open={Boolean(from || to) || undefined}>
+          <summary>Период нагрузки</summary>
+          <WorkloadRange search={search} timezone={query.data.meta.timezone} />
+        </details>
+      )}
       {query.data && (
         <>
-          <p>
-            Время снимка:{' '}
-            <time dateTime={query.data.meta.as_of}>
-              {viewTime(query.data.meta.as_of, query.data.meta.timezone)}
-            </time>
-            . Ответ получен:{' '}
-            <time dateTime={query.data.meta.now}>
-              {viewTime(query.data.meta.now, query.data.meta.timezone)}
-            </time>
-            .
-          </p>
+          <details className="details-panel">
+            <summary>Данные и обновление</summary>
+            <p>
+              Время снимка:{' '}
+              <time dateTime={query.data.meta.as_of}>
+                {viewTime(query.data.meta.as_of, query.data.meta.timezone)}
+              </time>
+              . Ответ получен:{' '}
+              <time dateTime={query.data.meta.now}>
+                {viewTime(query.data.meta.now, query.data.meta.timezone)}
+              </time>
+              .
+            </p>
+          </details>
           {equal && <p role="status">Границы совпадают: период пустой.</p>}
           <WorkloadCounters data={query.data.data} />
         </>

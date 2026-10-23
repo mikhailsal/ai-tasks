@@ -36,6 +36,8 @@ const queryFlags = [
   ['emoji', 'emoji'],
   ['archive', 'archive'],
   ['includeTerminal', 'include_terminal'],
+  ['deadlinePreset', 'deadline_preset'],
+  ['deadlineDay', 'deadline_day'],
 ] as const;
 export async function readCommand(command: Command, allowed: readonly (keyof CliOptions)[]) {
   const options = commandOptions(command);

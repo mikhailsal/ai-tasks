@@ -3,13 +3,14 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
 import { useMutationAvailability } from '../app/MutationBoundary.js';
-import { navigate } from '../app/router.js';
+import { AppLink, navigate } from '../app/router.js';
 import { getApi } from '../data/api.js';
 import { errorMessage, projectPageSchema, readProject } from '../data/resources.js';
 import { ProjectEditor } from './ProjectEditor.js';
 import { ProjectDetail } from './ProjectDetail.js';
 
 function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean }) {
+  const choosingTask = new URLSearchParams(window.location.search).get('new_task') === 'true';
   const [archive, setArchive] = useState<'exclude' | 'only'>('exclude');
   const [creating, setCreating] = useState(false);
   const query = useInfiniteQuery({
@@ -31,28 +32,27 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
         metadata={metadata}
         online={online}
         onCancel={() => setCreating(false)}
-        onSaved={(slug) => navigate(`/projects/${encodeURIComponent(slug)}`)}
+        onSaved={(slug) => navigate(`/projects/${encodeURIComponent(slug)}/board`)}
       />
     );
   const items = query.data?.pages.flatMap((page) => page.data.items) ?? [];
   return (
     <>
-      <h1>Проекты</h1>
-      <p>
-        <a href="/?all_projects=true">Все проекты: задачи</a>
-      </p>
-      <div role="group" aria-label="Состояние проектов">
-        <Button aria-pressed={archive === 'exclude'} onClick={() => setArchive('exclude')}>
-          Активные проекты
-        </Button>{' '}
-        <Button aria-pressed={archive === 'only'} onClick={() => setArchive('only')}>
-          Архивные проекты
+      <div className="page-heading">
+        <div>
+          <h1>{choosingTask ? 'Выберите проект' : 'Проекты'}</h1>
+        </div>
+        <Button
+          variant="primary"
+          aria-label="Создать проект"
+          onClick={() => setCreating(true)}
+          disabled={!online}
+        >
+          +
         </Button>
       </div>
-      <p>
-        <Button onClick={() => setCreating(true)} disabled={!online}>
-          Создать проект
-        </Button>
+      <p className="home-caption">
+        {choosingTask ? 'В какой проект добавить задачу?' : 'Выбери, над чем поработать'}
       </p>
       {query.isPending && <p role="status">Загрузка проектов…</p>}
       {query.error && (
@@ -70,12 +70,24 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
             : 'Активных проектов пока нет. Создайте проект, чтобы добавить задачи.'}
         </p>
       )}
-      <ul>
+      <ul className="project-list">
         {items.map((project) => (
-          <li key={project.slug}>
-            <a href={`/projects/${encodeURIComponent(project.slug)}`}>
-              {project.emoji} {project.name}
-            </a>
+          <li key={project.slug} className="panel project-card">
+            <AppLink
+              href={
+                choosingTask && project.archived_at === null
+                  ? `/projects/${encodeURIComponent(project.slug)}/tasks/new`
+                  : `/projects/${encodeURIComponent(project.slug)}/board`
+              }
+            >
+              <span className="project-emoji" aria-hidden="true">
+                {project.emoji}
+              </span>
+              <span>{project.name}</span>
+              <span className="project-arrow" aria-hidden="true">
+                ›
+              </span>
+            </AppLink>
             <p>
               Приоритет: {project.priority}
               {project.archived_at !== null ? ' · В архиве' : ''}
@@ -83,6 +95,13 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
           </li>
         ))}
       </ul>
+      <ProjectArchiveFooter
+        count={items.length}
+        hasMore={query.hasNextPage}
+        archive={archive}
+        onToggle={() => setArchive(archive === 'only' ? 'exclude' : 'only')}
+      />
+      <AppLink href="/tasks?all_projects=true">Все проекты: задачи</AppLink>
       {query.hasNextPage && (
         <Button
           onClick={() => void query.fetchNextPage()}
@@ -131,5 +150,29 @@ export function Projects({ slug, metadata }: { slug?: string; metadata: MetaData
         refresh={() => void project.refetch()}
       />
     </>
+  );
+}
+
+function ProjectArchiveFooter({
+  count,
+  hasMore,
+  archive,
+  onToggle,
+}: {
+  count: number;
+  hasMore: boolean;
+  archive: 'exclude' | 'only';
+  onToggle(): void;
+}) {
+  return (
+    <div className="home-project-footer">
+      <span className="subtle">
+        {count}
+        {hasMore ? '+' : ''} {archive === 'only' ? 'архивных' : 'активных'} проектов
+      </span>
+      <Button variant="ghost" onClick={onToggle}>
+        {archive === 'only' ? 'Активные проекты' : 'Архивные проекты'} →
+      </Button>
+    </div>
   );
 }

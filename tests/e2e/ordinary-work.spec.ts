@@ -194,7 +194,7 @@ test('preserves exact Markdown source, shows server preview, copies semantic emo
     emoji: '👩🏽‍💻',
   });
   await page.getByRole('button', { name: 'Скопировать эмодзи', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText(/эмодзи.*скопирован/iu);
+  await expect(page.getByRole('status').filter({ hasText: /эмодзи.*скопирован/iu })).toBeVisible();
 });
 test('names the task and exact transition in consent and records actual confirmation text', async ({
   page,
@@ -233,7 +233,7 @@ test('retains a stale proposal beside current server text and requires an explic
   const project = await seedProject(page, info, 4);
   const task = await seedTask(page, project.slug, { description: 'Первый исходник' });
   await page.goto(`/projects/${project.slug}/tasks/${task.id}`);
-  await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+  await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
   await page.getByLabel('Описание', { exact: true }).fill('Мой несохранённый вариант');
   await mutation(page, 'PATCH', `/projects/${project.slug}/tasks/${task.id}`, {
     payload: { description: 'Версия другого клиента' },
@@ -266,7 +266,9 @@ test('keeps archived project/task views read-only and restores ordinary status w
   });
   await page.goto(`/projects/${project.slug}/tasks/${task.id}`);
   await expect(page.getByText(/^В архиве\. Редактирование недоступно/iu)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Редактировать', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
+  await expect(page.getByLabel('Название задачи', { exact: true })).toBeDisabled();
+  await expect(page.getByLabel('Описание', { exact: true })).toBeDisabled();
   const [restoreResponse] = await Promise.all([
     page.waitForResponse(
       (response) =>
@@ -295,7 +297,7 @@ test('retains proposed fields when editing an existing task to an occupied marke
   await seedTask(page, project.slug, { emoji: '🧪' });
   const edited = await seedTask(page, project.slug, { emoji: '🎯', description: 'База' });
   await page.goto(`/projects/${project.slug}/tasks/${edited.id}`);
-  await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+  await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
   await page.getByLabel('Эмодзи задачи', { exact: true }).fill('🧪');
   await page.getByLabel('Описание', { exact: true }).fill('Правка должна остаться');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();

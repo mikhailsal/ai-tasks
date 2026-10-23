@@ -3,7 +3,7 @@ import { tasks } from '../../schema/entities.js';
 import { confirmationSchema, taskTransitionSchema } from '../../schema/tasks.js';
 import type { MutationEnvelope } from '../../schema/envelopes.js';
 import { executeMutation } from '../database/mutate.js';
-import type { CoreContext } from '../database/types.js';
+import type { CoreContext, DatabaseTransaction } from '../database/types.js';
 import { domainError, normalizeError } from '../errors.js';
 import { readProjectConfiguration, requireProject } from '../projects/read.js';
 import { parseInput } from '../validation.js';
@@ -59,68 +59,77 @@ export function transitionTask(
     input,
     guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
-      const project = requireProject(transaction, projectSlug);
-      assertProjectActive(project);
-      const before = requireTask(transaction, projectSlug, taskId);
-      const payload = parseInput(taskTransitionSchema, input.payload);
-      const config = readProjectConfiguration(transaction, project);
-      if (before.kind === 'recurring')
-        return moveRecurringTask(transaction, {
-          task: before,
-          project,
-          config,
-          input,
-          data: payload,
-          now,
-          action: 'task.transition',
-        });
-      if (before.archivedAt !== null)
-        throw domainError('VALIDATION_ERROR', 'Archived tasks are read-only');
-      const source = taskStatus(before, config);
-      const target = config.ordinary_workflow.statuses.find(
-        (status) => status.id === payload.to_status_id,
-      );
-      const edge = config.ordinary_workflow.transitions.find(
-        (value) => value.from === before.statusId && value.to === payload.to_status_id,
-      );
-      if (!target || !edge)
-        throw domainError('VALIDATION_ERROR', 'This transition is not in the project workflow');
-      const confirmation = transitionConfirmation(edge.requires_confirmation, payload.confirmation);
-      assertPrerequisitesSatisfied(transaction, taskId, target.category);
-      const policy = markerPolicy({
-        sourceCategory: source.category,
-        targetCategory: target.category,
-        replacement: payload.replacement_emoji,
-        collision: payload.emoji_collision,
-      });
-      const marker = syncTaskEmoji(transaction, {
-        projectSlug,
-        taskId,
-        emoji: payload.replacement_emoji ?? before.emoji,
-        ...policy,
-      });
-      const after = transaction
-        .update(tasks)
-        .set({
-          statusId: target.id,
-          completionRecordedAt: completionRecordedAt(before, source.category, target.category, now),
-          emoji: marker.emoji,
-          emojiKey: marker.key,
-          revision: before.revision + 1,
-          updatedAt: now,
-        })
-        .where(eq(tasks.id, taskId))
-        .returning()
-        .get();
-      if (!after) throw domainError('INTERNAL_ERROR', 'Task transition returned no result');
-      return taskMutationResult(transaction, {
-        before,
-        after,
-        project,
-        config,
-        action: 'task.transition',
-        ...(confirmation === undefined ? {} : { confirmation }),
-      });
+      return applyTaskTransition(transaction, { projectSlug, taskId, input, now });
     },
+  });
+}
+
+/** The board uses exactly the same guarded lifecycle inside its enclosing mutation. */
+export function applyTaskTransition(
+  transaction: DatabaseTransaction,
+  options: { projectSlug: string; taskId: string; input: MutationEnvelope; now: number },
+) {
+  const { projectSlug, taskId, input, now } = options;
+  const project = requireProject(transaction, projectSlug);
+  assertProjectActive(project);
+  const before = requireTask(transaction, projectSlug, taskId);
+  const payload = parseInput(taskTransitionSchema, input.payload);
+  const config = readProjectConfiguration(transaction, project);
+  if (before.kind === 'recurring')
+    return moveRecurringTask(transaction, {
+      task: before,
+      project,
+      config,
+      input,
+      data: payload,
+      now,
+      action: 'task.transition',
+    });
+  if (before.archivedAt !== null)
+    throw domainError('VALIDATION_ERROR', 'Archived tasks are read-only');
+  const source = taskStatus(before, config);
+  const target = config.ordinary_workflow.statuses.find(
+    (status) => status.id === payload.to_status_id,
+  );
+  const edge = config.ordinary_workflow.transitions.find(
+    (value) => value.from === before.statusId && value.to === payload.to_status_id,
+  );
+  if (!target || !edge)
+    throw domainError('VALIDATION_ERROR', 'This transition is not in the project workflow');
+  const confirmation = transitionConfirmation(edge.requires_confirmation, payload.confirmation);
+  assertPrerequisitesSatisfied(transaction, taskId, target.category);
+  const policy = markerPolicy({
+    sourceCategory: source.category,
+    targetCategory: target.category,
+    replacement: payload.replacement_emoji,
+    collision: payload.emoji_collision,
+  });
+  const marker = syncTaskEmoji(transaction, {
+    projectSlug,
+    taskId,
+    emoji: payload.replacement_emoji ?? before.emoji,
+    ...policy,
+  });
+  const after = transaction
+    .update(tasks)
+    .set({
+      statusId: target.id,
+      completionRecordedAt: completionRecordedAt(before, source.category, target.category, now),
+      emoji: marker.emoji,
+      emojiKey: marker.key,
+      revision: before.revision + 1,
+      updatedAt: now,
+    })
+    .where(eq(tasks.id, taskId))
+    .returning()
+    .get();
+  if (!after) throw domainError('INTERNAL_ERROR', 'Task transition returned no result');
+  return taskMutationResult(transaction, {
+    before,
+    after,
+    project,
+    config,
+    action: 'task.transition',
+    ...(confirmation === undefined ? {} : { confirmation }),
   });
 }

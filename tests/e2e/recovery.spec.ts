@@ -109,7 +109,7 @@ test('lost restore acceptance resolves through operation status during maintenan
   try {
     const info = await createBackup(server);
     await page.goto(`${server.origin}/projects/alpha/tasks/${server.taskId}`);
-    await page.getByRole('button', { name: 'Редактировать', exact: true }).click();
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     const draft = '  **Неотправленный черновик** 👩🏽‍💻\n\nСохранить после явной сверки.';
     await page.getByLabel('Описание', { exact: true }).fill(draft);
     await page
@@ -257,6 +257,74 @@ test('post-backup permanent marker conflicts remain visible and prevent restore 
       page.getByRole('button', { name: 'Восстановить снимок', exact: true }),
     ).toBeDisabled();
     expect(server.snapshot()).toEqual(before);
+  } finally {
+    await page.context().close();
+    await server.close();
+  }
+});
+
+test('canceling restore consent while draft persistence is pending never starts recovery', async ({
+  page,
+}) => {
+  const server = await createRecoveryHarness();
+  const restoreRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/backups/restore'))
+      restoreRequests.push(request.postData() ?? '');
+  });
+  try {
+    await page.addInitScript(`(() => {
+      const descriptor = Object.getOwnPropertyDescriptor(IDBTransaction.prototype, 'oncomplete');
+      if (!descriptor?.set) throw new Error('Missing IndexedDB completion descriptor');
+      globalThis.backupDraftHold = false;
+      globalThis.backupDraftHeld = [];
+      Object.defineProperty(IDBTransaction.prototype, 'oncomplete', {
+        ...descriptor,
+        set(handler) {
+          if (typeof handler !== 'function') return descriptor.set.call(this, handler);
+          descriptor.set.call(this, event => {
+            const complete = () => handler.call(this, event);
+            if (this.db.name === 'ai-tasks-browser-drafts' && this.mode === 'readwrite' && globalThis.backupDraftHold)
+              globalThis.backupDraftHeld.push(complete);
+            else complete();
+          });
+        },
+      });
+    })()`);
+    const info = await createBackup(server);
+    await openBackups(page, server);
+    await validateBackup(page, info.id);
+    const before = server.snapshot();
+    for (const dismissal of ['escape', 'outside', 'button']) {
+      const confirm = await confirmRestore(page);
+      await page.evaluate('globalThis.backupDraftHold = true');
+      await confirm.click();
+      await expect
+        .poll(() => page.evaluate('globalThis.backupDraftHeld.length'))
+        .toBeGreaterThan(0);
+      if (dismissal === 'escape') await page.keyboard.press('Escape');
+      else if (dismissal === 'outside') await page.mouse.click(2, 2);
+      else
+        await page.getByRole('dialog').getByRole('button', { name: 'Отмена', exact: true }).click();
+      await page.evaluate(`(() => {
+        globalThis.backupDraftHold = false;
+        for (const complete of globalThis.backupDraftHeld.splice(0)) complete();
+      })()`);
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+      await page.getByRole('button', { name: 'Восстановить снимок', exact: true }).click();
+      await expect(
+        page.getByRole('dialog').getByLabel('Текст подтверждения', { exact: true }),
+      ).toHaveValue('');
+      await expect(
+        page
+          .getByRole('dialog')
+          .getByRole('button', { name: 'Подтвердить восстановление', exact: true }),
+      ).toBeDisabled();
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+      expect(restoreRequests).toEqual([]);
+      expect(server.snapshot()).toEqual(before);
+    }
   } finally {
     await page.context().close();
     await server.close();
