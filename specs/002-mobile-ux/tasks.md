@@ -61,3 +61,7 @@ The user's subsequent review adds explicit editor behavior; previous acceptance 
 - [x] T024 Expose project emoji beside the primary identity fields in creation and editing (FR-026; SC-022).
 - [x] T025 Keep expanded Eisenhower and deadline controls in normal full-width flow, compact checkbox visuals with 44px activation areas, at 320/390px (FR-027; SC-023).
 - [x] T026 Run focused real-database/browser regressions in Chromium/WebKit, inspect narrow-screen screenshots, required quality/build/bundle gates, update evidence and restart LAN deployment (FR-024–027; SC-020–023).
+
+## Phase 9: CI verification
+
+- [x] T027 Reconcile the first pushed CI failure in the native-touch board test. Check the actual target and request identity in the retained trace, wait for the intended visible handle before coordinate-based CDP input, retain swipe/no-write and persisted order assertions, run repeated focused checks and prepare the corrective commit for a fresh push CI (FR-007/010/015; SC-006/011).

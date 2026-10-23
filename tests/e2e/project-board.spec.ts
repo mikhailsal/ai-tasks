@@ -277,15 +277,32 @@ test('real touch separates column swipes, vertical scrolling and deliberate card
       .click();
     await list.evaluate((el) => (el.scrollTop = 0));
     const cards = source.locator('.board-task');
-    await expect(cards.first().locator('.board-drag-handle')).toBeEnabled();
-    const h = await cards.first().locator('.board-drag-handle').boundingBox(),
+    const handle = cards.first().locator('.board-drag-handle');
+    await expect(cards.first()).toHaveAttribute('data-task-id', server.ids[0] ?? 'missing');
+    // CDP touches bypass locator actionability; wait for scrolling and the actual hit target.
+    await handle.scrollIntoViewIfNeeded();
+    await expect.poll(() => page.locator('.board-track').evaluate((el) => el.scrollLeft)).toBe(0);
+    await expect
+      .poll(() =>
+        handle.evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+          return hit !== null && element.contains(hit);
+        }),
+      )
+      .toBe(true);
+    await expect(handle).toBeEnabled();
+    const h = await handle.boundingBox(),
       second = await cards.nth(1).boundingBox();
     if (!h || !second) throw Error('Missing touch card');
     await touch('touchStart', h.x + h.width / 2, h.y + h.height / 2);
     await expect(page.locator('.board-drag-ghost')).toBeVisible();
+    await expect(page.locator('.board-drag-ghost')).toContainText('Первая задача');
     await touch('touchMove', 190, second.y + second.height - 3);
     const response = page.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().endsWith('/position'),
+      (r) =>
+        r.request().method() === 'POST' &&
+        r.url().endsWith(`/tasks/${server.ids[0] ?? 'missing'}/position`),
     );
     await touch('touchEnd');
     expect((await response).status()).toBe(200);
