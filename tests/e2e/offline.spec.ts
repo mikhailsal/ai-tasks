@@ -31,14 +31,16 @@ import {
 const savedTime = /Последнее успешное обновление/u;
 const cacheMiss = /не сохранен[аоы]?|нет сохранённых данных|нет данных в кэше|нет данных в кеше/iu;
 
-test('cold offline reload and reopening retain the latest fetched safe HTML and exact source without artificial expiry', async ({
+test('cold offline reload retains the latest fetched safe HTML and exact source', async ({
   page,
   context,
 }) => {
   const server = await offlineBrowserServer();
   try {
-    await loadedTask(page, server);
-    await openSavedDescription(page);
+    await page.goto(`${server.origin}${taskPath(server.taskId)}`);
+    await expect(page.getByRole('heading', { name: cachedTitle, exact: true })).toBeVisible();
+    await expect(page.getByLabel('Описание', { exact: true })).toBeVisible();
+    await expect(await openSavedDescription(page)).toContainText('Сохранить точно');
     await page.getByText('Исходник Markdown', { exact: true }).click();
     expect(
       await page
@@ -67,6 +69,28 @@ test('cold offline reload and reopening retain the latest fetched safe HTML and 
         .locator('pre')
         .textContent(),
     ).toBe(cachedSource);
+  } finally {
+    await context.setOffline(false);
+    await page.context().close();
+    await server.close();
+  }
+});
+
+test('cold offline reopening retains its fetched timestamp without artificial expiry', async ({
+  page,
+  context,
+}) => {
+  const server = await offlineBrowserServer();
+  try {
+    await page.goto(`${server.origin}${taskPath(server.taskId)}`);
+    await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(cachedSource);
+    await page.evaluate('navigator.serviceWorker.ready.then(() => undefined)');
+    await context.setOffline(true);
+    await offlineNavigation(page);
+    await expect(page.getByRole('heading', { name: cachedTitle, exact: true })).toBeVisible();
+    await expect(page.getByText(savedTime).first()).toBeVisible();
+    const saved = await page.getByText(savedTime).first().locator('time').getAttribute('datetime');
+    expect(saved).not.toBeNull();
     const path = page.url();
     await page.close();
     const reopened = await context.newPage();

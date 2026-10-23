@@ -1,4 +1,5 @@
 import type { z } from 'zod/mini';
+import { requestNavigation } from '../app/navigation-guard.js';
 import type { MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
@@ -135,7 +136,7 @@ export function ProjectEditor({
           variant="ghost"
           className="project-editor-back"
           aria-label={labels.back}
-          onClick={onCancel}
+          onClick={() => requestNavigation(onCancel)}
           disabled={cancelDisabled}
         >
           ‹
@@ -184,7 +185,7 @@ export function ProjectEditor({
           )}
         </div>
         <footer className="project-editor-actions">
-          <Button onClick={onCancel} disabled={cancelDisabled}>
+          <Button onClick={() => requestNavigation(onCancel)} disabled={cancelDisabled}>
             Отмена
           </Button>
           <Button

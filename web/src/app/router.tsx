@@ -1,4 +1,5 @@
 import { useSyncExternalStore, type MouseEvent, type ReactNode } from 'react';
+import { changeRoute, goBack, subscribeToNavigation } from './navigation-guard.js';
 
 function queryScreenRoute(url: URL) {
   const pathname = url.pathname;
@@ -61,11 +62,6 @@ export function routeForPath(path: string) {
   return { kind: 'not-found' } as const;
 }
 
-function subscribeToNavigation(listener: () => void): () => void {
-  window.addEventListener('popstate', listener);
-  return () => window.removeEventListener('popstate', listener);
-}
-
 export function useRoute() {
   const path = useSyncExternalStore(
     subscribeToNavigation,
@@ -74,16 +70,11 @@ export function useRoute() {
   return routeForPath(path);
 }
 
-export function navigate(href: string): void {
+export function navigate(href: string, replace = false): void {
   const url = new URL(href, window.location.origin);
   if (url.origin !== window.location.origin)
     throw new Error('Навигация доступна внутри приложения.');
-  window.history.pushState(
-    { previous: window.location.pathname + window.location.search },
-    '',
-    url.pathname + url.search,
-  );
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  changeRoute(url.pathname + url.search, replace);
 }
 
 export function navigateBack(fallback = '/'): void {
@@ -96,7 +87,7 @@ export function navigateBack(fallback = '/'): void {
   ) {
     const previous = new URL(state.previous, window.location.origin);
     if (previous.origin === window.location.origin && previous.href !== window.location.href) {
-      window.history.back();
+      goBack();
       return;
     }
   }

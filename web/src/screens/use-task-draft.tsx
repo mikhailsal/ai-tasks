@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useUnsavedChanges } from '../app/use-unsaved-changes.js';
 import {
   createDraft,
   deleteDraft,
@@ -30,6 +31,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
   const [draft, setDraft] = useState<DraftRecord<TaskFields> | null>(null);
   const [dirty, setDirty] = useState(false);
   const dirtyRef = useRef(false);
+  useUnsavedChanges(() => dirtyRef.current);
   const [error, setError] = useState('');
   const [storageError, setStorageError] = useState('');
   const [pendingProposal, setPendingProposal] = useState<OperationProposal | undefined>();

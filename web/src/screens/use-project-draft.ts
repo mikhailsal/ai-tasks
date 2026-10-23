@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useUnsavedChanges } from '../app/use-unsaved-changes.js';
 import {
   createDraft,
   updateDraft,
@@ -16,6 +17,11 @@ export function useProjectDraft(key: string, initial: { fields: ProjectFields; b
   const [draft, setDraft] = useState(() => createDraft({ key, ...initial }));
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState('');
+  const baseline = useRef(JSON.stringify(initial.fields));
+  const removed = useRef(false);
+  useUnsavedChanges(
+    () => ready && !removed.current && JSON.stringify(draft.fields) !== baseline.current,
+  );
   const queue = useRef(Promise.resolve());
   useEffect(() => {
     let active = true;
@@ -49,6 +55,7 @@ export function useProjectDraft(key: string, initial: { fields: ProjectFields; b
   async function remove() {
     await queue.current;
     await deleteDraft(key);
+    removed.current = true;
   }
   return { draft, setDraft, ready, message, change, persist, remove };
 }

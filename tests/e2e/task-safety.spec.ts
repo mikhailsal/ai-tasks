@@ -1,4 +1,4 @@
-import { openTaskActions } from '../fixtures/task-ui.js';
+import { leaveWithDraft, openTaskActions } from '../fixtures/task-ui.js';
 import { randomUUID } from 'node:crypto';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { z } from 'zod/mini';
@@ -81,12 +81,12 @@ test('a restored dirty draft keeps its source and exposes Restore after an exter
   await page.goto(`/projects/${slug}/tasks/${task.id}`);
   await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
   await page.getByLabel('Описание', { exact: true }).fill('Мой несохранённый исходник **целиком**');
-  await page.reload();
+  await leaveWithDraft(page, () => page.reload());
   await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(
     'Мой несохранённый исходник **целиком**',
   );
   await mutate(request, `/tasks/${task.id}/archive`, {}, task.revision);
-  await page.reload();
+  await leaveWithDraft(page, () => page.reload());
   await openTaskActions(page);
   await expect(page.getByRole('button', { name: 'Восстановить', exact: true })).toBeVisible();
   await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(

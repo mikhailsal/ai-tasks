@@ -84,3 +84,10 @@ Sketch A project chooser/board/detail is accepted as the visual direction. Appli
 - Clickable priority tags filter the exact priority; deadline tags filter the exact local calendar day shown (for example, a tomorrow tag means tomorrow only); stage tags filter the exact configured status ID. Open the same project's same-kind board/list, visibly retain the filter with a reset/removal control, preserve compatible other dimensions and replace an existing selection in the same dimension. Stage is an explicit removable filter, not only a tab switch. Tag clicks do not open or drag the card. A blocker badge is explanatory and is not represented as a filter unless a real supported filter exists; do not invent a tag domain.
 - Deadline exact-day tag filtering, if needed by the shared read contract, is additive and must use application timezone plus frozen as_of/cursor semantics. The tag itself and its active label must identify that exact day.
 - Task detail exposes a visible, discoverable change-history section backed by actual immutable audit events. Include stage/order events when recorded; render truthful loading, paging, empty, error and offline states. Never synthesize audit entries.
+
+## Editor follow-up contract
+
+- The entire task description grows into the page on load, editing and resizing; retain source bytes, secondary formatting and page scrolling.
+- Dirty task/project departure confirms before leaving through internal links, closing project forms or browser Back. Rejecting preserves URL/form/source; accepting never implicitly saves to the API and retains existing draft recovery. Browser reload/close uses native unsaved-change confirmation. Successful save, explicit task discard and unchanged forms leave without false warnings.
+- Project emoji is a primary field in both creation and editing.
+- Eisenhower priority and expanded deadline each use sufficient normal-flow space at 320/390px, with no overlap or horizontal overflow. Checkbox marks are compact; activation areas remain at least 44px.

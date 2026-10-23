@@ -31,6 +31,13 @@ export function ProjectFields({
         required
         disabled={disabled}
       />
+      <EmojiField
+        label="Эмодзи проекта"
+        value={fields.emoji}
+        onChange={(value) => change('emoji', value)}
+        disabled={disabled}
+        hint="Уникальный маркер проекта. Прежние маркеры остаются за ним навсегда."
+      />
       <div className="field">
         <label htmlFor={`${id}-description`}>Описание проекта</label>
         <textarea
@@ -68,13 +75,6 @@ export function ProjectFields({
           required
           disabled={disabled || editing}
           hint="Постоянная ссылка проекта. После создания изменить нельзя."
-        />
-        <EmojiField
-          label="Эмодзи проекта"
-          value={fields.emoji}
-          onChange={(value) => change('emoji', value)}
-          disabled={disabled}
-          hint="Уникальный маркер проекта. Прежние маркеры остаются за ним навсегда."
         />
         {editing ? (
           <AppLink href={`/projects/${encodeURIComponent(fields.slug)}/configuration`}>

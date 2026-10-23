@@ -38,7 +38,7 @@ for (const width of [320, 390]) {
       expect(nameBox.y).toBeLessThan(descriptionBox.y);
       expect(descriptionBox.y).toBeLessThan(priorityBox.y);
       await expect(page.getByLabel('Slug проекта', { exact: true })).toBeHidden();
-      await expect(page.getByLabel('Эмодзи проекта', { exact: true })).toBeHidden();
+      await expect(page.getByLabel('Эмодзи проекта', { exact: true })).toBeVisible();
       const save = page.getByRole('button', { name: 'Сохранить изменения', exact: true });
       await expect(save).toHaveText('Сохранить');
       await expect(save).toBeInViewport();

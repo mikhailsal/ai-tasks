@@ -15,12 +15,14 @@ export function TaskParameters({
   return (
     <>
       <div className="task-inline-parameters">
-        <PriorityField
-          compact
-          model={page.configuration.priority_model}
-          value={fields.priority}
-          onChange={(priority) => onChange({ ...fields, priority })}
-        />
+        <div className="task-priority-control">
+          <PriorityField
+            compact
+            model={page.configuration.priority_model}
+            value={fields.priority}
+            onChange={(priority) => onChange({ ...fields, priority })}
+          />
+        </div>
         {fields.kind === 'ordinary' && (
           <div className="task-deadline-control">
             <span className="task-parameter-label">Срок</span>

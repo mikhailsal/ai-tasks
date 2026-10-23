@@ -3,7 +3,7 @@
 **Feature**: `002-mobile-ux`
 **Created**: 2026-10-23
 **Updated**: 2026-10-23
-**Status**: The user accepted sketch A and explicitly authorized application implementation and a final commit. All 23 functional requirements and 19 success criteria remain in scope. The first application transfer exposed functional and visual gaps in user review; Phase 7 of tasks.md records their convergence and renewed runtime/visual evidence in quickstart.md. Human acceptance of the real application is separate.
+**Status**: The user accepted sketch A and explicitly authorized application implementation and a final commit. All 27 functional requirements and 23 success criteria remain in scope. The first application transfer exposed functional and visual gaps in user review; Phase 7 of tasks.md records their convergence and renewed runtime/visual evidence in quickstart.md. Phase 8 records the subsequent editor follow-ups. Human acceptance of the real application is separate.
 
 **Input**: Work by selecting a project, then see its tasks by workflow stage on a mobile Kanban board. Swipe horizontally between neighboring columns, as in Trello. Keep the interface compact and app-like while preserving existing operations and data protections.
 
@@ -125,6 +125,10 @@ Project title opens that project's editor. Clicking a filterable task tag opens 
 - **FR-021**: Clicking an exposed filterable task tag MUST open a board/list scoped to the same project and task kind with that filter visibly applied and resettable. Supported dimensions include priority, deadline and stage; replace a selection in the same dimension, preserve compatible filters, and do not open/drag the card. Any clickable blocker badge MUST map to an actual supported filter; no new tag domain is introduced.
 - **FR-022**: Clicking a project title on its Kanban board MUST open that selected project's editor; Back MUST restore the prior board context.
 - **FR-023**: Task detail MUST expose a discoverable change-history section backed by actual immutable audit events. Show stage/order changes when available and truthful loading, paging, empty, error and offline states; never fabricate history.
+- **FR-024**: Task description editing MUST grow to show the entire exact text on initial load, typing and viewport resize. Long descriptions scroll with the page rather than an independently clipped textarea.
+- **FR-025**: Leaving a dirty task/project creation or editing form through application navigation, Cancel that closes the form, or browser Back MUST ask for confirmation. Rejecting keeps the current page and exact draft; accepting leaves without an implicit server write and retains local draft recovery. Reload/tab close uses the browser's unsaved-change confirmation. Successful saving, explicit task draft discard and untouched forms MUST NOT trigger a false warning.
+- **FR-026**: Project creation and editing MUST expose the emoji field in the primary identity fields, without opening advanced settings.
+- **FR-027**: Expanded priority and deadline controls MUST coexist without overlap or horizontal overflow at 320/390px. Eisenhower checkbox marks remain compact while their activation targets remain at least 44px.
 
 
 ### Key Entities
@@ -156,6 +160,10 @@ Existing project, task, workflow status and snapshot meanings are unchanged. A b
 - **SC-017**: Clicking a board project title opens that project's editor; Back restores board project, selected stage and reading position.
 - **SC-018**: Detail displays discoverable immutable audit history with actual recorded stage/order changes when available and truthful loading, paging, empty, error and offline states; no fabricated events.
 - **SC-019**: Board order remains identical across reloads/devices when saved by the application, even with browser storage cleared; browser-local order alone fails.
+- **SC-020**: A multiline description remains fully visible and source-exact on load/edit and when resized from 390px to 320px.
+- **SC-021**: Browser and application Back can both be canceled with the exact dirty draft intact; confirmed departure and reload recover the draft without writes. Project form close confirms changes; saved/untouched forms leave without a warning.
+- **SC-022**: Emoji can be read and edited immediately in both project forms.
+- **SC-023**: Both Eisenhower priority and expanded deadline fit together on narrow phone screens with compact marks and accessible hit areas.
 
 ## Assumptions and decisions for visual review
 

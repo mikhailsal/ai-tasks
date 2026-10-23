@@ -1,4 +1,18 @@
-import type { Page } from '@playwright/test';
+import { expect, type Dialog, type Page } from '@playwright/test';
+
+/** Explicitly authorize document navigation while testing draft recovery. */
+export async function leaveWithDraft(page: Page, action: () => Promise<unknown>) {
+  const approve = async (dialog: Dialog) => {
+    expect(dialog.type()).toBe('beforeunload');
+    await dialog.accept();
+  };
+  page.on('dialog', approve);
+  try {
+    await action();
+  } finally {
+    page.off('dialog', approve);
+  }
+}
 
 /** Follow the same secondary action entry as a person editing a task. */
 export async function openTaskActions(page: Page) {

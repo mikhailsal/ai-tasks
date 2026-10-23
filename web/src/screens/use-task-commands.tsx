@@ -20,6 +20,7 @@ import {
   type TaskPage,
 } from './task-model.js';
 import type { useTaskDraft } from './use-task-draft.js';
+import { navigate } from '../app/router.js';
 import { actionFromProposal, taskProposalIntent, type TaskAction } from './task-action-identity.js';
 export type { TaskAction } from './task-action-identity.js';
 type Editor = ReturnType<typeof useTaskDraft>;
@@ -47,8 +48,7 @@ function openCreatedTask(projectSlug: string, id: string, loaded: TaskPage) {
   const context = params.has('return_to')
     ? `?${new URLSearchParams({ return_to: boardReturnHref(projectSlug, loaded.task?.kind ?? 'ordinary') })}`
     : '';
-  window.history.replaceState(null, '', `/projects/${projectSlug}/tasks/${id}${context}`);
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  navigate(`/projects/${projectSlug}/tasks/${id}${context}`, true);
 }
 export function useTaskCommands(editor: Editor, projectSlug: string) {
   const sending = useRef(false);

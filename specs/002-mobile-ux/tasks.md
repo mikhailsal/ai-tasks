@@ -51,3 +51,13 @@ User review after the first application transfer found real functional and visua
 - [x] T019 Provide a visible, consistent Back action on secondary pages, preserving the actual originating board/project/search context and a safe internal fallback for direct entry. Avoid duplicate back rows on board/task headers; retain browser Back and dirty-draft protections (FR-005/011/022; SC-003/007/017; partial).
 - [x] T020 Remove inherited link-hover underlines from application controls, cards, tags and navigation to match the accepted sketch. Keep clear keyboard focus and distinguish links in rendered description content where appropriate; verify actual hover styles in both browsers (FR-003/007/018; SC-002/004/013; contradicts).
 - [x] T021 Compare real home/board/search/filter/task-edit/project-edit/secondary/error/offline screens with the accepted sketch at 320/390px, including hover and insecure LAN HTTP. Correct concrete differences rather than accepting geometry-only tests; record actual screenshots, failures and fixes in quickstart.md, rerun affected and required quality gates, and keep the previously approved temporary 170000-byte bundle exception unchanged (all FR/SC; Constitution IV/VI/VII; partial).
+
+## Phase 8: Editor follow-ups
+
+The user's subsequent review adds explicit editor behavior; previous acceptance evidence does not cover these cases.
+
+- [x] T022 Grow task descriptions on load, edits and resize without changing source; reproduce the four-line clipping first (FR-024; SC-020).
+- [x] T023 Guard dirty task/project departure, application and browser Back and reload. Preserve exact local drafts, cancellation, clean save/discard paths and existing mutation/recovery guards (FR-025; SC-021).
+- [x] T024 Expose project emoji beside the primary identity fields in creation and editing (FR-026; SC-022).
+- [x] T025 Keep expanded Eisenhower and deadline controls in normal full-width flow, compact checkbox visuals with 44px activation areas, at 320/390px (FR-027; SC-023).
+- [x] T026 Run focused real-database/browser regressions in Chromium/WebKit, inspect narrow-screen screenshots, required quality/build/bundle gates, update evidence and restart LAN deployment (FR-024–027; SC-020–023).

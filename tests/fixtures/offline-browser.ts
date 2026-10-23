@@ -7,7 +7,7 @@ import { addDependency } from '../../src/core/tasks/dependencies.js';
 import { controlRecurrence } from '../../src/core/recurrence/control.js';
 import { ordinaryInput } from './ordinary-work.js';
 import { createRecoveryHarness } from './recovery-transport.js';
-import { closeTaskActions, openSavedDescription } from './task-ui.js';
+import { closeTaskActions, leaveWithDraft, openSavedDescription } from './task-ui.js';
 
 export const cachedTitle = 'Офлайн: сохранить исходник 👩🏽‍💻';
 export const cachedSource =
@@ -140,7 +140,7 @@ export async function offlineBrowserServer() {
 export type OfflineBrowserServer = Awaited<ReturnType<typeof offlineBrowserServer>>;
 export const taskPath = (id: string) => `/projects/alpha/tasks/${id}`;
 export async function loadedTask(page: Page, server: OfflineBrowserServer) {
-  await page.goto(`${server.origin}${taskPath(server.taskId)}`);
+  await leaveWithDraft(page, () => page.goto(`${server.origin}${taskPath(server.taskId)}`));
   await expect(page.getByRole('heading', { name: cachedTitle, exact: true })).toBeVisible();
   const description = await openSavedDescription(page);
   await expect(description).toContainText('Сохранить точно');
@@ -149,8 +149,10 @@ export async function loadedTask(page: Page, server: OfflineBrowserServer) {
 }
 export async function offlineNavigation(page: Page, path?: string) {
   // A failed cold navigation is the behavior under test, not a fixture setup failure.
-  if (path) await page.goto(path, { waitUntil: 'domcontentloaded' }).catch(() => undefined);
-  else await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  await leaveWithDraft(page, async () => {
+    if (path) await page.goto(path, { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+    else await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  });
 }
 export async function waitForDraft(page: Page, id: string, text: string) {
   await expect
