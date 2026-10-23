@@ -18,6 +18,14 @@ export const deadlineChoices = [
   ['next_3_days', 'Ближайшие 3 дня'],
   ['undated', 'Без срока'],
 ] as const;
+function deadlineExplanation(deadline: string) {
+  const conjunction = 'Приоритет, срок и поиск применяются вместе.';
+  if (deadline === 'next_3_days')
+    return `Ближайшие 3 дня — сегодня и два следующих дня. ${conjunction}`;
+  if (deadline === 'from_tomorrow') return `От начала завтрашнего дня и дальше. ${conjunction}`;
+  if (deadline === 'undated') return `Без срока — задачи без назначенного срока. ${conjunction}`;
+  return conjunction;
+}
 function priorityChoices(model: PriorityModel): [string, string][] {
   const common: [string, string][] = [
     ['', 'Любой приоритет'],
@@ -170,26 +178,27 @@ export function BoardFilters({
           </Button>
         )}
       </div>
-      <Field
-        label="Точный день"
-        type="date"
-        value={deadline.startsWith('day:') ? deadline.slice(4) : ''}
-        onChange={(event) => setDeadline(event.target.value ? `day:${event.target.value}` : '')}
-      />
-      <label className="field">
-        Стадия
-        <select value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="">Все стадии</option>
-          {statuses.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <p className="subtle">
-        Приоритет, срок и поиск применяются вместе. Ближайшие 3 дня — сегодня и два следующих дня.
-      </p>
+      <p className="subtle board-filter-explanation">{deadlineExplanation(deadline)}</p>
+      <details className="board-filter-details">
+        <summary>Другие фильтры</summary>
+        <Field
+          label="Точный день"
+          type="date"
+          value={deadline.startsWith('day:') ? deadline.slice(4) : ''}
+          onChange={(event) => setDeadline(event.target.value ? `day:${event.target.value}` : '')}
+        />
+        <label className="field">
+          Стадия
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="">Все стадии</option>
+            {statuses.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </details>
       {error && <p role="alert">{error}</p>}
       <div className="actions">
         <Button

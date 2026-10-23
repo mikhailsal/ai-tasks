@@ -23,10 +23,10 @@ export function MarkdownEditor({
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
           rows={4}
-          aria-describedby={`${id}-hint`}
         />
       </div>
-      <div className="task-description-tools">
+      <details className="task-description-tools">
+        <summary>Дополнительно</summary>
         <DescriptionPreview
           source={value}
           projectSlug={projectSlug}
@@ -35,13 +35,12 @@ export function MarkdownEditor({
           busyLabel="Готовим предпросмотр…"
           clearErrorOnStart
         />
-        <details>
-          <summary>Markdown</summary>
-          <p id={`${id}-hint`}>
-            Свободный текст, списки, ссылки и блоки кода. Исходник сохраняется целиком.
-          </p>
+        <details className="details-panel">
+          <summary>Исходный текст</summary>
+          <pre>{value}</pre>
         </details>
-      </div>
+        <p>При необходимости поддерживается Markdown. Исходный текст сохраняется целиком.</p>
+      </details>
     </section>
   );
 }

@@ -1,7 +1,6 @@
 import { DeadlineField } from '../components/DeadlineField.js';
 import { PriorityField } from '../components/PriorityField.js';
 import { RecurrenceFields } from '../components/RecurrenceFields.js';
-import { priorityLabel } from '../data/view-format.js';
 import type { TaskFields, TaskPage } from './task-model.js';
 
 export function TaskParameters({
@@ -15,33 +14,31 @@ export function TaskParameters({
 }) {
   return (
     <>
-      <details
-        className="task-parameters"
-        open={!page.task}
-        onInvalidCapture={(event) => {
-          event.currentTarget.open = true;
-        }}
-      >
-        <summary>
-          <span>Приоритет и срок</span>
-          <span className="task-parameters-values">
-            {priorityLabel(fields.priority, page.configuration.priority_model)}
-            {fields.kind === 'ordinary' && ` · ${fields.deadline.date || 'Без срока'}`}
-          </span>
-        </summary>
+      <div className="task-inline-parameters">
         <PriorityField
+          compact
           model={page.configuration.priority_model}
           value={fields.priority}
           onChange={(priority) => onChange({ ...fields, priority })}
         />
         {fields.kind === 'ordinary' && (
-          <DeadlineField
-            value={fields.deadline}
-            timezone={fields.timezone}
-            onChange={(deadline) => onChange({ ...fields, deadline })}
-          />
+          <div className="task-deadline-control">
+            <span className="task-parameter-label">Срок</span>
+            <details
+              onInvalidCapture={(event) => {
+                event.currentTarget.open = true;
+              }}
+            >
+              <summary aria-label="Изменить срок">{fields.deadline.date || 'Без срока'}</summary>
+              <DeadlineField
+                value={fields.deadline}
+                timezone={fields.timezone}
+                onChange={(deadline) => onChange({ ...fields, deadline })}
+              />
+            </details>
+          </div>
         )}
-      </details>
+      </div>
       {fields.kind === 'recurring' && !page.task && (
         <RecurrenceFields
           value={fields.recurrence}

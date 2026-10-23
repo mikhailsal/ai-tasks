@@ -78,8 +78,29 @@ export function navigate(href: string): void {
   const url = new URL(href, window.location.origin);
   if (url.origin !== window.location.origin)
     throw new Error('Навигация доступна внутри приложения.');
-  window.history.pushState(null, '', url.pathname + url.search);
+  window.history.pushState(
+    { previous: window.location.pathname + window.location.search },
+    '',
+    url.pathname + url.search,
+  );
   window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
+export function navigateBack(fallback = '/'): void {
+  const state: unknown = window.history.state;
+  if (
+    state &&
+    typeof state === 'object' &&
+    'previous' in state &&
+    typeof state.previous === 'string'
+  ) {
+    const previous = new URL(state.previous, window.location.origin);
+    if (previous.origin === window.location.origin && previous.href !== window.location.href) {
+      window.history.back();
+      return;
+    }
+  }
+  navigate(fallback);
 }
 
 export function AppLink({

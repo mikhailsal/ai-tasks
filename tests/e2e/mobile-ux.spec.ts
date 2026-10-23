@@ -12,6 +12,7 @@ import {
   mobileUxServer,
 } from '../fixtures/mobile-ux.js';
 import { offlineBrowserServer } from '../fixtures/offline-browser.js';
+import { closeTaskActions, openTaskActions, openSavedDescription } from '../fixtures/task-ui.js';
 
 test('populated home exposes a project in the first 390×844 viewport', async ({ page }) => {
   const server = await offlineBrowserServer();
@@ -187,6 +188,9 @@ test('project selection opens contextual task board and adding retains explicit 
     await expect(card).toContainText(/Высокий/iu);
     await expect(card.locator(`time[datetime="${mobileDeadline}"]`)).toBeVisible();
     await expect(page.getByRole('main')).toContainText(mobileProject.name);
+    await expect(
+      page.getByRole('complementary', { name: 'Соединение и сохранённые данные' }),
+    ).toContainText('Обновлено:');
     await expect(card).not.toContainText(mobileProject.slug);
     await checkLayouts(page);
     await page.getByRole('button', { name: 'Добавить задачу', exact: true }).click();
@@ -200,7 +204,7 @@ test('project selection opens contextual task board and adding retains explicit 
   }
 });
 
-test('ordinary task actions precede long readable Markdown and use clear button hierarchy', async ({
+test('secondary task actions precede the saved formatted description and use clear button hierarchy', async ({
   page,
 }) => {
   const server = await mobileUxServer();
@@ -209,7 +213,7 @@ test('ordinary task actions precede long readable Markdown and use clear button 
     await page.goto(`${server.origin}${server.taskPath}`);
     await expect(page.getByRole('heading', { name: mobileTitle, exact: true })).toBeVisible();
     const actions = page.getByRole('region', { name: 'Действия с задачей', exact: true });
-    const markdown = page.getByRole('region', { name: 'Описание задачи', exact: true });
+    const markdown = await openSavedDescription(page);
     await expect(actions).toBeVisible();
     await expect(markdown).toHaveClass(/markdown/u);
     const actionsBox = await actions.boundingBox();
@@ -254,19 +258,28 @@ test('cached mobile task preserves offline context and disabled actions without 
   try {
     await page.goto(`${server.origin}${server.taskPath}`);
     await expect(page.getByRole('heading', { name: mobileTitle, exact: true })).toBeVisible();
-    const status = page.getByRole('complementary', { name: 'Соединение и сохранённые данные' });
-    await expect(status.locator('time')).toHaveAttribute('datetime', /\d{4}-\d{2}-\d{2}T/u);
-    const saved = await status.locator('time').getAttribute('datetime');
+    const dialog = await openTaskActions(page);
+    const onlineStatus = dialog.getByRole('complementary', {
+      name: 'Соединение и сохранённые данные',
+    });
+    await expect(onlineStatus.locator('time')).toHaveAttribute('datetime', /\d{4}-\d{2}-\d{2}T/u);
+    const saved = await onlineStatus.locator('time').getAttribute('datetime');
+    await closeTaskActions(page);
     const before = await server.snapshot();
     await context.setOffline(true);
+    const status = page.getByRole('complementary', { name: 'Соединение и сохранённые данные' });
     await expect(status).toContainText(/Нет соединения/u);
     await expect(status.locator('time')).toBeVisible();
     await expect(status.locator('time')).toHaveAttribute('datetime', saved ?? '');
-    await expect(page.getByRole('region', { name: 'Описание задачи', exact: true })).toContainText(
-      'Порядок работы',
-    );
     await expect(page.getByLabel('Название задачи', { exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
+    const description = await openSavedDescription(page);
+    await expect(description).toContainText('Порядок работы');
+    const dialogStatus = dialog.getByRole('complementary', {
+      name: 'Соединение и сохранённые данные',
+    });
+    await expect(dialogStatus).toContainText(/Нет соединения/u);
+    await expect(dialogStatus.locator('time')).toHaveAttribute('datetime', saved ?? '');
     const actions = page
       .getByRole('region', { name: 'Действия с задачей', exact: true })
       .getByRole('button');

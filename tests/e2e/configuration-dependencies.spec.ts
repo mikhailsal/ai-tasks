@@ -1,3 +1,4 @@
+import { openTaskActions } from '../fixtures/task-ui.js';
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { z } from 'zod/mini';
@@ -88,8 +89,9 @@ test('creates custom configuration with structured mobile controls and rejects i
   });
   const task = await browserSeedTask(page, slug);
   await page.goto(`/projects/${slug}/tasks/${task.id}`);
+  await openTaskActions(page);
   await page.getByRole('button', { name: 'Планирование', exact: true }).click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: 'Подтвердите переход', exact: true });
   await expect(dialog).toContainText('Входящие поручения → Планирование');
   await dialog.getByLabel('Текст подтверждения').fill('Настроенное согласие пользователя');
   const transitioned = page.waitForResponse(
@@ -174,8 +176,10 @@ for (const { model, markers } of models) {
     expect(data.priority).toEqual(expected);
     await expect(page).toHaveURL(new RegExp(`/projects/${slug}/tasks/${data.id}$`, 'u'));
     await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
-    await page.getByText('Приоритет и срок', { exact: true }).click();
-    await page.getByRole('button', { name: 'Убрать приоритет', exact: true }).click();
+    if (model.type === 'numeric') await page.getByLabel('Приоритет', { exact: true }).fill('');
+    else if (model.type === 'eisenhower')
+      await page.getByLabel('Указать приоритет', { exact: true }).uncheck();
+    else await page.getByLabel('Приоритет', { exact: true }).selectOption('');
     const cleared = page.waitForResponse(
       (reply) => reply.request().method() === 'PATCH' && reply.url().endsWith(`/tasks/${data.id}`),
     );
@@ -269,6 +273,7 @@ test('searches and selects a cross-project prerequisite, blocks completion, and 
     title: 'Найти договор в другом проекте',
   });
   await page.goto(`/projects/${source}/tasks/${parent.id}`);
+  await openTaskActions(page);
   await page.getByRole('button', { name: 'Добавить зависимость', exact: true }).click();
   await page.getByLabel('Проект предварительной задачи', { exact: true }).selectOption(target);
   await page.getByLabel('Поиск задачи', { exact: true }).fill('Найти договор');
@@ -286,12 +291,16 @@ test('searches and selects a cross-project prerequisite, blocks completion, and 
   expect(response.request().postDataJSON()).toMatchObject({
     payload: { prerequisite_task_id: prerequisite.id, prerequisite_project_slug: target },
   });
+  await openTaskActions(page);
   const links = page.getByRole('region', { name: 'Зависимости', exact: true });
   await expect(links).toContainText('Найти договор');
   await expect(links).toContainText(/не завершена|блокирует/iu);
+  await openTaskActions(page);
   await page.getByRole('button', { name: 'Планирование', exact: true }).click();
+  await openTaskActions(page);
   await expect(page.getByRole('button', { name: 'Готово к работе', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Готово к работе', exact: true }).click();
+  await openTaskActions(page);
   await expect(page.getByRole('button', { name: 'В работе', exact: true })).toBeDisabled();
   const blocked = browserTask.parse(
     successEnvelopeSchema.parse(
@@ -304,6 +313,7 @@ test('searches and selects a cross-project prerequisite, blocks completion, and 
   );
   await links.getByRole('button', { name: 'Удалить зависимость', exact: true }).click();
   expect((await removed).status()).toBe(200);
+  await openTaskActions(page);
   await expect(links.getByText('Найти договор')).toHaveCount(0);
   expect(
     successEnvelopeSchema.parse(

@@ -2,31 +2,36 @@ import type { PointerEvent } from 'react';
 import type { PriorityModel } from '../../../src/schema/configuration.js';
 import type { TaskResource } from '../../../src/schema/tasks.js';
 import { AppLink } from '../app/router.js';
-import { boardFilterHref, boardTaskHref, localDeadlineDay } from '../data/board-links.js';
+import { boardFilterHref, boardTaskHref } from '../data/board-links.js';
 import { priorityLabel } from '../data/view-format.js';
 import { Button } from '../components/Button.js';
+import { BoardDeadline } from './BoardDeadline.js';
 
 export function BoardTaskCard({
   task,
   model,
   timezone,
+  asOf,
   search,
   status,
   movable,
   onMove,
   onDrag,
+  showHandle = true,
+  excerpt,
 }: {
   task: TaskResource;
   model: PriorityModel;
   timezone: string;
+  asOf: string | undefined;
   search: string;
   status?: string;
   movable: boolean;
   onMove(task: TaskResource): void;
   onDrag(event: PointerEvent<HTMLButtonElement>, task: TaskResource): void;
+  showHandle?: boolean;
+  excerpt?: string;
 }) {
-  const date = task.display_deadline;
-  const day = date ? localDeadlineDay(date, timezone) : '';
   return (
     <li className="board-task" data-task-id={task.id}>
       <div className="board-task-heading">
@@ -34,17 +39,20 @@ export function BoardTaskCard({
           <span aria-hidden="true">{task.emoji}</span>
           <span>{task.title}</span>
         </AppLink>
-        <Button
-          className="board-drag-handle"
-          variant="ghost"
-          aria-label={`Переместить: ${task.title}`}
-          disabled={!movable || task.archived_at !== null}
-          onClick={() => onMove(task)}
-          onPointerDown={(event) => onDrag(event, task)}
-        >
-          ⠿
-        </Button>
+        {showHandle && (
+          <Button
+            className="board-drag-handle"
+            variant="ghost"
+            aria-label={`Переместить: ${task.title}`}
+            disabled={!movable || task.archived_at !== null}
+            onClick={() => onMove(task)}
+            onPointerDown={(event) => onDrag(event, task)}
+          >
+            ⠿
+          </Button>
+        )}
       </div>
+      {excerpt && <p className="board-search-excerpt">{excerpt}</p>}
       {status && (
         <AppLink
           className="board-stage-tag"
@@ -54,21 +62,7 @@ export function BoardTaskCard({
         </AppLink>
       )}
       <div className="board-task-tags">
-        {date && (
-          <AppLink
-            className="board-tag board-date"
-            href={boardFilterHref(task, { deadlineDay: day }, search)}
-            label={`Срок: ${day}`}
-          >
-            <time dateTime={date}>
-              {new Intl.DateTimeFormat('ru-RU', {
-                timeZone: timezone,
-                day: 'numeric',
-                month: 'short',
-              }).format(new Date(date))}
-            </time>
-          </AppLink>
-        )}
+        <BoardDeadline task={task} timezone={timezone} search={search} asOf={asOf} />
         {task.priority !== null && (
           <AppLink
             className={`board-tag board-priority priority-${task.priority.model === 'classic' ? task.priority.level : 'custom'}`}

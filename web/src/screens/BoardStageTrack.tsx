@@ -1,5 +1,6 @@
-import { Button } from '../components/Button.js';
+import { navigate } from '../app/router.js';
 import { BoardColumn } from './BoardColumn.js';
+import { BoardStageTab } from './BoardStageTab.js';
 import type { BoardSessionState, SessionProps } from './use-board-session.js';
 export function BoardStageTrack({
   board,
@@ -19,10 +20,16 @@ export function BoardStageTrack({
     scope,
     readingKey,
     movable,
+    online,
     register,
     setMenuTask,
     onTrackScroll,
   } = board;
+  const createParams = new URLSearchParams({
+    kind: new URLSearchParams(scope.search).get('kind') === 'recurring' ? 'recurring' : 'ordinary',
+    return_to: window.location.pathname + window.location.search,
+  });
+  const createHref = `/projects/${encodeURIComponent(scope.slug)}/tasks/new?${createParams}`;
   return (
     <>
       {stages.length === 0 && (
@@ -30,9 +37,13 @@ export function BoardStageTrack({
       )}
       <nav className="board-stage-tabs" aria-label="Стадии проекта">
         {stages.map((status, index) => (
-          <Button key={status.id} aria-pressed={index === active} onClick={() => go(index)}>
-            {status.label}
-          </Button>
+          <BoardStageTab
+            key={status.id}
+            scope={scope}
+            status={status}
+            active={index === active}
+            onSelect={() => go(index)}
+          />
         ))}
       </nav>
       <div
@@ -51,6 +62,8 @@ export function BoardStageTrack({
             timezone={metadata.timezone}
             readingKey={readingKey}
             movable={movable}
+            canAdd={online}
+            onAdd={() => navigate(createHref)}
             register={register}
             onMove={(task) => {
               if (drag.clickAllowed()) setMenuTask(task);
@@ -59,29 +72,6 @@ export function BoardStageTrack({
           />
         ))}
       </div>
-      {stages.length > 0 && (
-        <div className="board-position">
-          <Button
-            variant="ghost"
-            aria-label="Предыдущая стадия"
-            disabled={active === 0}
-            onClick={() => go(active - 1)}
-          >
-            ‹
-          </Button>
-          <span>
-            {active + 1} из {stages.length} стадий
-          </span>
-          <Button
-            variant="ghost"
-            aria-label="Следующая стадия"
-            disabled={active === stages.length - 1}
-            onClick={() => go(active + 1)}
-          >
-            ›
-          </Button>
-        </div>
-      )}
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { openTaskActions } from '../fixtures/task-ui.js';
 import { expect, test } from '@playwright/test';
 import {
   mutationEnvelopeSchema,
@@ -21,6 +22,7 @@ test('stale manual tick reconciliation retains tick intent and never reconfigure
       first: Date.now() + 10 * 86_400_000,
     });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     const manual = page.getByRole('button', { name: 'Обработать наступившие сроки', exact: true });
     await expect(manual).toBeEnabled();
     await changeBrowserTimezone(server);

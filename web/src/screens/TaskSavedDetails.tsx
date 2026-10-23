@@ -43,14 +43,17 @@ export function TaskSavedDetails({
           </p>
         </details>
       )}
-      <section
-        aria-label="Описание задачи"
-        className="markdown"
-        dangerouslySetInnerHTML={{ __html: task.rendered_html }}
-      />
-      <details className="details-panel">
-        <summary>Исходник Markdown</summary>
-        <pre>{task.description}</pre>
+      <details className="details-panel task-saved-description">
+        <summary>Сохранённое описание</summary>
+        <section
+          aria-label="Описание задачи"
+          className="markdown"
+          dangerouslySetInnerHTML={{ __html: task.rendered_html }}
+        />
+        <details className="details-panel">
+          <summary>Исходник Markdown</summary>
+          <pre>{task.description}</pre>
+        </details>
       </details>
       {task.kind === 'ordinary' && (
         <Dependencies page={page} disabled={disabled || archived} onAction={onAction} />

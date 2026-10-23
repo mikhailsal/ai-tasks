@@ -4,11 +4,39 @@
   min-width: 0;
   padding-bottom: 18px;
 }
-.task-board-back {
+.task-detail-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-inline: -20px;
+  padding: 8px 14px;
+  background: #fff;
+  border-bottom: 1px solid #e9edf2;
+}
+.task-detail-back,
+.task-detail-more {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 44px;
   min-height: 44px;
+  padding: 0;
+  color: #64728b;
+}
+.task-detail-project {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #8190a7;
   overflow-wrap: anywhere;
+}
+.task-actions-modal {
+  width: calc(100% - 28px);
+  max-width: 402px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
 }
 .task-page form,
 .task-page fieldset {
@@ -52,7 +80,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.4;
   font-weight: 650;
   resize: none;
@@ -83,10 +111,16 @@
   align-items: center;
   min-height: 44px;
   max-width: 100%;
-  padding: 7px 11px;
+  padding: 0;
   white-space: normal;
   overflow-wrap: anywhere;
   text-decoration: none;
+}
+.task-facts .badge {
+  min-height: 24px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 400;
 }
 .task-draft-caption,
 .task-history-snapshot {
@@ -108,59 +142,84 @@
   display: flex;
   gap: 8px;
   padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
-  background: #f7f9fc;
+  background: #fff;
   border-top: 1px solid var(--border, #e4e8ef);
 }
-.task-draft-actions > button {
+.task-draft-actions > .button-primary {
   flex: 1;
 }
-.task-page .task-description-tools {
-  display: flex;
-  align-items: start;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-top: -6px;
+.task-description-tools {
+  margin-top: 4px;
 }
-.task-description-tools > button,
-.task-description-tools summary {
+.task-description-tools > summary {
   min-height: 44px;
+  padding-block: 12px;
   font-size: 12px;
+  color: #8190a7;
 }
-.task-description-tools > button {
-  border: 0;
-  padding-inline: 0;
-  background: transparent;
-}
-.task-description-tools summary {
-  display: flex;
-  align-items: center;
-  color: #69758a;
-}
-.task-description-tools > section,
-.task-description-tools > p,
-.task-description-tools > details[open] {
-  flex-basis: 100%;
-}
-.task-description-tools details p {
-  margin: 0 0 12px;
+.task-description-tools p {
   font-size: 12px;
-  color: #69758a;
+  color: #8190a7;
 }
-.task-parameters {
-  border-bottom: 1px solid var(--border, #e4e8ef);
+.task-description-tools pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
-.task-parameters > summary {
-  min-height: 56px;
-  padding-block: 8px;
-  font-size: 13px;
-  font-weight: 600;
+.task-inline-parameters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-top: 8px;
 }
-.task-parameters-values {
+.task-inline-parameters .field {
+  gap: 6px;
+  margin-block: 0;
+}
+.task-inline-parameters label,
+.task-parameter-label {
   display: block;
-  margin-top: 2px;
-  color: #69758a;
+  margin-bottom: 0;
   font-size: 12px;
   font-weight: 400;
+  color: #8190a7;
+}
+.task-parameter-label {
+  margin-bottom: 6px;
+}
+.task-inline-parameters select {
+  padding-inline: 8px;
+  min-height: 44px;
+  font-size: 13px;
+}
+.task-deadline-control {
+  min-width: 0;
+}
+.task-deadline-control > details > summary {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dce4ef;
+  border-radius: 12px;
+  background: #fff;
+  color: #64728b;
+  font-size: 13px;
+}
+.task-deadline-control > details > fieldset {
+  width: calc(200% + 12px);
+  margin-left: calc(-100% - 12px);
+}
+.task-draft-actions > .task-stage-action {
+  flex: 0 0 44px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+}
+.task-history-meta {
+  margin-top: 8px;
+}
+.task-history-meta > summary {
+  color: #8190a7;
+  font-size: 12px;
 }
 .task-history {
   min-width: 0;
@@ -178,6 +237,9 @@
   font-size: 17px;
 }
 .task-history-heading a {
+  font-size: 12px;
+  flex: none;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -221,5 +283,20 @@
   }
   .task-identity-fields textarea {
     font-size: 20px;
+  }
+}
+
+@media (max-width: 359px) {
+  .task-detail-header {
+    margin-inline: -16px;
+  }
+}
+
+@media (max-width: 359px) {
+  .task-history-heading h2 {
+    font-size: 15px;
+  }
+  .task-inline-parameters select {
+    font-size: 12px;
   }
 }

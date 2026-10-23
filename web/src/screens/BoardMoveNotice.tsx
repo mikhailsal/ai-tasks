@@ -13,12 +13,19 @@ export function BoardMoveNotice({
   const previousEpoch = pending && pending.envelope.database_epoch !== epoch;
   return (
     <>
-      {(move.error || move.operation.storageError) && (
-        <p role="alert">
-          {move.error || move.operation.storageError} Проверьте текущие данные перед новым
-          перемещением.
-        </p>
+      {move.error && (
+        <div className="board-error" role="alert">
+          <p>{move.error} Проверьте текущие данные перед новым перемещением.</p>
+          <Button
+            variant="ghost"
+            aria-label="Закрыть сообщение об ошибке"
+            onClick={move.dismissError}
+          >
+            ×
+          </Button>
+        </div>
       )}
+      {move.operation.storageError && <p role="alert">{move.operation.storageError}</p>}
       {pending && (
         <div className="board-retry">
           <p role="status">

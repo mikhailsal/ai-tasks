@@ -1,3 +1,4 @@
+import { openTaskActions, openTaskDeadline, openTaskFormatting } from '../fixtures/task-ui.js';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:net';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
@@ -169,12 +170,14 @@ test('preserves exact Markdown source, shows server preview, copies semantic emo
   await page.getByLabel('Название задачи', { exact: true }).fill('Срок и описание');
   await page.getByLabel('Описание', { exact: true }).fill(source);
   await page.getByLabel('Эмодзи задачи', { exact: true }).fill('👩🏽‍💻');
+  await openTaskDeadline(page);
   await page.getByLabel('Дата срока', { exact: true }).fill('2026-11-01');
   await page.getByLabel('Время срока', { exact: true }).fill('12:34:56.789');
   await expect(page.getByText('Europe/Moscow', { exact: true })).toBeVisible();
   const preview = page.waitForResponse((response) =>
     response.url().endsWith(`/projects/${project.slug}/description/preview`),
   );
+  await openTaskFormatting(page);
   await page.getByRole('button', { name: 'Предпросмотр', exact: true }).click();
   expect((await preview).status()).toBe(200);
   await expect(page.getByRole('region', { name: 'Предпросмотр описания' })).toContainText(
@@ -193,6 +196,7 @@ test('preserves exact Markdown source, shows server preview, copies semantic emo
     deadline: '2026-11-01T09:34:56.789Z',
     emoji: '👩🏽‍💻',
   });
+  await openTaskActions(page);
   await page.getByRole('button', { name: 'Скопировать эмодзи', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: /эмодзи.*скопирован/iu })).toBeVisible();
 });
@@ -210,8 +214,9 @@ test('names the task and exact transition in consent and records actual confirma
     });
   }
   await page.goto(`/projects/${project.slug}/tasks/${task.id}`);
+  await openTaskActions(page);
   await page.getByRole('button', { name: /завершить|выполнено/iu }).click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: 'Подтвердите переход', exact: true });
   await expect(dialog).toContainText('Проверить договор');
   await expect(dialog).toContainText(/провер|sanity_check/iu);
   await expect(dialog).toContainText(/заверш|done|выполнено/iu);
@@ -269,6 +274,7 @@ test('keeps archived project/task views read-only and restores ordinary status w
   await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
   await expect(page.getByLabel('Название задачи', { exact: true })).toBeDisabled();
   await expect(page.getByLabel('Описание', { exact: true })).toBeDisabled();
+  await openTaskActions(page);
   const [restoreResponse] = await Promise.all([
     page.waitForResponse(
       (response) =>
@@ -349,6 +355,7 @@ test('rejects DST gaps and requires an explicit offset branch for a repeated loc
     const project = await seedProject(page, info, 6);
     await page.goto(`${server.origin}/projects/${project.slug}/tasks/new`);
     await page.getByLabel('Название задачи', { exact: true }).fill('Проверка местного времени');
+    await openTaskDeadline(page);
     await page.getByLabel('Дата срока', { exact: true }).fill('2026-03-29');
     await page.getByLabel('Время срока', { exact: true }).fill('02:30:00.000');
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();

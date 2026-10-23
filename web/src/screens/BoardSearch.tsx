@@ -32,6 +32,7 @@ export function BoardSearch({
     if (list.current) list.current.scrollTop = reading.searchScroll;
   }, [reading]);
   const items = q.trim() ? boardItems(query) : [];
+  const meta = query.data?.pages[0]?.meta;
   return (
     <>
       <div className="board-search-bar">
@@ -39,11 +40,24 @@ export function BoardSearch({
           <label className="visually-hidden" htmlFor="project-task-search">
             Поиск задач в проекте
           </label>
+          <svg
+            aria-hidden="true"
+            className="board-search-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+          >
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m16 16 4.5 4.5" />
+          </svg>
           <input
             id="project-task-search"
             type="search"
             autoFocus
-            placeholder="Название или описание"
+            placeholder="Найти задачу"
             value={q}
             onChange={(event) => onQuery(event.target.value)}
             onKeyDown={(event) => {
@@ -78,6 +92,7 @@ export function BoardSearch({
               task={task}
               model={model}
               timezone={timezone}
+              asOf={meta?.as_of ?? meta?.now}
               search={scope.search}
               statuses={statuses}
             />
@@ -92,27 +107,38 @@ function SearchCard({
   task,
   model,
   timezone,
+  asOf,
   search,
   statuses,
 }: {
   task: TaskResource;
   model: PriorityModel;
   timezone: string;
+  asOf: string | undefined;
   search: string;
   statuses: { id: string; label: string }[];
 }) {
   const noop = () => {};
   const noDrag = () => {};
+  const term = new URLSearchParams(search).get('q')?.trim().toLocaleLowerCase() ?? '';
+  const position = term ? task.description.toLocaleLowerCase().indexOf(term) : -1;
+  const excerpt =
+    position >= 0 && !task.title.toLocaleLowerCase().includes(term)
+      ? task.description.slice(Math.max(0, position - 45), position + 120).replace(/\s+/gu, ' ')
+      : undefined;
   return (
     <BoardTaskCard
       task={task}
       model={model}
       timezone={timezone}
+      asOf={asOf}
       search={search}
       status={statuses.find((status) => status.id === task.status_id)?.label ?? task.status_id}
       movable={false}
       onMove={noop}
       onDrag={noDrag}
+      showHandle={false}
+      {...(excerpt ? { excerpt } : {})}
     />
   );
 }

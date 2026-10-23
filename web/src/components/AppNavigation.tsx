@@ -28,15 +28,9 @@ export function AppNavigation({ path }: { path: string }) {
     <>
       <nav className="bottom-nav" aria-label="Основная навигация">
         <AppLink href="/" active={projects}>
-          <span aria-hidden="true" className="nav-symbol">
-            ☷
-          </span>
           <span data-nav-label>Проекты</span>
         </AppLink>
         <AppLink href="/tasks?all_projects=true" active={tasks}>
-          <span aria-hidden="true" className="nav-symbol">
-            ▦
-          </span>
           <span data-nav-label>Обзор</span>
         </AppLink>
         <button
@@ -45,9 +39,6 @@ export function AppNavigation({ path }: { path: string }) {
           aria-expanded={open}
           className={secondary ? 'nav-current' : undefined}
         >
-          <span aria-hidden="true" className="nav-symbol">
-            ···
-          </span>
           <span data-nav-label>Ещё</span>
         </button>
       </nav>

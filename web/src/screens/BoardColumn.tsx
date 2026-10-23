@@ -1,12 +1,16 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
-import type { PriorityModel } from '../../../src/schema/configuration.js';
+import type { PriorityModel, ProjectConfigInput } from '../../../src/schema/configuration.js';
 import type { TaskResource } from '../../../src/schema/tasks.js';
 import { boardItems, completeColumn, useBoardRead, type BoardRead } from '../data/board.js';
 import { boardReading } from '../data/board-reading.js';
 import { BoardTaskCard } from './BoardTaskCard.js';
 import { BoardReadState, BoardSnapshot } from './BoardReadState.js';
+import { Button } from '../components/Button.js';
 
 export type ColumnScope = { slug: string; search: string; epoch: string; revision: number };
+export type BoardStatus =
+  | ProjectConfigInput['ordinary_workflow']['statuses'][number]
+  | ProjectConfigInput['recurring_workflow']['statuses'][number];
 export function BoardColumn({
   scope,
   status,
@@ -15,17 +19,21 @@ export function BoardColumn({
   timezone,
   readingKey,
   movable,
+  canAdd,
+  onAdd,
   register,
   onMove,
   onDrag,
 }: {
   scope: ColumnScope;
-  status: { id: string; label: string };
+  status: BoardStatus;
   enabled: boolean;
   model: PriorityModel;
   timezone: string;
   readingKey: string;
   movable: boolean;
+  canAdd: boolean;
+  onAdd(): void;
   register(id: string, read: BoardRead): void;
   onMove(task: TaskResource): void;
   onDrag(event: PointerEvent<HTMLButtonElement>, task: TaskResource): void;
@@ -34,6 +42,7 @@ export function BoardColumn({
   const list = useRef<HTMLDivElement>(null);
   const reading = boardReading(readingKey, status.id);
   const items = boardItems(query);
+  const meta = query.data?.pages[0]?.meta;
   useEffect(() => {
     register(status.id, query);
   }, [register, status.id, query]);
@@ -48,7 +57,7 @@ export function BoardColumn({
   return (
     <section className="board-column" data-status-id={status.id} aria-label={status.label}>
       <div className="board-column-heading">
-        <span className="stage-dot" aria-hidden="true" />
+        <span className="stage-dot" data-color={status.color} aria-hidden="true" />
         <h2>{status.label}</h2>
         <span
           className="board-counter"
@@ -69,6 +78,7 @@ export function BoardColumn({
               task={task}
               model={model}
               timezone={timezone}
+              asOf={meta?.as_of ?? meta?.now}
               search={scope.search}
               movable={movable && completeColumn(query)}
               onMove={onMove}
@@ -81,6 +91,16 @@ export function BoardColumn({
         ) : (
           !query.data && <p className="board-empty">Откройте стадию, чтобы загрузить задачи.</p>
         )}
+        <Button
+          className="board-add-card"
+          variant="ghost"
+          aria-label={`Добавить задачу: ${status.label}`}
+          title="Новая задача появится в начальной стадии проекта"
+          disabled={!canAdd}
+          onClick={onAdd}
+        >
+          + Добавить
+        </Button>
         <BoardSnapshot query={query} />
       </div>
     </section>

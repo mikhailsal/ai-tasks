@@ -1,3 +1,4 @@
+import { openTaskActions } from '../fixtures/task-ui.js';
 import {
   installBrowserResponseLoss,
   waitForBrowserResponseLoss,
@@ -214,6 +215,7 @@ test('stale nested dependency removal requires explicit retry while retaining di
       (response) =>
         response.request().method() === 'POST' && response.url().endsWith(graph.endpoint),
     );
+    await openTaskActions(page);
     await page
       .getByRole('region', { name: 'Зависимости', exact: true })
       .getByRole('button', { name: 'Удалить зависимость', exact: true })
@@ -295,6 +297,7 @@ test('lost dependency removal response survives reload and replays exact body on
         sent.push(request.postData() ?? '');
     });
     await installBrowserResponseLoss(page, { method: 'POST', path: graph.endpoint });
+    await openTaskActions(page);
     await page
       .getByRole('region', { name: 'Зависимости', exact: true })
       .getByRole('button', { name: 'Удалить зависимость', exact: true })

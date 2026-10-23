@@ -3,6 +3,7 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 import { z } from 'zod/mini';
 import { metaEnvelopeSchema } from '../../src/schema/meta.js';
 import { successEnvelopeSchema } from '../../src/schema/envelopes.js';
+import { openTaskActions } from '../fixtures/task-ui.js';
 const storedTaskSchema = z.object({
   id: z.uuid(),
   revision: z.number(),
@@ -93,6 +94,7 @@ test('explicit return with ⚪ keeps that choice when the original marker become
   const rejected = page.waitForResponse(
     (response) => response.url().endsWith(restorePath) && response.request().method() === 'POST',
   );
+  await openTaskActions(page);
   await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
   expect((await rejected).status()).toBe(409);
   const defaultChoice = page.getByRole('button', { name: 'Восстановить с ⚪', exact: true });

@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
+import { AppLink } from '../app/router.js';
 import { ProjectConfigurationFields } from './ProjectConfigurationFields.js';
 import { Field } from '../components/Field.js';
 import { EmojiField } from '../components/EmojiField.js';
@@ -9,17 +10,16 @@ export function ProjectFields({
   onChange,
   editing,
   disabled,
+  children,
 }: {
   fields: Fields;
   onChange(fields: Fields): void;
   editing: boolean;
   disabled: boolean;
+  children?: ReactNode;
 }) {
   const id = useId();
-  function change(
-    key: 'slug' | 'name' | 'emoji' | 'description' | 'priority' | 'preset',
-    value: string,
-  ) {
+  function change(key: 'slug' | 'name' | 'emoji' | 'description' | 'priority', value: string) {
     onChange({ ...fields, [key]: value });
   }
   return (
@@ -27,24 +27,9 @@ export function ProjectFields({
       <Field
         label="Название проекта"
         value={fields.name}
-        onChange={(e) => change('name', e.target.value)}
+        onChange={(event) => change('name', event.target.value)}
         required
         disabled={disabled}
-      />
-      <Field
-        label="Slug проекта"
-        value={fields.slug}
-        onChange={(e) => change('slug', e.target.value)}
-        required
-        disabled={disabled || editing}
-        hint="Постоянная ссылка проекта. После создания изменить нельзя."
-      />
-      <EmojiField
-        label="Эмодзи проекта"
-        value={fields.emoji}
-        onChange={(value) => change('emoji', value)}
-        disabled={disabled}
-        hint="Уникальный маркер проекта. Прежние маркеры остаются за ним навсегда."
       />
       <div className="field">
         <label htmlFor={`${id}-description`}>Описание проекта</label>
@@ -52,7 +37,7 @@ export function ProjectFields({
           id={`${id}-description`}
           rows={6}
           value={fields.description}
-          onChange={(e) => change('description', e.target.value)}
+          onChange={(event) => change('description', event.target.value)}
           disabled={disabled}
         />
       </div>
@@ -64,42 +49,86 @@ export function ProjectFields({
         max={2147483647}
         required
         value={fields.priority}
-        onChange={(e) => change('priority', e.target.value)}
+        onChange={(event) => change('priority', event.target.value)}
         disabled={disabled}
         hint="Большее число поднимает проект выше в списке."
       />
-      {!editing && fields.config === null && (
-        <div className="field">
-          <label htmlFor={`${id}-preset`}>Модель приоритета</label>
-          <select
-            id={`${id}-preset`}
-            value={fields.preset}
-            onChange={(e) => change('preset', e.target.value)}
-            disabled={disabled}
-          >
-            {Object.entries(presetLabels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <label htmlFor={`${id}-ordinary`}>Обычный рабочий процесс</label>
-          <select id={`${id}-ordinary`} disabled={disabled} defaultValue="builtin">
-            <option value="builtin">Стандартный: от идеи до завершения</option>
-          </select>
-          <label htmlFor={`${id}-recurring`}>Повторяющийся рабочий процесс</label>
-          <select id={`${id}-recurring`} disabled={disabled} defaultValue="builtin">
-            <option value="builtin">Стандартный: черновик, активно, пауза, архив</option>
-          </select>
-          <p className="field-hint">
-            Готовые статусы: Идея → Планирование → Готово к работе → В работе → Проверка → Готово.
-            Отмена и возврат доступны по правилам проекта.
-          </p>
-        </div>
-      )}
-      {!editing && (
-        <ProjectConfigurationFields fields={fields} onChange={onChange} disabled={disabled} />
-      )}
+      <details
+        className="project-editor-advanced"
+        open={!editing}
+        onInvalidCapture={(event) => {
+          event.currentTarget.open = true;
+        }}
+      >
+        <summary>Дополнительные настройки</summary>
+        <Field
+          label="Slug проекта"
+          value={fields.slug}
+          onChange={(event) => change('slug', event.target.value)}
+          required
+          disabled={disabled || editing}
+          hint="Постоянная ссылка проекта. После создания изменить нельзя."
+        />
+        <EmojiField
+          label="Эмодзи проекта"
+          value={fields.emoji}
+          onChange={(value) => change('emoji', value)}
+          disabled={disabled}
+          hint="Уникальный маркер проекта. Прежние маркеры остаются за ним навсегда."
+        />
+        {editing ? (
+          <AppLink href={`/projects/${encodeURIComponent(fields.slug)}/configuration`}>
+            Настройки стадий и приоритетов
+          </AppLink>
+        ) : (
+          <ProjectPresets fields={fields} onChange={onChange} disabled={disabled} />
+        )}
+        {!editing && (
+          <ProjectConfigurationFields fields={fields} onChange={onChange} disabled={disabled} />
+        )}
+        {children}
+      </details>
     </>
+  );
+}
+function ProjectPresets({
+  fields,
+  onChange,
+  disabled,
+}: {
+  fields: Fields;
+  onChange(fields: Fields): void;
+  disabled: boolean;
+}) {
+  const id = useId();
+  if (fields.config !== null) return null;
+  return (
+    <div className="field">
+      <label htmlFor={`${id}-preset`}>Модель приоритета</label>
+      <select
+        id={`${id}-preset`}
+        value={fields.preset}
+        onChange={(event) => onChange({ ...fields, preset: event.target.value })}
+        disabled={disabled}
+      >
+        {Object.entries(presetLabels).map(([key, label]) => (
+          <option key={key} value={key}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <label htmlFor={`${id}-ordinary`}>Обычный рабочий процесс</label>
+      <select id={`${id}-ordinary`} disabled={disabled} defaultValue="builtin">
+        <option value="builtin">Стандартный: от идеи до завершения</option>
+      </select>
+      <label htmlFor={`${id}-recurring`}>Повторяющийся рабочий процесс</label>
+      <select id={`${id}-recurring`} disabled={disabled} defaultValue="builtin">
+        <option value="builtin">Стандартный: черновик, активно, пауза, архив</option>
+      </select>
+      <p className="field-hint">
+        Готовые статусы: Идея → Планирование → Готово к работе → В работе → Проверка → Готово.
+        Отмена и возврат доступны по правилам проекта.
+      </p>
+    </div>
   );
 }

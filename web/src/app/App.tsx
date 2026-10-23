@@ -5,6 +5,7 @@ import { Button } from '../components/Button.js';
 import { AppNavigation } from '../components/AppNavigation.js';
 import { CacheMiss } from '../components/CacheMiss.js';
 import { OfflineBanner } from '../components/OfflineBanner.js';
+import { BackButton } from '../components/BackButton.js';
 import { getApi } from '../data/api.js';
 import { ProjectBoard } from '../screens/ProjectBoard.js';
 import { Projects } from '../screens/Projects.js';
@@ -159,6 +160,18 @@ export function App() {
         Перейти к содержимому
       </a>
       <header className={shell.header}>
+        {route.kind !== 'projects' &&
+          route.kind !== 'project-board' &&
+          route.kind !== 'task' &&
+          route.kind !== 'task-new' && (
+            <BackButton
+              fallback={
+                'projectSlug' in route
+                  ? `/projects/${encodeURIComponent(route.projectSlug)}/board`
+                  : '/'
+              }
+            />
+          )}
         <AppLink className="app-brand" href="/">
           <span className="brand-mark" aria-hidden="true">
             ✓
@@ -168,7 +181,9 @@ export function App() {
         <AppNavigation path={window.location.pathname + window.location.search} />
       </header>
       <main id="main" tabIndex={-1} className={shell.main}>
-        <OfflineBanner />
+        {route.kind !== 'project-board' && (
+          <OfflineBanner quiet={route.kind === 'task' || route.kind === 'task-new'} />
+        )}
         <MutationBoundary {...(metadata.data ? { epoch: metadata.data.data.database_epoch } : {})}>
           {route.kind === 'backups' ? (
             <Backups {...(metadata.data ? { metadata: metadata.data.data } : {})} />
@@ -195,9 +210,6 @@ export function App() {
           )}
         </MutationBoundary>
       </main>
-      {route.kind !== 'project-board' && route.kind !== 'task' && route.kind !== 'task-new' && (
-        <footer className="app-footer">Спокойно, по одному делу.</footer>
-      )}
     </>
   );
 }

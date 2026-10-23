@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
-import { AppLink } from '../app/router.js';
-import { boardReturnHref } from '../data/board-links.js';
 import { TaskHistory } from './TaskHistory.js';
+import { TaskDetailHeader } from './TaskDetailHeader.js';
+import { Modal } from '../components/Modal.js';
+import { OfflineBanner } from '../components/OfflineBanner.js';
 import './task-detail.css';
 import { useMutationAvailability } from '../app/MutationBoundary.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
@@ -163,6 +164,7 @@ export function TaskDetail({
 }) {
   const editor = useTaskDraft(projectSlug, taskId);
   const commands = useTaskCommands(editor, projectSlug);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [recurrenceBlocked, setRecurrenceBlocked] = useState(Boolean(taskId));
   const online = useMutationAvailability(metadata.database_epoch, projectSlug);
   const page = editor.page;
@@ -187,13 +189,11 @@ export function TaskDetail({
   });
   return (
     <div className="task-page">
-      <AppLink
-        className="task-board-back"
-        label="Назад на доску проекта"
-        href={boardReturnHref(projectSlug, editor.draft.fields.kind)}
-      >
-        ← {page.project.emoji} {page.project.name}
-      </AppLink>
+      <TaskDetailHeader
+        page={page}
+        kind={editor.draft.fields.kind}
+        onActions={() => setActionsOpen(true)}
+      />
       <TaskNotices
         editor={editor}
         commands={commands}
@@ -206,6 +206,7 @@ export function TaskDetail({
         fields={editor.draft.fields}
         onChange={editor.change}
         onSave={() => void commands.save()}
+        onActions={() => setActionsOpen(true)}
         onCancel={() => {
           editor.cancel();
           commands.cancelReview();
@@ -218,21 +219,34 @@ export function TaskDetail({
         ].some(Boolean)}
       />
       <TaskHistory key={task?.id ?? 'new'} page={page} />
-      {task && (
-        <TaskSavedDetails
+      <Modal
+        open={actionsOpen}
+        onCancel={() => setActionsOpen(false)}
+        label="Действия с задачей"
+        className="task-actions-modal"
+      >
+        <h2>Действия с задачей</h2>
+        <OfflineBanner />
+        {task && (
+          <TaskSavedDetails
+            page={page}
+            disabled={[actionUnavailable, metadata.database_epoch !== page.epoch].some(Boolean)}
+            archived={archived}
+            onAction={(action) => {
+              setActionsOpen(false);
+              void commands.action(action);
+            }}
+          />
+        )}
+        <TaskRecurrence
           page={page}
-          disabled={[actionUnavailable, metadata.database_epoch !== page.epoch].some(Boolean)}
-          archived={archived}
-          onAction={(action) => void commands.action(action)}
+          metadata={metadata}
+          disabled={[blocked, metadata.database_epoch !== page.epoch].some(Boolean)}
+          editor={editor}
+          report={setRecurrenceBlocked}
         />
-      )}
-      <TaskRecurrence
-        page={page}
-        metadata={metadata}
-        disabled={[blocked, metadata.database_epoch !== page.epoch].some(Boolean)}
-        editor={editor}
-        report={setRecurrenceBlocked}
-      />
+        <Button onClick={() => setActionsOpen(false)}>Закрыть</Button>
+      </Modal>
       <TaskOperationReview
         editor={editor}
         commands={commands}

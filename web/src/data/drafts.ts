@@ -1,3 +1,4 @@
+import { browserUuid } from './uuid.js';
 import { createStore, del, get, set } from 'idb-keyval';
 import * as z from 'zod/mini';
 import { mutationEnvelopeSchema, type MutationEnvelope } from '../../../src/schema/envelopes.js';
@@ -123,7 +124,7 @@ export function proposalFor(
     )
       return previous;
   }
-  const envelope = mutationEnvelopeSchema.parse({ ...body, operation_id: crypto.randomUUID() });
+  const envelope = mutationEnvelopeSchema.parse({ ...body, operation_id: browserUuid() });
   jsonBodySchema.parse(envelope);
   freezeJson(jsonValueSchema.parse(envelope));
   return Object.freeze({ path, method, envelope, body: JSON.stringify(envelope) });

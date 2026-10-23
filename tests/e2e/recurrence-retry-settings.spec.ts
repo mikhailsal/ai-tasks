@@ -1,3 +1,4 @@
+import { openTaskActions } from '../fixtures/task-ui.js';
 import {
   installBrowserResponseLoss,
   waitForBrowserResponseLoss,
@@ -190,6 +191,7 @@ test('lost completion response is retried with the identical persisted operation
     const first = Date.now() - 2 * 86400000;
     const id = await seedBrowserRecurring(server, { first, active: true, activeSince: first });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     await tick(page);
     const debts = browserOccurrences(server, id).filter((item) => item.state === 'debt');
     const selected = debts[0];
@@ -217,6 +219,7 @@ test('lost completion response is retried with the identical persisted operation
     expect(completeAuditCount(server, selected.id)).toBe(1);
     const committed = browserWriteSnapshot(server);
     await page.reload();
+    await openTaskActions(page);
     await expect(
       page.getByRole('button', { name: 'Выполнить выбранные', exact: true }),
     ).toBeDisabled();
@@ -260,6 +263,7 @@ test('actual-time draft retains its original timezone through settings conflict 
     const selected = browserOccurrences(server, id)[0];
     if (!selected) throw new Error('Expected materialized pending occurrence');
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     await row(page, selected.id)
       .getByLabel(`Выбрать повторение ${selected.id}`, { exact: true })
       .check();
@@ -286,6 +290,7 @@ test('actual-time draft retains its original timezone through settings conflict 
     );
     expect(browserWriteSnapshot(server)).toEqual(before);
     await page.reload();
+    await openTaskActions(page);
     const group = row(page, selected.id).getByRole('group', {
       name: `Фактическое выполнение ${selected.id}`,
       exact: true,

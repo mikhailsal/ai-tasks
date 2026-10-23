@@ -1,3 +1,4 @@
+import { openTaskActions } from '../fixtures/task-ui.js';
 import { randomUUID } from 'node:crypto';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { z } from 'zod/mini';
@@ -86,6 +87,7 @@ test('a restored dirty draft keeps its source and exposes Restore after an exter
   );
   await mutate(request, `/tasks/${task.id}/archive`, {}, task.revision);
   await page.reload();
+  await openTaskActions(page);
   await expect(page.getByRole('button', { name: 'Восстановить', exact: true })).toBeVisible();
   await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(
     'Мой несохранённый исходник **целиком**',
@@ -148,8 +150,9 @@ test('stale completion retains the exact consent and target for explicit reconci
     (await mutate(request, '/tasks', { kind: 'ordinary', title: 'Согласованное завершение' })).data,
   );
   await page.goto(`/projects/${slug}/tasks/${task.id}`);
+  await openTaskActions(page);
   await page.getByRole('button', { name: /Завершить/u }).click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: 'Подтвердите переход', exact: true });
   await expect(dialog).toContainText('Согласованное завершение');
   await expect(dialog).toContainText('Идея → Готово');
   await dialog.getByLabel('Текст подтверждения').fill('Проверил результат лично');
@@ -176,6 +179,7 @@ test('stale completion retains the exact consent and target for explicit reconci
   await expect(proposed).toContainText('Проверил результат лично');
   await expect(proposed).toContainText('done');
   await page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }).click();
+  await openTaskActions(page);
   await expect(page.getByRole('button', { name: 'В архив', exact: true })).toBeEnabled();
   const current = z
     .object({ data: z.object({ status_id: z.string(), description: z.string() }) })

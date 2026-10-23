@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { boardProject, projectBoardServer } from '../fixtures/project-board.js';
-import { mobileProject, mobileTitle, mobileUxServer } from '../fixtures/mobile-ux.js';
+import {
+  mobileMarkdown,
+  mobileProject,
+  mobileTitle,
+  mobileUxServer,
+} from '../fixtures/mobile-ux.js';
+import { closeTaskActions, openTaskActions, openTaskFormatting } from '../fixtures/task-ui.js';
 
 test('home selects a project and opens its Kanban directly', async ({ page }) => {
   const server = await mobileUxServer();
@@ -30,6 +36,15 @@ test('task opens directly editable with discoverable actual history', async ({ p
     await expect(
       page.getByRole('heading', { name: 'История изменений', exact: true }),
     ).toBeVisible();
+    await expect(page.getByLabel('Описание', { exact: true })).toHaveValue(mobileMarkdown);
+    await expect(page.getByRole('button', { name: 'Предпросмотр', exact: true })).not.toBeVisible();
+    await openTaskFormatting(page);
+    await expect(page.getByRole('button', { name: 'Предпросмотр', exact: true })).toBeVisible();
+    await page.getByText('Дополнительно', { exact: true }).click();
+    const actions = await openTaskActions(page);
+    await expect(actions.getByRole('button', { name: 'В архив', exact: true })).toBeEnabled();
+    await closeTaskActions(page);
+    await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
   } finally {
     await page.context().close();
     await server.close();

@@ -95,6 +95,7 @@ export function useBoardMove(options: {
   return {
     operation,
     error,
+    dismissError: () => setError(''),
     request,
     confirmation,
     setConfirmation,

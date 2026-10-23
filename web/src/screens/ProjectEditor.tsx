@@ -7,6 +7,7 @@ import type { projectEnvelopeSchema } from '../data/resources.js';
 import { ProjectFields } from './ProjectFields.js';
 import { ProjectDescriptionPreview } from './ProjectDescriptionPreview.js';
 import { useProjectEditor } from './use-project-editor.js';
+import './project-editor.css';
 function editorDisabled(
   editor: ReturnType<typeof useProjectEditor>,
   online: boolean,
@@ -84,6 +85,9 @@ function ProjectEditorNotices({
   return (
     <>
       {editor.message && <p role="alert">{editor.message}</p>}
+      {archived && (
+        <p role="status">Проект в архиве. Редактирование недоступно до восстановления.</p>
+      )}
       {!online && (
         <p role="status">
           Нет подключения. Черновик сохранён в форме; для сохранения проекта подключитесь к сети.
@@ -94,6 +98,15 @@ function ProjectEditorNotices({
       )}
     </>
   );
+}
+function projectEditorLabels(editing: boolean) {
+  return editing
+    ? {
+        page: 'Редактирование проекта',
+        save: 'Сохранить изменения',
+        back: 'Назад на доску проекта',
+      }
+    : { page: 'Создание проекта', save: 'Сохранить проект', back: 'Назад к проектам' };
 }
 export function ProjectEditor({
   source,
@@ -111,62 +124,79 @@ export function ProjectEditor({
   const editor = useProjectEditor({ ...(source ? { source } : {}), metadata, onSaved });
   const archived = source ? source.data.archived_at !== null : false;
   const comparisonDisabled = !online || editor.busy;
-  const saveLabel = source ? 'Сохранить изменения' : 'Сохранить проект';
+  const labels = projectEditorLabels(source !== undefined);
   const disabled = editorDisabled(editor, online, archived);
   const oldEpoch = editor.draft.base.database_epoch !== metadata.database_epoch;
+  const cancelDisabled = editor.busy || editor.saved || editor.pending !== undefined;
   return (
-    <section>
-      <h1>{source ? 'Редактировать проект' : 'Создать проект'}</h1>
+    <section className="project-editor-page" aria-label={labels.page}>
+      <header className="project-editor-head">
+        <Button
+          variant="ghost"
+          className="project-editor-back"
+          aria-label={labels.back}
+          onClick={onCancel}
+          disabled={cancelDisabled}
+        >
+          ‹
+        </Button>
+        <h1>{labels.page}</h1>
+        <span aria-hidden="true" />
+      </header>
       <form
-        aria-label={source ? 'Редактирование проекта' : 'Создание проекта'}
+        className="project-editor-form"
+        aria-label={labels.page}
         onSubmit={(event) => {
           event.preventDefault();
           void editor.submit();
         }}
       >
-        <ProjectFields
-          fields={editor.draft.fields}
-          onChange={editor.change}
-          editing={source !== undefined}
-          disabled={disabled}
-        />
-        {source && (
-          <ProjectDescriptionPreview
-            slug={source.data.slug}
-            description={editor.draft.fields.description}
+        <div className="project-editor-content">
+          <ProjectFields
+            fields={editor.draft.fields}
+            onChange={editor.change}
+            editing={source !== undefined}
             disabled={disabled}
+          >
+            {source && (
+              <ProjectDescriptionPreview
+                slug={source.data.slug}
+                description={editor.draft.fields.description}
+                disabled={disabled}
+              />
+            )}
+          </ProjectFields>
+          <ProjectEditorNotices
+            editor={editor}
+            metadataEpoch={metadata.database_epoch}
+            online={online}
+            archived={archived}
+            comparisonDisabled={comparisonDisabled}
           />
-        )}
-        <ProjectEditorNotices
-          editor={editor}
-          metadataEpoch={metadata.database_epoch}
-          online={online}
-          archived={archived}
-          comparisonDisabled={comparisonDisabled}
-        />
-        <Button
-          variant="primary"
-          type="submit"
-          disabled={disabled || oldEpoch || editor.current !== undefined}
-        >
-          {editor.busy ? 'Сохранение…' : saveLabel}
-        </Button>{' '}
-        <Button
-          onClick={onCancel}
-          disabled={editor.busy || editor.saved || editor.pending !== undefined}
-        >
-          Отмена
-        </Button>
+          <ProjectSaveRecovery editor={editor} disabled={comparisonDisabled} />
+          {editor.current && (
+            <ConflictReview
+              current={editor.current}
+              proposed={editor.draft.fields}
+              onRetry={editor.retry}
+              disabled={comparisonDisabled}
+            />
+          )}
+        </div>
+        <footer className="project-editor-actions">
+          <Button onClick={onCancel} disabled={cancelDisabled}>
+            Отмена
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            aria-label={labels.save}
+            disabled={disabled || oldEpoch || editor.current !== undefined}
+          >
+            {editor.busy ? 'Сохранение…' : 'Сохранить'}
+          </Button>
+        </footer>
       </form>
-      <ProjectSaveRecovery editor={editor} disabled={comparisonDisabled} />
-      {editor.current && (
-        <ConflictReview
-          current={editor.current}
-          proposed={editor.draft.fields}
-          onRetry={editor.retry}
-          disabled={comparisonDisabled}
-        />
-      )}
     </section>
   );
 }

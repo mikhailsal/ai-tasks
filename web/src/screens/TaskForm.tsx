@@ -15,6 +15,7 @@ export function TaskForm({
   cancelDisabled,
   dirty,
   disabled,
+  onActions,
 }: {
   page: TaskPage;
   fields: TaskFields;
@@ -24,6 +25,7 @@ export function TaskForm({
   cancelDisabled: boolean;
   dirty: boolean;
   disabled: boolean;
+  onActions?: () => void;
 }) {
   const kindId = useId();
   return (
@@ -74,9 +76,19 @@ export function TaskForm({
         <Button onClick={onCancel} disabled={cancelDisabled}>
           Отмена
         </Button>
-        <Button variant="primary" type="submit" disabled={disabled}>
+        <Button variant="primary" type="submit" disabled={disabled || !dirty}>
           Сохранить
         </Button>
+        {page.task && onActions && (
+          <Button
+            variant="ghost"
+            className="task-stage-action"
+            aria-label="Сменить стадию задачи"
+            onClick={onActions}
+          >
+            →
+          </Button>
+        )}
       </div>
     </form>
   );

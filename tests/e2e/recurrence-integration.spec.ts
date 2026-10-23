@@ -1,3 +1,4 @@
+import { openTaskActions, closeTaskActions } from '../fixtures/task-ui.js';
 import { expect, test, type Page } from '@playwright/test';
 import { createProject } from '../../src/core/projects/commands.js';
 import { migrateConfiguration } from '../../src/core/projects/configuration.js';
@@ -144,6 +145,7 @@ test('a failed recurrence background refresh remains visible, retains the mounte
     const selected = browserOccurrences(server, id)[0];
     if (!selected) throw new Error('Expected real future occurrence');
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     const occurrence = page.getByRole('article', {
       name: `Повторение ${selected.id}`,
       exact: true,
@@ -152,6 +154,7 @@ test('a failed recurrence background refresh remains visible, retains the mounte
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
     const window = page.getByLabel('Окно подтверждения, мс', { exact: true });
     await window.fill('123456');
+    await closeTaskActions(page);
     await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();
     await page
       .getByLabel('Название задачи', { exact: true })
@@ -161,6 +164,7 @@ test('a failed recurrence background refresh remains visible, retains the mounte
     const updated = mutationResponse(page, `/projects/alpha/tasks/${id}`, 'PATCH');
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
     expect((await updated).status()).toBe(200);
+    await openTaskActions(page);
     await expect(
       page.getByRole('alert').filter({ hasText: 'Не удалось обновить повторение' }),
     ).toBeVisible();
@@ -224,6 +228,7 @@ test('archiving active recurring work with debts and future pending records reje
     const first = Date.now() - 2 * 86_400_000;
     const id = await seedBrowserRecurring(server, { first, active: true, activeSince: first });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     const tick = mutationResponse(page, '/projects/alpha/recurrence/tick', 'POST');
     await page.getByRole('button', { name: 'Обработать наступившие сроки', exact: true }).click();
     expect((await tick).status()).toBe(200);
@@ -249,6 +254,7 @@ test('archiving active recurring work with debts and future pending records reje
     expect(browserWriteSnapshot(server)).toEqual(before);
     expect(browserParent(server.fixture, id)).toEqual(parent);
     expect(parent.status_id).toBe('active');
+    await openTaskActions(page);
     const blockers = page.getByRole('link', { name: /Ожидают:.*Долги:.*Открыть записи/u });
     await expect(blockers).toHaveAttribute('href', '#occurrences');
     await blockers.click();

@@ -1,3 +1,4 @@
+import { closeTaskActions, openTaskActions } from '../fixtures/task-ui.js';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { z } from 'zod/mini';
 import { updateTask } from '../../src/core/tasks/commands.js';
@@ -34,9 +35,11 @@ async function tick(page: Page, id: string) {
   await expect(
     page.getByRole('article', { name: new RegExp('^Повторение ') }).first(),
   ).toBeVisible();
+  await closeTaskActions(page);
   await expect(
     page.getByRole('heading', { name: 'Проверка оборудования', exact: true }),
   ).toBeVisible();
+  await openTaskActions(page);
   expect(id).toMatch(/^[a-f0-9-]{36}$/u);
 }
 // These labels define structured controls for T075/T076; no JSON editor or hidden time defaults.
@@ -106,6 +109,7 @@ test('recurring creation requires explicit anchor, policy and window and keeps t
         width,
       );
     }
+    await openTaskActions(page);
     await minimumTarget(page.getByRole('button', { name: 'Активно', exact: true }));
   } finally {
     await page.context().close();
@@ -124,6 +128,7 @@ test('manual tick exposes explicit debt selection, per-row actual and frozen ins
       activeSince: first,
     });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     await tick(page, id);
     const rows = browserOccurrences(server, id);
     const debts = rows.filter((row) => row.state === 'debt');
@@ -142,6 +147,7 @@ test('manual tick exposes explicit debt selection, per-row actual and frozen ins
       ),
     );
     await page.reload();
+    await openTaskActions(page);
     const row = occurrence(page, selected.id);
     await row.getByRole('button', { name: 'Сохранённая инструкция', exact: true }).click();
     await expect(
@@ -186,10 +192,12 @@ test('paused cancellation requires reason, selects future pending only and leave
   try {
     const id = await seedBrowserRecurring(server, { first: Date.now() - 86400000, active: true });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     await tick(page, id);
     const pause = mutationResponse(page, `/projects/alpha/tasks/${id}/recurrence/control`);
     await page.getByRole('button', { name: 'Пауза', exact: true }).click();
     expect((await pause).status()).toBe(200);
+    await openTaskActions(page);
     const rows = browserOccurrences(server, id);
     const debt = rows.find((row) => row.state === 'debt');
     const future = rows.find((row) => row.state === 'pending' && row.deadline > Date.now());
@@ -234,6 +242,7 @@ test('timezone conflict preserves recurrence draft and original base across relo
   try {
     const id = await seedBrowserRecurring(server, { active: true });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
     await page.getByLabel('Окно подтверждения, мс', { exact: true }).fill('123456');
     const snapshots = browserOccurrences(server, id);
@@ -258,6 +267,7 @@ test('timezone conflict preserves recurrence draft and original base across relo
       snapshots,
     );
     await page.reload();
+    await openTaskActions(page);
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
     await expect(page.getByLabel('Окно подтверждения, мс', { exact: true })).toHaveValue('123456');
     expect(browserWriteSnapshot(server)).toEqual(before);
@@ -273,6 +283,7 @@ test('direct recurring restore requires transition-specific consent and restores
   try {
     const id = await seedBrowserRecurring(server, { archived: true });
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
+    await openTaskActions(page);
     const before = browserWriteSnapshot(server);
     await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Подтвердите переход', exact: true });

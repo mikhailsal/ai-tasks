@@ -2,7 +2,7 @@
 
 ## Current status
 
-The user accepted sketch A and explicitly authorized implementation and a final commit. The real application now implements project-first navigation, swipeable ordinary/recurring boards, complete server-side search and deadline/priority filtering, shared database order/guarded stage transfer, direct task editing, contextual tag navigation and actual audit history. Required checks are complete with the explicitly approved temporary bundle exception. Human acceptance of the real application remains separate.
+The user accepted sketch A and explicitly authorized implementation and a final commit. The real application now implements project-first navigation, swipeable ordinary/recurring boards, complete server-side search and deadline/priority filtering, shared database order/guarded stage transfer, direct task editing, contextual tag navigation and actual audit history. The first transfer required repairs after user review; the renewed convergence evidence below supersedes the initial check summary, with the same approved temporary bundle exception. Human acceptance of the real application remains separate.
 
 Existing list-first prototype checks and all standalone sketch checks are historical evidence only. The reviewed standalone source is tracked at [design/sketch.html](design/sketch.html).
 
@@ -117,3 +117,59 @@ Final quality checks ran after the last source/test additions, sequentially unde
 | `npm run check:bundle-size` | 0 | 0.412s |
 
 The production bundle contains 162798 individually gzipped JavaScript bytes including service worker, below the approved strict 170000 ceiling. Production migration preserved 4 projects and 29 tasks; all 29 have shared board-order rows, integrity is ok and foreign-key check empty. The current application is served at http://192.168.1.203:3000/; the synthetic sketch on port3001 remains only a design reference. The user explicitly requested a final local commit; no push is authorized.
+
+
+## Convergence after the first application transfer
+
+User review found actual defects despite the earlier completed checks. The accepted sketch was concrete enough to catch the main layout drift; earlier implementation review overvalued viewport/functional assertions and did not adequately compare the real screens with that sketch. Localhost also masked a secure-context-only API failure on ordinary LAN HTTP. The first acceptance evidence above remains historical; it does not establish human acceptance or cover these failures.
+
+Phase 7 addresses the reported defects:
+
+- Browser operation IDs retain native randomUUID on secure contexts and use native cryptographic random bytes on insecure HTTP; existing immutable proposals/receipt identities remain unchanged. No dependencies or weak randomness were added.
+- Application controls keep plain hover styling. The project-search accessible label is visually hidden; its input, clear and cancel controls fit 320/390px. The short visible placeholder fits narrow phones, and the icon remains SVG.
+- Move errors have a close control. Dismissing a message does not discard an uncertain proposal; explicit retry reuses exactly the same bytes. Storage failures still prevent unsafe writes.
+- Task and project editors follow the accepted header/main-field/fixed-footer hierarchy. Ordinary text editing is primary; formatting, saved source/preview, technical metadata and configuration tools remain secondary. Exact saved/user-edited source and drafts are preserved.
+- Secondary routes have visible contextual Back controls with a safe in-app fallback. Board/task/project editor headers provide their own return control. Active stage tabs follow horizontal navigation; sync and stage position share one compact footer. Date tags show relative days and overdue urgency from the cached server snapshot, preserving exact-day filters and exact timestamp titles. Filter AND/calendar explanations stay visible.
+- Nested dialog Escape cancellation no longer bubbles into the parent action dialog. Connection state remains available inside the action dialog, including offline/error/update states; mutation guards and confirmations remain intact.
+
+Before the first fix, `sketch-regressions-red.log` reproduced hover/search/move-error failures (4 failed), `editors-parity-red.log` reproduced task/project editor mismatch (2 failed), `back-red.log` reproduced the missing secondary Back control, and the HTTP UUID regression reproduced the missing API. The first focused final-layout run passed 13/14 Chromium and 12/14 WebKit; it exposed the nested Escape bug, plus WebKit service-worker routing bypassing the deliberately aborted network request. That error-injection suite now explicitly blocks service workers so its mocked transport failure is deterministic; real production offline/service-worker journeys remain separate and unchanged in meaning.
+
+The full matrix initially exposed stale test entry points for newly secondary task actions/source views. Helpers and callers now use the same visible menu controls as a person. Existing exact-source, sanitizer, offline, confirmation, receipt and database-state assertions are retained. No failed run is considered passing evidence.
+
+### Demonstration description cleanup
+
+The Markdown template came from the demonstration seed I supplied. A hash-pinned recognizer matched the original seed definition and creation audit, required exact unchanged descriptions and rejected any later description edits. After a verified native SQLite backup, 28 editable demonstration descriptions were saved as readable plain text through guarded HTTP task updates. All 127 earlier audit records, non-target descriptions and board positions were verified unchanged; new changes have normal audit entries and receipts. The one archived task remains unchanged under the existing archive guard. No application startup cleanup or general user-content rewriting was added.
+
+Evidence: ignored `artifacts/mobile-ux/cleanup-demo-descriptions-{dry-run,applied}.json`; verified backup and exact operation manifest under ignored `data/pre-demo-description-cleanup/`. Native SQLite integrity is ok, foreign-key violations are zero, and 4 projects/29 tasks/29 board-order rows remain.
+
+### Renewed checks and visual review
+
+Actual LAN HTTP screenshots are `artifacts/mobile-ux/convergence-*.png` and measurements are `convergence-review.json`: project home, board/search/task/project editor at 320/390px, filters and settings. The reviewed HTML sketch remains unchanged. Real data, configured initial stages, partial counts, real audit events and exact-date editing remain authoritative; synthetic sketch totals/events are never copied into application state. Physical phone hardware has not been tested.
+
+Full browser jobs use the same ignored prebuilt-server helper documented above, with distinct ports/output directories and unchanged case/job budgets. One Chromium second-shard attempt was intentionally interrupted after host load rose while three browsers ran concurrently; its log is retained and is not passing evidence. Final checks/results are recorded below after completion.
+
+
+### Final convergence results
+
+| Check / evidence under `artifacts/mobile-ux/` | Result | Job duration |
+| --- | --- | --- |
+| UUID, immutable draft/proposal and strict bundle accounting (`convergence-functional-focused.log`) | Exit 0, 51/51 passed | 4.181s |
+| Chromium full shard 1 (`convergence-full-chromium-1.log`) | Exit 1, 55/65 passed; stale secondary-menu/source helpers and hidden timestamp assumptions repaired and rechecked below | 354.419s |
+| Chromium full shard 2 (`convergence-full-chromium-2-final.log`) | Exit 0, 52/52 passed | 290.270s |
+| Chromium corrective journeys (`convergence-chromium-corrections.log`) | Exit 0, 14/14 passed; covers all ten first-shard failures, both added stage/deadline checks and actual insecure-HTTP move | 94.692s |
+| WebKit full shard 1 (`convergence-full-webkit-1.log`) | Exit 1, 37/39 passed; two stale secondary-entry helpers repaired and rechecked | 394.788s |
+| WebKit full shard 2 (`convergence-full-webkit-2.log`) | Exit 0, 39 passed; one Chromium-CDP-only native-touch skip | 535.790s |
+| WebKit full shard 3 (`convergence-full-webkit-3.log`) | Exit 124 at unchanged 600s job budget; stale recurrence-entry helpers and unrelated-alert scoping exposed; failed/unreached cases rechecked below | 601.329s including cleanup |
+| WebKit corrective journeys (`convergence-webkit-corrections.log`) | Exit 1, 26/27 passed; remaining added test expected the wrong conjunction copy, corrected without changing application behavior | 359.323s |
+| Both engines: final stage/deadline/filter and simple-editor checks (`convergence-extra-final.log`) | Exit 0, 6/6 passed, including the corrected copy expectation and latest editor layout | 73.556s |
+| Both engines: final simple-editor smoke after concise priority prompt (`convergence-extra-priority-final.log`) | Exit 0, 2/2 passed; an additional actual LAN check verified the selected null value and concise prompt | 23.851s |
+| Final production build (`convergence-build-6.log`) | Exit 0, server/web/SW | Not a suite timing gate |
+| Final strict bundle inventory (`convergence-bundle-6.log`) | Exit 0, 164886 bytes gzip including SW, strictly below approved 170000 | Not a suite timing gate |
+
+`convergence-browser-manifest.json` and `convergence-coverage.json` reconcile unique case titles across the full runs and corrections: **237 passing browser cases, one documented engine-specific native-touch skip, zero missing cases**. Failed/interrupted jobs retain their original exit codes and are never relabeled as passing. All first-shard failures and budget-unreached cases have positive corrective evidence. WebKit's intentionally blocked service-worker registration can also report a shell-cache warning; move-error assertions now target that move error specifically and preserve unrelated storage diagnostics.
+
+Full quality commands under pinned Node24.22.0/npm11.19.1 completed successfully (`convergence-quality.json`): typecheck 42.153s, lint 76.185s, format 28.126s, runtime 1.044s, bundle inventory 0.629s. Subsequent small editor-spacing/prompt changes and added test copy received focused lint, web typecheck, formatting, both-engine editor checks, a fresh production build and fresh bundle accounting. No dependency, case/job budget or 170000-byte ceiling was changed.
+
+I reviewed actual final LAN screenshots in both engines against the accepted HTML sketch: home, board, search, filters, task and project editor; secondary navigation and error/offline behavior are covered by the corresponding browser journeys. The 320px history heading stays on one line, the source/formatting tools remain secondary, and the unset-priority prompt is concise. Search controls and visible return actions fit; no horizontal page overflow was observed. Recorded real data/required guards remain distinct from the synthetic sketch sample. Physical phone hardware and human visual acceptance remain separate.
+
+The final real application responds successfully at `http://192.168.1.203:3000/`, including its emitted JS/CSS assets. The LAN bridge and production server were restarted/verified for the final build. Reload an existing tab to load it. Existing drafts remain protected. One archived demonstration description still has its original source; it was not restored or edited to bypass the archive guard.

@@ -94,7 +94,9 @@ function PriorityInput({
           onChange({ model: 'classic', level });
       }}
     >
-      <option value="">Без приоритета</option>
+      <option value="" aria-label="Без приоритета">
+        Не задан
+      </option>
       {model.type === 'named'
         ? model.levels.map((level) => (
             <option key={level.id} value={level.id}>
@@ -110,11 +112,14 @@ function PriorityInput({
   );
 }
 
-export function PriorityField(props: Parameters<typeof PriorityInput>[0]) {
+export function PriorityField({
+  compact = false,
+  ...props
+}: Parameters<typeof PriorityInput>[0] & { compact?: boolean }) {
   return (
     <div className="stack">
       <PriorityInput {...props} />
-      {props.value !== null && (
+      {!compact && props.value !== null && (
         <>
           <p>Выбранный приоритет: {priorityLabel(props.value, props.model)}</p>
           <Button disabled={props.disabled} onClick={() => props.onChange(null)}>

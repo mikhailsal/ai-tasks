@@ -43,7 +43,7 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
           <h1>{choosingTask ? 'Выберите проект' : 'Проекты'}</h1>
         </div>
         <Button
-          variant="primary"
+          className="home-add-project"
           aria-label="Создать проект"
           onClick={() => setCreating(true)}
           disabled={!online}
@@ -88,10 +88,12 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
                 ›
               </span>
             </AppLink>
-            <p>
-              Приоритет: {project.priority}
-              {project.archived_at !== null ? ' · В архиве' : ''}
-            </p>
+            {(project.priority !== 0 || project.archived_at !== null) && (
+              <p>
+                Приоритет: {project.priority}
+                {project.archived_at !== null ? ' · В архиве' : ''}
+              </p>
+            )}
           </li>
         ))}
       </ul>
@@ -101,7 +103,6 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
         archive={archive}
         onToggle={() => setArchive(archive === 'only' ? 'exclude' : 'only')}
       />
-      <AppLink href="/tasks?all_projects=true">Все проекты: задачи</AppLink>
       {query.hasNextPage && (
         <Button
           onClick={() => void query.fetchNextPage()}

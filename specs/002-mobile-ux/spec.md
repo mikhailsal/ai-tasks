@@ -3,7 +3,7 @@
 **Feature**: `002-mobile-ux`
 **Created**: 2026-10-23
 **Updated**: 2026-10-23
-**Status**: The user accepted sketch A and explicitly authorized application implementation and a final commit. All 23 functional requirements and 19 success criteria remain in scope. Implementation and required runtime checks are complete; evidence is recorded in quickstart.md. Human acceptance of the real application is separate.
+**Status**: The user accepted sketch A and explicitly authorized application implementation and a final commit. All 23 functional requirements and 19 success criteria remain in scope. The first application transfer exposed functional and visual gaps in user review; Phase 7 of tasks.md records their convergence and renewed runtime/visual evidence in quickstart.md. Human acceptance of the real application is separate.
 
 **Input**: Work by selecting a project, then see its tasks by workflow stage on a mobile Kanban board. Swipe horizontally between neighboring columns, as in Trello. Keep the interface compact and app-like while preserving existing operations and data protections.
 
@@ -165,3 +165,8 @@ Existing project, task, workflow status and snapshot meanings are unchanged. A b
 - Existing data/protections/operation coverage are preserved. Deadline presets are an additive read-filter capability; task drag/order adds a new persisted write operation; existing transition semantics and guards remain authoritative. Data tests use synthetic isolated fixtures, never writes to the live demonstration database.
 - The earlier list-first prototype is historical work; acceptance of this Kanban revision requires real application checks against these requirements.
 - Sketch A (project home, swipeable board and task detail) was accepted as the visual direction; the user additionally requested task search. The accepted standalone sketch is versioned at `specs/002-mobile-ux/design/sketch.html` (session preview: `artifacts/mobile-ux/design/index.html`) and uses synthetic data only. The user subsequently authorized application implementation and a final commit after accepting the sketch.
+
+
+## Application review clarification
+
+The accepted HTML sketch is the visual reference for the primary screen hierarchy and editing flow. Descriptions open in an ordinary text editor; formatting and source tools stay secondary and never introduce content. Existing source and drafts remain exact. All secondary pages need visible contextual Back controls with a safe internal fallback. Normal board sync and stage position share a compact footer; application link controls retain the sketch hover appearance. Acceptance includes actual 320/390px screen comparison and an insecure LAN HTTP browser origin, where secure-context-only APIs cannot be assumed. Dismissible errors retain uncertain operations and immutable retry identities. These clarify FR-002–005/007/011/012/015–020/022/023 after the first transfer; they do not waive existing guards or constitute human acceptance.

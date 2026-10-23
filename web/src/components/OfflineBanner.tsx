@@ -1,9 +1,17 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { refreshReadState } from '../data/cache.js';
 import { useConnectivity } from '../data/connectivity.js';
 import { Button } from './Button.js';
 
-export function OfflineBanner() {
+export function OfflineBanner({
+  compact = false,
+  quiet = false,
+  children,
+}: {
+  compact?: boolean;
+  quiet?: boolean;
+  children?: ReactNode;
+}) {
   const state = useConnectivity();
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -19,15 +27,19 @@ export function OfflineBanner() {
       setRefreshing(false);
     }
   }
+  const attention = connectionAttention(state, error);
+  const warning = !state.online || state.maintenance;
+  if (quiet && !attention) return null;
   return (
     <aside
-      className={`connection-status${!state.online || state.maintenance ? ' connection-warning' : ''}`}
+      className={`connection-status${compact ? ' connection-compact' : ''}${warning ? ' connection-warning' : ''}`}
+      data-attention={attention}
       aria-label="Соединение и сохранённые данные"
     >
       <div className="connection-row">
         <span className="connection-dot" aria-hidden="true" />
         <p className="sync-time">
-          Последнее успешное обновление:{' '}
+          {compact ? 'Обновлено: ' : 'Последнее успешное обновление: '}
           {state.lastSuccessfulAt === null ? (
             'нет сохранённых данных'
           ) : (
@@ -42,6 +54,7 @@ export function OfflineBanner() {
             </time>
           )}
         </p>
+        {children}
         <Button
           variant="ghost"
           className="sync-refresh"
@@ -53,6 +66,32 @@ export function OfflineBanner() {
           <span aria-hidden="true">↻</span>
         </Button>
       </div>
+      <ConnectionNotices state={state} error={error} />
+    </aside>
+  );
+}
+
+function connectionAttention(state: ReturnType<typeof useConnectivity>, error: string) {
+  return [
+    !state.online,
+    state.maintenance,
+    state.reconciling,
+    state.unavailableProjects.length > 0,
+    state.cacheError,
+    error,
+    state.shellUpdateAvailable,
+  ].some(Boolean);
+}
+
+function ConnectionNotices({
+  state,
+  error,
+}: {
+  state: ReturnType<typeof useConnectivity>;
+  error: string;
+}) {
+  return (
+    <>
       {!state.online && (
         <p role="status">
           Нет соединения. Доступны ранее сохранённые данные; изменения не отправляются.
@@ -77,6 +116,6 @@ export function OfflineBanner() {
           Доступна новая версия приложения. Перезагрузите страницу после сохранения черновиков.
         </p>
       )}
-    </aside>
+    </>
   );
 }

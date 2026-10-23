@@ -56,11 +56,14 @@ Baseline [UI contract 001](../../001-ai-task-manager/contracts/web-ui.md), [HTTP
 
 - Compact cards: title/emoji primary; deadline/priority/blocker indicators secondary. The project header and column label supply context. Exact deadline/timezone, absent optional values and copy actions remain available in detail.
 - Buttons distinguish primary/secondary/ghost/danger; no payload/confirmation changes. Sync stays compact normally and visible on errors/offline/maintenance. All existing search/filter/metadata/configuration/history/recurrence/backup operations remain available in secondary views/disclosures.
-- Keep server-sanitized Markdown rendering/source faithful; do not introduce a new Markdown dialect or image/raw-HTML support.
+- The accepted `design/sketch.html` is the concrete reference for the main screen hierarchy, toolbar, editor headers and fixed action footers. Application controls retain their plain hover appearance; keyboard focus stays visible. Validate by viewing actual screens, not viewport geometry alone.
+- Task descriptions open as ordinary text editing. Formatting help, rendered preview, exact source view and technical metadata are secondary disclosures. Keep server-sanitized Markdown rendering/source faithful for existing content; do not insert Markdown into descriptions or introduce a new dialect or image/raw-HTML support.
+- Secondary pages have a visible Back control. Return to the actual internal originating board/project/search URL when available, with a safe in-app fallback for direct entry. Board and editor headers supply their own Back control without duplicate navigation rows.
+- Normal board sync and stage position share a compact footer. Error messages can be dismissed without discarding a pending operation, receipt or draft; storage failures continue to prevent unsafe writes.
 
 ## Acceptance
 
-Sketch A project chooser/board/detail is accepted as the visual direction. Application implementation was explicitly authorized after the sketch review. Reproduce board regressions first, test actual directional gestures in Chromium/WebKit, keyboard alternatives, returns/refresh, pagination/custom statuses and existing safety/offline suites. Capture/review real 320px and 390px screenshots; run the strict JS gzip gate (<170000 bytes including SW/lazy chunks under the user-approved temporary plan exception; baseline 150000). Superseded list-prototype results are historical evidence only.
+Sketch A project chooser/board/detail is accepted as the visual direction. Application implementation was explicitly authorized after the sketch review. Reproduce board regressions first, include a real insecure LAN HTTP browser origin (localhost is insufficient for browser API support), test actual directional gestures in Chromium/WebKit, keyboard alternatives, returns/refresh, pagination/custom statuses and existing safety/offline suites. Capture/review real 320px and 390px screenshots; run the strict JS gzip gate (<170000 bytes including SW/lazy chunks under the user-approved temporary plan exception; baseline 150000). Superseded list-prototype results are historical evidence only.
 
 
 ## Proposed persisted order and drag contract

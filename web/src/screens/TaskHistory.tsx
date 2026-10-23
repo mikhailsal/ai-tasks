@@ -28,17 +28,6 @@ function HistoryPage({
 }) {
   return (
     <>
-      <p className="task-history-snapshot">
-        Время страницы истории:{' '}
-        <time dateTime={data.meta.as_of ?? data.meta.now}>
-          {new Intl.DateTimeFormat('ru-RU', {
-            dateStyle: 'short',
-            timeStyle: 'short',
-            timeZone: timezone,
-          }).format(new Date(data.meta.as_of ?? data.meta.now))}
-        </time>{' '}
-        · {timezone}
-      </p>
       {data.data.items.length === 0 ? (
         <p>История изменений пока пуста.</p>
       ) : (
@@ -62,6 +51,20 @@ function HistoryPage({
           ))}
         </ol>
       )}
+      <details className="task-history-meta">
+        <summary>Сведения об истории</summary>
+        <p className="task-history-snapshot">
+          Время страницы истории:{' '}
+          <time dateTime={data.meta.as_of ?? data.meta.now}>
+            {new Intl.DateTimeFormat('ru-RU', {
+              dateStyle: 'short',
+              timeStyle: 'short',
+              timeZone: timezone,
+            }).format(new Date(data.meta.as_of ?? data.meta.now))}
+          </time>{' '}
+          · {timezone}
+        </p>
+      </details>
       <div className="action-row">
         {cursor && (
           <Button disabled={busy} onClick={onFirst}>

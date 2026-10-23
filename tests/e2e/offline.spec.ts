@@ -1,3 +1,4 @@
+import { closeTaskActions, openTaskActions, openSavedDescription } from '../fixtures/task-ui.js';
 import { expect, test } from '@playwright/test';
 import { z } from 'zod/mini';
 import {
@@ -37,6 +38,7 @@ test('cold offline reload and reopening retain the latest fetched safe HTML and 
   const server = await offlineBrowserServer();
   try {
     await loadedTask(page, server);
+    await openSavedDescription(page);
     await page.getByText('Исходник Markdown', { exact: true }).click();
     expect(
       await page
@@ -53,7 +55,7 @@ test('cold offline reload and reopening retain the latest fetched safe HTML and 
     await expect(page.getByText(savedTime).first()).toBeVisible();
     const saved = await page.getByText(savedTime).first().locator('time').getAttribute('datetime');
     expect(saved).not.toBeNull();
-    const html = page.getByRole('region', { name: 'Описание задачи', exact: true });
+    const html = await openSavedDescription(page);
     await expect(html).toContainText('Сохранить точно');
     await expect(html.locator('script,img,[onerror],a[href^="javascript:"]')).toHaveCount(0);
     expect(await page.evaluate('globalThis.offlineAttack ?? null')).toBeNull();
@@ -93,7 +95,9 @@ test('uncached detail and evicted read snapshots explain absence instead of inve
   const server = await offlineBrowserServer();
   try {
     await loadedTask(page, server);
-    await expect(page.getByText(savedTime).first()).toBeVisible();
+    const actions = await openTaskActions(page);
+    await expect(actions.getByText(savedTime)).toBeVisible();
+    await closeTaskActions(page);
     await context.setOffline(true);
     await offlineNavigation(page, `${server.origin}${taskPath(server.uncachedId)}`);
     await expect(page.getByText(cacheMiss).first()).toBeVisible();
@@ -138,7 +142,9 @@ test('a real read-cache quota failure is visible, keeps the online result and ne
           throw new DOMException('Read cache quota exhausted','QuotaExceededError');
         return put.apply(this,args);};})();`);
     await loadedTask(page, server);
-    await expect(page.getByText(savedTime).first()).toBeVisible();
+    const actions = await openTaskActions(page);
+    await expect(actions.getByText(savedTime)).toBeVisible();
+    await closeTaskActions(page);
     await page.evaluate("sessionStorage.setItem('fail-read-cache','yes')");
     await page.goto(`${server.origin}${taskPath(server.uncachedId)}`);
     await expect(
@@ -206,7 +212,11 @@ test('every write family remains disabled offline and reconnecting never queues 
     ];
     for (const route of routes) {
       await page.goto(`${server.origin}${route.path}`);
-      for (const name of route.buttons)
+      if (route.buttons.includes('Сохранить'))
+        await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeVisible();
+      if (route.path.includes('/tasks/') && !route.path.endsWith('/new'))
+        await openTaskActions(page);
+      for (const name of route.buttons.filter((button) => button !== 'Сохранить'))
         await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
       if (route.path === taskPath(server.recurringId)) {
         await page
@@ -233,7 +243,11 @@ test('every write family remains disabled offline and reconnecting never queues 
     await context.setOffline(true);
     for (const route of routes) {
       await offlineNavigation(page, `${server.origin}${route.path}`);
-      for (const name of route.buttons)
+      if (route.buttons.includes('Сохранить'))
+        await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
+      if (route.path.includes('/tasks/') && !route.path.endsWith('/new'))
+        await openTaskActions(page);
+      for (const name of route.buttons.filter((button) => button !== 'Сохранить'))
         await expect(page.getByRole('button', { name, exact: true })).toBeDisabled();
       for (const button of await page
         .getByRole('region', { name: 'Действия с задачей', exact: true })

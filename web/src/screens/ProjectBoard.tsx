@@ -7,6 +7,7 @@ import { AppLink, navigate } from '../app/router.js';
 import { Button } from '../components/Button.js';
 import { Modal } from '../components/Modal.js';
 import { CacheMiss } from '../components/CacheMiss.js';
+import { OfflineBanner } from '../components/OfflineBanner.js';
 import { boardHref } from '../data/board-links.js';
 import { rememberedBoardSearch } from '../data/board-reading.js';
 import {
@@ -103,6 +104,8 @@ function BoardSession({ project, configuration, metadata, search, kind }: Sessio
     searchQuery,
     cancelSearch,
     reset,
+    stages,
+    active,
   } = board;
   return (
     <section className="project-board" aria-label="Доска проекта">
@@ -151,6 +154,13 @@ function BoardSession({ project, configuration, metadata, search, kind }: Sessio
           <BoardStageTrack board={board} configuration={configuration} metadata={metadata} />
         </>
       )}
+      <OfflineBanner compact>
+        {!searching && stages.length > 0 && (
+          <span className="board-footer-position">
+            {active + 1} из {stages.length} стадий
+          </span>
+        )}
+      </OfflineBanner>
       {drag.active && (
         <p className="board-drag-hint" role="status">
           Отпустите в выбранной позиции. У края — соседняя стадия. Esc — отмена.

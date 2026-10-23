@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { z } from 'zod/mini';
 import { mutationEnvelopeSchema, successEnvelopeSchema } from '../../src/schema/envelopes.js';
 import { offlineBrowserServer, loadedTask } from '../fixtures/offline-browser.js';
+import { openTaskActions } from '../fixtures/task-ui.js';
 
 test('an open transition consent stays disabled offline, retains its text and saves only after explicit online confirmation', async ({
   page,
@@ -24,8 +25,9 @@ test('an open transition consent stays disabled offline, retains its text and sa
         .parse(successEnvelopeSchema.parse(result.envelope).data).revision;
     }
     await loadedTask(page, server);
+    await openTaskActions(page);
     await page.getByRole('button', { name: 'Завершить: Готово', exact: true }).click();
-    const dialog = page.getByRole('dialog');
+    const dialog = page.getByRole('dialog', { name: 'Подтвердите переход', exact: true });
     const field = dialog.getByLabel('Текст подтверждения', { exact: true });
     const confirm = dialog.getByRole('button', { name: 'Подтвердить', exact: true });
     const text = '  Проверено лично 👩🏽‍💻.\nСохранить мой текст подтверждения точно.  ';

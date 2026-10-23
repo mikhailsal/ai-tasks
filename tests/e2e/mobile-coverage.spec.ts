@@ -1,3 +1,9 @@
+import {
+  closeTaskActions,
+  openTaskActions,
+  openTaskFormatting,
+  openSavedDescription,
+} from '../fixtures/task-ui.js';
 import { expect, test, type Page } from '@playwright/test';
 import { z } from 'zod/mini';
 import { backupValidation, successfulRecovery } from '../fixtures/recovery-transport.js';
@@ -146,6 +152,8 @@ test.describe('independent mobile read and operation screens', () => {
       page,
     }) => {
       await page.goto(`${server.origin}${view.path()}`);
+      if (view.path().endsWith('/tasks/new')) await openTaskFormatting(page);
+      else if (view.path().includes('/tasks/')) await openTaskActions(page);
       for (const name of view.buttons)
         await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
       await checkMobile(page);
@@ -177,6 +185,7 @@ test('keyboard editing and long hostile Markdown remain usable and safe at 320px
   try {
     await page.setViewportSize({ width: 320, height: 900 });
     await loadedTask(page, server);
+    await openSavedDescription(page);
     await page.getByText('Исходник Markdown', { exact: true }).click();
     expect(
       await page
@@ -188,6 +197,7 @@ test('keyboard editing and long hostile Markdown remain usable and safe at 320px
     const rendered = page.getByRole('region', { name: 'Описание задачи', exact: true });
     await expect(rendered.locator('script,img,[onerror],a[href^="javascript:"]')).toHaveCount(0);
     await checkMobile(page);
+    await closeTaskActions(page);
     const emoji = page.getByLabel('Эмодзи задачи', { exact: true });
     await emoji.focus();
     await expect(emoji).toBeFocused();
