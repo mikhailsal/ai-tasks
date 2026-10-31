@@ -150,8 +150,13 @@ the application shell as well as cached data. Persistence technology belongs in 
   `busy_timeout = 5000`. Isolated contention tests MAY use a documented shorter wait to
   exercise timeout handling. In-memory tests are exempt from WAL. Connection setup MUST
   verify effective settings.
-- **Backend and CLI**: Fastify bound to `127.0.0.1`, tested with `fastify.inject()`;
-  `commander` for CLI parsing.
+- **Backend and CLI**: Fastify bound to `127.0.0.1` by default, tested with `fastify.inject()`;
+  `commander` for CLI parsing. Binding to one specific non-loopback address of the host is
+  permitted only as an explicit per-start owner choice for a trusted private network. Wildcard
+  binding (`0.0.0.0`, `::`), implicit network selection and public exposure are forbidden. A
+  non-loopback start MUST validate that its exact Host/Origin matches the bound address and
+  port before accepting requests, and MUST warn that every device on that network can read
+  and change all data without authentication. Browser Host/Origin protections apply unchanged.
 - **Frontend**: React, Vite, Tailwind CSS, and TanStack Query with offline persistence.
 - **Dependencies**: Every new dependency MUST be justified in the implementation plan with
   its purpose and maintenance, security, and operational costs. Prefer standard APIs for
@@ -243,4 +248,9 @@ records MAY retain their original version when clearly identified as historical.
 or database migration is needed for this documentation amendment. Project templates and
 Spec Kit command rules remain unchanged.
 
-**Version**: 3.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21
+Version 3.1.0, explicitly authorized by the user on 2026-10-31 for feature `003-lan-access`,
+permits an opt-in bind to one specific trusted-network address while keeping loopback as the
+default. This MINOR change expands operational guidance; existing loopback deployments, the
+absence of authentication and all other obligations are unchanged. No data migration is needed.
+
+**Version**: 3.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-31

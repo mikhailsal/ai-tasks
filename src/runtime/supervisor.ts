@@ -8,6 +8,7 @@ import { retryStartup } from './startup-retry.js';
 
 type SupervisorOptions = {
   databasePath: string;
+  host: string;
   port: number;
   security: Omit<Parameters<typeof createApp>[0], 'helper' | 'recovery'>;
   onReady: (envelope: Awaited<ReturnType<DataHelper['request']>>) => void;
@@ -59,7 +60,7 @@ export async function superviseApi(options: SupervisorOptions): Promise<void> {
       databasePath,
       submitRestore: (input) => controller.services.restore({ ...input, caller: 'cli' }),
     });
-    if (!stopping) await app.listen({ host: '127.0.0.1', port: options.port });
+    if (!stopping) await app.listen({ host: options.host, port: options.port });
     if (!stopping) await bootstrap();
     await stopped.promise;
     if (failure) throw failure;

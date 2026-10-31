@@ -61,7 +61,7 @@ envelopes. There are no implicit mutations during reads.
 | Command | Type | Input and result |
 |---|---|---|
 | `meta` | R | `--all-projects`; epoch, timezone, settings revision, contract/schema version, maintenance status |
-| `serve` | O | `--all-projects`; start loopback API/UI supervisor and scoped recurrence workers; no arbitrary listen-host option |
+| `serve` | O | `--all-projects`; start API/UI supervisor and scoped recurrence workers; loopback unless `AI_TASKS_HOST` names one validated local network address ([003 contract](../../003-lan-access/contracts/serve-network.md)); no listen-host flag |
 | `worker run` | O | `--project`; dedicated recurrence worker with startup/30-second ticks, internal fresh revision/epoch reads and deterministic tick IDs |
 | `project list` | R | Required scope selection; filters/pagination → project list |
 | `project get` | R | `--project` → Project |
