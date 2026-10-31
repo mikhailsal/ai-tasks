@@ -92,7 +92,7 @@ function startServe(env: NodeJS.ProcessEnv) {
     const timer = setTimeout(() => reject(new Error(`No readiness: ${stderr}`)), 8000);
     child.stdout.on('data', (chunk: Buffer) => {
       stdout += chunk.toString('utf8');
-      if (stdout.split('\n').length < 3) return;
+      if (stdout.split('\n').length < 4) return;
       clearTimeout(timer);
       resolve(stdout);
     });
@@ -168,7 +168,8 @@ describe.skipIf(lanHost === undefined)('serve on a real local network address', 
     try {
       expect(await serve.ready).toBe(
         `Web interface on the local network: ${origin}/\n` +
-          'Warning: every device on this network can read and change all data without signing in.\n',
+          'Warning: every device on this network can read and change all data without signing in.\n' +
+          'Offline reopening is unavailable over plain HTTP; an open tab keeps showing loaded data.\n',
       );
       const target = { host, port };
       const meta = await send(target, { path: '/api/v1/meta?all_projects=true' });

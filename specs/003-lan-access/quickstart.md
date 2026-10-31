@@ -11,7 +11,9 @@
 3. Open the printed URL on the phone. Stop with Ctrl+C (or SIGTERM).
 4. Plain `npm start` keeps loopback-only access at `http://127.0.0.1:3000`.
 
-Every device on that network can read and change all data; there is no sign-in.
+Every device on that network can read and change all data; there is no sign-in. On the phone,
+loaded data stays readable in an open tab without the network, but the app cannot be reloaded or
+reopened offline over plain HTTP.
 
 ## Validation record
 
@@ -36,3 +38,14 @@ T010: the manual `socat` bridge and loopback server were stopped. `AI_TASKS_HOST
 npm start` printed the URL and warning; `http://192.168.1.203:3000/` returned the shell and
 project list, and 127.0.0.1:3000 refused connections. Opening the app on a physical phone has
 not been verified by the agent.
+
+### PR #1 review follow-up (2026-10-31)
+
+Codex review correctly found that offline reopening does not work over plain HTTP (no
+service worker outside a secure context); the validation above covered writes only. After
+narrowing the spec (FR-007/FR-011): `npm run test:e2e -- tests/e2e/board-http-offline.spec.ts
+tests/e2e/board-http-origin.spec.ts tests/e2e/browser-uuid-http.spec.ts` exit 0, 6 passed
+(51s); the first run of the new spec failed in WebKit because a failed offline reload keeps the
+old document, so the check now reopens in a new tab. Typecheck, lint, format check and build
+exit 0; targeted functional files (`serve-network`, `listen-address`, `bootstrap`) 41 passed.
+The full functional suite and browser matrix run in CI.

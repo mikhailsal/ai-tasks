@@ -49,7 +49,11 @@ served in this mode; open the printed URL on the host as well. Stop with Ctrl+C 
 a plain `npm start` returns to loopback-only access. `AI_TASKS_ORIGIN` may be omitted; if set,
 it must equal `http://HOST:PORT`. Startup fails before listening, with exit 2 and a
 `VALIDATION_ERROR` naming the problem, for `0.0.0.0`, hostnames, IPv6, an address not
-assigned to this computer, or a mismatched origin. Plain HTTP is supported; there is no TLS.
+assigned to this computer, or a mismatched origin. Plain HTTP is supported; there is no TLS. Because browsers cache the application shell only
+for secure origins, other devices keep loaded data in an already open tab when the network
+drops, but cannot reload or reopen the application offline in this mode. Android Chrome can
+be told to treat this one address as secure via `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+(per device, at the owner's risk); this is a workaround, not a supported setup.
 Firewall rules and router settings are outside the application. If the host's address
 changes, restart with the new one. Never expose this mode to untrusted networks or the internet.
 

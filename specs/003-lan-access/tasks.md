@@ -30,6 +30,15 @@ lint, CI, hooks); no setup phase is needed.
 - [x] T009 Run typecheck, lint, format check, functional suite, build and bundle check; run the existing insecure-HTTP browser specs (`board-http-origin`, `browser-uuid-http`) for FR-007. Record commands, exits and durations in quickstart.md.
 - [x] T010 Replace the manual socat bridge on the owner's host with the new mode and verify the real URL responds.
 
+## Phase 6: PR #1 review follow-up (FR-007, FR-011)
+
+Codex review found that plain HTTP cannot register the service worker, so offline reopening
+does not work on other devices; the first validation tested writes only. Owner chose to
+narrow the feature rather than add TLS.
+
+- [x] T011 [US1] `tests/e2e/board-http-offline.spec.ts` with the shared `tests/fixtures/insecure-origin.ts` proxy: plain HTTP origin, no service worker, offline open tab keeps cards and disables writes, offline reopen shows no app, no writes or DB change (Chromium + WebKit).
+- [x] T012 [US1] Spec US1-5/FR-007/FR-011, plan, research R5, contract, ready message and docs state that offline reopening is unsupported over plain HTTP; document the Android Chrome flag as an unsupported workaround.
+
 ## Dependencies
 
 T001 → T002 → T003–T005 → T006–T007 → T009. T008 is independent after T002. T010 last.
@@ -37,5 +46,5 @@ T001 → T002 → T003–T005 → T006–T007 → T009. T008 is independent afte
 ## Traceability
 
 FR-001 T001/T007 · FR-002 T001/T002 · FR-003 T008 · FR-004 T005/T007 · FR-005 T005/T007 ·
-FR-006 T001/T005/T006 · FR-007 T007/T009 · FR-008 T007 · FR-009 T001/T009 · FR-010 T008.
+FR-006 T001/T005/T006 · FR-007 T007/T009 · FR-008 T007 · FR-009 T001/T009 · FR-010 T008 · FR-011 T011/T012.
 Constitution v3.1.0 bind rule: T002/T005/T006/T007. Principle III: T006. Principle VI: T001/T006/T007.

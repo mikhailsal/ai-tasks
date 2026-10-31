@@ -19,9 +19,10 @@ The owner starts the application in an explicit local network mode on the host c
 **Acceptance Scenarios**:
 
 1. **Given** the application is started in local network mode with a chosen network address, **When** it becomes ready, **Then** it states the exact address to open from other devices.
-2. **Given** local network mode is running, **When** a device on the same network opens the stated address, **Then** the interface loads and reads, changes, offline caching and history behave as when opened on the host computer.
+2. **Given** local network mode is running, **When** a device on the same network opens the stated address, **Then** the interface loads and reads, changes, drafts and history behave as when opened on the host computer, and an already open tab keeps showing loaded data when the network is lost.
 3. **Given** local network mode is running, **When** a change is saved from another device, **Then** it is attributed to the human interface in history, as any other browser change.
 4. **Given** local network mode is running, **When** the application is opened on the host computer through the stated network address, **Then** it works as from any other device.
+5. **Given** a phone opened the stated address and then lost the network, **When** the owner reloads or reopens the application there, **Then** it does not open; the startup message and documentation state this limitation in advance. Opening it again works once the network returns.
 
 ---
 
@@ -76,9 +77,9 @@ Opening the application on the network must not weaken the existing protection a
 - The host computer has several network addresses (wired, wireless, virtual adapters, VPN). The owner chooses one explicitly; the application never picks a network by itself.
 - The host's network address changes after startup (for example, a new lease from the router). The stated address stops working; the owner restarts with the new address. Automatic re-detection is not provided.
 - The assistant command interface is unaffected by local network mode and keeps working on the host computer.
-- A device opens the interface over the network without a secure connection. All existing features, including creating changes and offline reading, still work there.
+- A device opens the interface over the network without a secure connection. Changes, drafts and offline reading in an already open tab work there. Browsers keep the application available for offline reopening only on secure connections, so reloading or reopening without the network is not supported in this mode.
 - Background recurring work, backup and restore behave identically in both modes.
-- The phone switches to mobile data. The application is unreachable; already loaded data remains readable offline as today.
+- The phone switches to mobile data. The application is unreachable; data in an already open tab remains readable, but a reload or new tab cannot open the application until the home network returns.
 
 ## Requirements
 
@@ -90,9 +91,10 @@ Opening the application on the network must not weaken the existing protection a
 - **FR-004 — Reported address**: When ready in local network mode, the application MUST state the exact address other devices should open.
 - **FR-005 — Exposure warning**: When ready in local network mode, the application MUST warn that every device on that network can read and change all data without signing in.
 - **FR-006 — Startup validation**: Startup MUST fail with an explanatory message, before accepting any request, when the chosen address is a wildcard, does not belong to this computer, or does not match the configured browser address and port.
-- **FR-007 — Full functionality**: Every capability available on the host computer, including writes, offline reading, drafts, history and restore flows, MUST work from other devices opening the stated address, including over a connection without encryption.
+- **FR-007 — Full online functionality**: Every capability available online on the host computer, including writes, drafts, history and restore flows, MUST work from other devices opening the stated address over a connection without encryption. Offline reading in an already open tab MUST keep working as on the host.
 - **FR-008 — Unchanged protections**: Existing protections against changes initiated by unrelated websites and against unexpected request addresses MUST apply unchanged in local network mode.
 - **FR-009 — Unchanged default**: Existing start procedures, settings and the default address MUST behave exactly as before.
+- **FR-011 — Offline reopening decision**: Offline reload and reopening are NOT supported in local network mode, because the connection is not encrypted. The startup message and documentation MUST say so. Lost network MUST NOT cause writes or data changes.
 - **FR-010 — Documentation**: Operating documentation MUST describe how to start local network mode, how to find and choose the host's address, how to stop it, and the security consequences of running without accounts on a shared network.
 
 ### Key Entities
@@ -112,7 +114,7 @@ Opening the application on the network must not weaken the existing protection a
 ## Assumptions
 
 - The network is a trusted private home network controlled by the owner. Sign-in, access tokens and passwords are explicitly out of scope for this feature and may be a later feature.
-- Encrypted connections, certificates, public internet exposure, port forwarding and automatic device discovery are out of scope.
+- Encrypted connections, certificates, public internet exposure, port forwarding and automatic device discovery are out of scope. Offline reopening on other devices requires an encrypted connection and is deferred together with it (decided by the owner on 2026-10-31 after PR review).
 - Device firewalls and router configuration are the owner's responsibility; documentation may mention them but the application does not change them.
 - Running as an always-on system service after reboot is out of scope; the owner starts the application when needed.
 - The browser address used by devices is the host's network address and port; access through a custom host name is out of scope.

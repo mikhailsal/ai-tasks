@@ -9,7 +9,8 @@ function readyText(address: ListenAddress): string {
   if (!address.network) return 'API is ready on the configured loopback port\n';
   return (
     `Web interface on the local network: ${address.origin}/\n` +
-    'Warning: every device on this network can read and change all data without signing in.\n'
+    'Warning: every device on this network can read and change all data without signing in.\n' +
+    'Offline reopening is unavailable over plain HTTP; an open tab keeps showing loaded data.\n'
   );
 }
 

@@ -33,6 +33,7 @@ Exit code 2 (the CLI code for every `VALIDATION_ERROR`); stdout empty; stderr on
 ```text
 Web interface on the local network: http://HOST:PORT/
 Warning: every device on this network can read and change all data without signing in.
+Offline reopening is unavailable over plain HTTP; an open tab keeps showing loaded data.
 ```
 
 ## HTTP

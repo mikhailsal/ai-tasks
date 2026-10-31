@@ -39,5 +39,13 @@
 
 ## R5 — Insecure HTTP browser support
 
-- **Decision**: No change. Feature 002 (T015) already made operation IDs work without a
-  secure context, verified by existing insecure-origin e2e suites.
+- **Decision**: Writes need no change: feature 002 (T015) already made operation IDs work
+  without a secure context. Offline reopening is declared unsupported in network mode.
+- **Rationale**: Browsers register service workers only in secure contexts (HTTPS or
+  localhost), so plain `http://LAN-IP` cannot cache the shell; data persisted for the open tab
+  still works. Found by PR #1 review after the first validation tested writes only.
+- **Alternatives**: HTTPS with a locally trusted CA installed on each phone (deferred with
+  TLS; self-signed certificates are rejected for service workers); Chrome's
+  `unsafely-treat-insecure-origin-as-secure` flag (Android Chrome only, per device, documented
+  as an optional owner workaround, not a supported path); dropping `no-store` for static assets
+  (would allow HTTP-cache reopens only by accident and conflicts with the cache policy).

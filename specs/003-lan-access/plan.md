@@ -38,7 +38,7 @@ assumption); stdout JSON contract of `serve --json` unchanged
 | I. Thin adapters | No domain logic in transports | Address validation is runtime configuration in `src/runtime/listen-address.ts`; CLI and API entry only call it | Architecture lint (`npm run lint`) |
 | II. Isolation & audit | Network writes keep `human-web` actor and atomic audit | No mutation path changes; actor still derived by route | Contract test: LAN mutation produces a `human-web` audit record |
 | III. CLI contract | Invalid config → JSON error on stderr, non-zero exit, stdout empty | Validate in `serve` before forking; throw `VALIDATION_ERROR` with fixed messages | Compiled-CLI contract tests for each FR-006 case |
-| IV. Mobile/offline | Offline and writes work on insecure HTTP origin | Already implemented (002 T015); unchanged | Existing `board-http-origin` and `browser-uuid-http` e2e suites |
+| IV. Mobile/offline | Spec states the offline reopening decision with scenarios (FR-011); writes work on insecure HTTP | Writes: 002 T015, unchanged. Plain HTTP cannot register the service worker (secure context only), so offline reopen is declared unsupported in network mode and stated in the ready message and docs | Existing `board-http-origin`, `browser-uuid-http`; new `board-http-offline` e2e (open tab readable, cold reopen fails, no writes) |
 | V. Functions, types, boundaries | Plain functions, explicit dependencies, no `any` | `resolveListenAddress(env, interfaces)` pure function; interfaces injected | Typecheck, lint, unit tests |
 | VI. Behavior tests | Proportional, real processes, regression-first N/A | Unit tests for validation; compiled-process test binding a real non-loopback address | Functional suite; see verification matrix |
 | VII. Performance/bundle | No regression | No UI change; bundle unchanged | `npm run check:bundle-size` at acceptance |
@@ -87,6 +87,7 @@ both the CLI and the API entry, so the shared validator lives there.
 | US1-1/2/3, US1-4, US2-2, FR-004/005/007, SC-001, SC-004 | Contract: compiled `serve` (human mode) with the host's first non-internal IPv4 prints the URL and warning; GET via that address 200; connecting to `127.0.0.1:PORT` is refused; valid mutation via LAN origin succeeds and its audit actor is `human-web` | Real process, real socket | 15s |
 | US4-1/2, FR-008, SC-004 | Same process: mutation with foreign Origin → 403 `ORIGIN_REJECTED`; request with `Host: 127.0.0.1:PORT` or a different name → rejected; no new audit rows | Real socket, explicit headers | inside the case above |
 | FR-007 browser behavior on insecure HTTP | Existing `board-http-origin.spec.ts`, `browser-uuid-http.spec.ts` | Playwright, unchanged | existing budgets |
+| US1-5, FR-007 offline tab, FR-011 | `board-http-offline.spec.ts`: plain HTTP origin, no service worker; offline open tab keeps cards and disables writes; offline reopen in a new tab shows no app; no requests mutate and the DB snapshot is unchanged | Playwright, Chromium + WebKit, proxy fails routed requests while offline | 30s/case |
 | FR-003, FR-010 | Docs review: README + operations describe the command, choosing an address, stopping, security | Manual review recorded in quickstart | — |
 
 Mutation coverage: success/audit applies (one LAN write). Validation failure and origin
