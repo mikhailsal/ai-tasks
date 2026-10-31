@@ -96,6 +96,16 @@ restore preserves original draft text/base and requires explicit review before a
 
 ## Checks
 
+Changes reach `main` only through pull requests that pass CI and are merged by a human
+maintainer. After cloning, install the committed pre-push hook once:
+
+```bash
+npm run hooks:install
+```
+
+It refuses direct pushes to `main` and runs the runtime check, typecheck, lint, formatting
+and ShellCheck. Tests, build and bundle accounting run in CI; run them locally as below.
+
 ```bash
 npm run typecheck
 npm run lint

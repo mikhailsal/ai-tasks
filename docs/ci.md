@@ -13,6 +13,17 @@ contain all 1,647 functional and 168 browser cases without missing or overlappin
 see the [collection record](../artifacts/checks/CI-workflow-validation.json). Collection
 does not execute the tests or substitute for hosted execution.
 
+## Pull requests and local hook
+
+`main` changes only through pull requests: push a branch, open a PR, let CI pass, and have a
+human maintainer merge it. `npm run hooks:install` sets `core.hooksPath` to `.githooks`. Its
+`pre-push` hook refuses pushes to `main` and runs `check:runtime`, `typecheck`, `lint`,
+`format:check` and ShellCheck, the static part of the Quality job. It deliberately does not
+build: a build replaces `dist/`, which a running local server may still be loading lazy
+chunks from. Tests, the build and bundle accounting stay in CI and the local commands in the
+README. The Quality job also runs ShellCheck on the committed hook. Bypassing the hook
+(`--no-verify`) requires explicit owner permission for that push.
+
 ## Correctness checks
 
 [CI](../.github/workflows/ci.yml) runs on pull requests, pushes to `main`, and manual dispatch.

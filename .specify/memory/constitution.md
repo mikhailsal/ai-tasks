@@ -211,9 +211,15 @@ the application shell as well as cached data. Persistence technology belongs in 
    exit codes, durations, and unresolved limitations; include detailed output for failures
    or link saved logs. Skipped, unavailable, failed, or timed-out checks MUST NOT be described
    as passing. AI review alone is not proof of correctness or human approval.
-6. **Git hooks**: Hooks MUST run normally. Fix a failing hook and rerun the check or operation.
-   Bypassing a hook requires explicit user permission for that specific operation; a general
-   constitutional exception does not grant it.
+6. **Git hooks**: The repository MUST commit a pre-push hook that runs the CI static gates
+   (runtime check, typecheck, lint, formatting, hook ShellCheck) and refuses direct pushes to
+   `main`; `npm run hooks:install` installs it. Hooks MUST run normally. Fix a failing hook
+   and rerun the check or operation. Bypassing a hook requires explicit user permission for
+   that specific operation; a general constitutional exception does not grant it.
+7. **Pull requests**: Every change reaches `main` through a pull request from a feature or
+   maintenance branch. Required CI checks MUST pass before merge, and a human maintainer
+   merges it; agents MUST NOT merge their own pull requests or push directly to `main`.
+   Dependent changes MAY be stacked on an open pull request's branch.
 
 ## Governance
 
@@ -253,4 +259,9 @@ permits an opt-in bind to one specific trusted-network address while keeping loo
 default. This MINOR change expands operational guidance; existing loopback deployments, the
 absence of authentication and all other obligations are unchanged. No data migration is needed.
 
-**Version**: 3.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-31
+Version 3.2.0, explicitly authorized by the user on 2026-10-31, makes pull requests mandatory
+for `main` and requires the committed pre-push hook. This MINOR change adds workflow
+obligations. Before it, changes were committed directly to `main` and no hook existed; existing
+history is unaffected. Each clone runs `npm run hooks:install` once.
+
+**Version**: 3.2.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-31
