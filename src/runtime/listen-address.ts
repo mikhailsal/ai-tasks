@@ -32,7 +32,7 @@ export function resolveListenAddress(
   const host = env.AI_TASKS_HOST ?? '127.0.0.1';
   if (!ipv4Pattern.test(host))
     throw domainError('VALIDATION_ERROR', 'AI_TASKS_HOST must be an IPv4 address');
-  const ownOrigin = `http://${host}:${port}`;
+  const ownOrigin = new URL(`http://${host}:${port}`).origin;
   if (host.startsWith('127.'))
     return { host, port, origin: env.AI_TASKS_ORIGIN ?? ownOrigin, network: false };
   if (host === '0.0.0.0')

@@ -24,6 +24,8 @@
   behavior, origin unrestricted as today). Anything else is network mode and must (a) not be
   `0.0.0.0`, (b) be an address of a local interface from `os.networkInterfaces()`, (c) have
   `AI_TASKS_ORIGIN` unset or exactly `http://HOST:PORT`. Hostnames, IPv6 and `::` are rejected.
+  The derived origin is URL-normalized, so the default HTTP port `80` is omitted from
+  the origin, expected Host header and printed URL.
 - **Rationale**: Exact Host checks require a stable literal; names and IPv6 bracket forms
   add ambiguity with no current need. Checking interfaces up front avoids an opaque
   `EADDRNOTAVAIL` from the child.

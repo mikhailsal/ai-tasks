@@ -11,6 +11,11 @@ the settings table in `docs/operations.md`.
 | `AI_TASKS_PORT` | `3000` | unchanged |
 | `AI_TASKS_ORIGIN` | `http://HOST:PORT` | Loopback: unchanged. Network mode: must equal `http://HOST:PORT` |
 
+Origins use the canonical URL form: when `PORT` is `80`, omit `:80`. For example,
+`AI_TASKS_HOST=192.168.1.10 AI_TASKS_PORT=80` derives `http://192.168.1.10`;
+an explicit `AI_TASKS_ORIGIN` must use that same form. Host headers and printed URLs
+also omit the default port.
+
 ## Startup failures (before any listener)
 
 Exit code 2 (the CLI code for every `VALIDATION_ERROR`); stdout empty; stderr one error envelope with `code: "VALIDATION_ERROR"`,
