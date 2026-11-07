@@ -51,6 +51,28 @@ describe('listen address configuration', () => {
     });
   });
 
+  it.each([undefined, 'http://192.168.1.203'])(
+    'supports the canonical port 80 origin %s',
+    (origin) => {
+      expect(
+        resolveListenAddress(
+          {
+            AI_TASKS_HOST: '192.168.1.203',
+            AI_TASKS_PORT: '80',
+            ...(origin === undefined ? {} : { AI_TASKS_ORIGIN: origin }),
+          },
+          interfaces,
+        ).origin,
+      ).toBe('http://192.168.1.203');
+    },
+  );
+
+  it('normalizes the default HTTP port for loopback too', () => {
+    expect(resolveListenAddress({ AI_TASKS_PORT: '80' }, interfaces).origin).toBe(
+      'http://127.0.0.1',
+    );
+  });
+
   it('enables local network mode for an address of this computer', () => {
     const expected = {
       host: '192.168.1.203',

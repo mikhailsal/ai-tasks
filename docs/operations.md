@@ -47,7 +47,9 @@ The server binds only that address, prints the URL to open, and warns that every
 the network can read and change all data without signing in. The loopback address is not
 served in this mode; open the printed URL on the host as well. Stop with Ctrl+C or SIGTERM;
 a plain `npm start` returns to loopback-only access. `AI_TASKS_ORIGIN` may be omitted; if set,
-it must equal `http://HOST:PORT`. Startup fails before listening, with exit 2 and a
+it must equal the canonical `http://HOST:PORT` origin. For `AI_TASKS_PORT=80`, omit
+`:80` from the origin: `http://192.168.1.10`. The printed URL also omits that port.
+Startup fails before listening, with exit 2 and a
 `VALIDATION_ERROR` naming the problem, for `0.0.0.0`, hostnames, IPv6, an address not
 assigned to this computer, or a mismatched origin. Plain HTTP is supported; there is no TLS. Because browsers cache the application shell only
 for secure origins, other devices keep loaded data in an already open tab when the network
