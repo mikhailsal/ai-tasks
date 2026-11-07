@@ -16,7 +16,10 @@ does not execute the tests or substitute for hosted execution.
 ## Pull requests and local hook
 
 `main` changes only through pull requests: push a branch, open a PR, let CI pass, and have a
-human maintainer merge it. `npm run hooks:install` sets `core.hooksPath` to `.githooks`. Its
+human maintainer merge it. Install ShellCheck before pushing (Debian/Ubuntu: `sudo apt install
+shellcheck`). `npm run hooks:install` sets `core.hooksPath` to `.githooks` only when doing so
+will not replace an existing hook configuration or active default hooks. Migrate existing
+hooks first; multiple worktrees sharing configuration require explicit setup. Its
 `pre-push` hook refuses pushes to `main` and runs `check:runtime`, `typecheck`, `lint`,
 `format:check` and ShellCheck, the static part of the Quality job. It deliberately does not
 build: a build replaces `dist/`, which a running local server may still be loading lazy
