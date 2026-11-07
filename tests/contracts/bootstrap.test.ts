@@ -13,12 +13,14 @@ import { openDatabase } from '../../src/core/database/open.js';
 import { errorEnvelopeSchema } from '../../src/schema/envelopes.js';
 import { metaEnvelopeSchema } from '../../src/schema/meta.js';
 import { acquireDatabaseLock, releaseDatabaseLock } from '../../src/runtime/database-lock.js';
+import { inheritedBackups } from '../fixtures/inherited-backups.js';
 
 const cli = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
 const migration = fileURLToPath(new URL('../../dist/migrate.js', import.meta.url));
 let directory: string;
 let databasePath: string;
 let environment: NodeJS.ProcessEnv;
+let inherited: Awaited<ReturnType<typeof inheritedBackups>> | undefined;
 
 function invoke(args: string[], input?: string, env = environment) {
   const result = spawnSync(process.execPath, [cli, ...args], {
@@ -122,7 +124,22 @@ function serveProcess(env: NodeJS.ProcessEnv) {
 beforeAll(async () => {
   directory = await mkdtemp(join(tmpdir(), 'ai-tasks-bootstrap-'));
   databasePath = join(directory, 'application.sqlite');
-  environment = { ...process.env, AI_TASKS_DB_PATH: databasePath, NODE_ENV: 'production' };
+  inherited = await inheritedBackups(directory);
+  // Model a shell used for LAN serving; the bootstrap fixture owns its listener too.
+  const inheritedEnvironment = {
+    ...process.env,
+    ...inherited.environment,
+    AI_TASKS_HOST: '192.0.2.123',
+    AI_TASKS_ORIGIN: 'http://192.0.2.123:3000',
+  };
+  environment = {
+    ...inheritedEnvironment,
+    AI_TASKS_DB_PATH: databasePath,
+    AI_TASKS_BACKUP_DIR: join(directory, 'backups'),
+    NODE_ENV: 'production',
+  };
+  delete environment.AI_TASKS_HOST;
+  delete environment.AI_TASKS_ORIGIN;
   const result = spawnSync(process.execPath, [migration], {
     env: environment,
     encoding: 'utf8',
@@ -134,7 +151,11 @@ beforeAll(async () => {
   expect(oneJsonLine(result.stdout)).toMatchObject({ ok: true, schema_version: 1 });
 });
 afterAll(async () => {
-  if (directory) await rm(directory, { recursive: true, force: true });
+  try {
+    if (inherited) expect(await inherited.read()).toEqual(inherited.record);
+  } finally {
+    if (directory) await rm(directory, { recursive: true, force: true });
+  }
 });
 
 describe('compiled foundation CLI contracts', () => {

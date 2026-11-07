@@ -24,7 +24,9 @@ npm run build
 npm start
 ```
 
-Open **http://127.0.0.1:3000**. Migration is explicit; queries and server startup do not
+Open **http://127.0.0.1:3000**. To use a phone on the trusted home network, start with
+`AI_TASKS_HOST=<this computer's LAN IPv4> npm start` and open the printed URL; see
+[local network access](docs/operations.md#local-network-access). Migration is explicit; queries and server startup do not
 initialize or migrate a new database. Keep the same environment variables for the server
 and CLI. `npm run dev` starts the API watcher and Vite at **http://127.0.0.1:5173**, with
 `/api` proxied to the API on port 3000. Test offline shell behavior against a production
@@ -79,7 +81,8 @@ storage. SQLite uses WAL with `synchronous=NORMAL`: this is not a promise of zer
 transaction loss after sudden power or OS failure. Use managed manual backups; copying only
 an open `.sqlite` file is not a consistent backup.
 
-The default listener is loopback-only. Exact Host/Origin, Fetch Metadata, JSON, and mutation
+The default listener is loopback-only. Local network mode is explicit and lets every device
+on that network read and change all data. Exact Host/Origin, Fetch Metadata, JSON, and mutation
 header checks reduce cross-origin browser attacks; **they are not authentication**. Local
 programs can make requests directly. Do not expose the service to untrusted users or turn
 it into a public endpoint by changing an origin setting.
