@@ -11,6 +11,7 @@ import { openDatabase } from '../../src/core/database/open.js';
 import { acquireDatabaseLock, releaseDatabaseLock } from '../../src/runtime/database-lock.js';
 import { errorEnvelopeSchema } from '../../src/schema/envelopes.js';
 import { metaEnvelopeSchema } from '../../src/schema/meta.js';
+import { inheritedBackups } from '../fixtures/inherited-backups.js';
 
 const cli = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
 const migration = fileURLToPath(new URL('../../dist/migrate.js', import.meta.url));
@@ -19,6 +20,7 @@ const lanHost = Object.values(networkInterfaces())
   .find((entry) => entry.family === 'IPv4' && !entry.internal)?.address;
 let directory: string;
 let environment: NodeJS.ProcessEnv;
+let inherited: Awaited<ReturnType<typeof inheritedBackups>> | undefined;
 
 async function availablePort(host: string): Promise<number> {
   const server = createServer();
@@ -103,9 +105,12 @@ function startServe(env: NodeJS.ProcessEnv) {
 
 beforeAll(async () => {
   directory = await mkdtemp(join(tmpdir(), 'ai-tasks-network-'));
+  inherited = await inheritedBackups(directory);
   environment = {
     ...process.env,
+    ...inherited.environment,
     AI_TASKS_DB_PATH: join(directory, 'application.sqlite'),
+    AI_TASKS_BACKUP_DIR: join(directory, 'backups'),
     NODE_ENV: 'production',
   };
   delete environment.AI_TASKS_HOST;
@@ -114,7 +119,11 @@ beforeAll(async () => {
   expect(result.status).toBe(0);
 });
 afterAll(async () => {
-  if (directory) await rm(directory, { recursive: true, force: true });
+  try {
+    if (inherited) expect(await inherited.read()).toEqual(inherited.record);
+  } finally {
+    if (directory) await rm(directory, { recursive: true, force: true });
+  }
 });
 
 describe('serve local network configuration failures', () => {
