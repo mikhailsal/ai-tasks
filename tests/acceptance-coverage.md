@@ -276,3 +276,27 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 | FR-010 strict form unchanged                                     | `tests/integration/shortcuts-parity.test.ts` (replay and `IDEMPOTENCY_CONFLICT`), full functional suite                                                             |
 | FR-011 follow-up data                                            | strict envelope returned; `tests/integration/shortcuts-complete.test.ts`                                                                                            |
 | FR-012 compatibility                                             | help snapshot gains only the new options and `task move`; no existing input changed                                                                                 |
+
+## Specification 010: advisories
+
+| Requirement                                      | Evidence                                                                                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-002 content, never fatal, no writes   | `tests/unit/advisories.test.ts`, `tests/integration/readiness-advisories.test.ts` (total_changes unchanged)                       |
+| FR-003, SC-002 catalogue equals docs             | `tests/unit/advisories.test.ts`                                                                                                   |
+| FR-004 order, bound, omitted, aggregation        | `tests/unit/advisories.test.ts`                                                                                                   |
+| FR-005 persistent conditions                     | `tests/integration/readiness-advisories.test.ts`                                                                                  |
+| FR-006, SC-004 web                               | `tests/e2e/advisories.spec.ts` (task, list, 430 px, Chromium and WebKit)                                                          |
+| FR-007 human mode on stderr                      | `tests/contracts/readiness-advisories.test.ts`                                                                                    |
+| FR-008 fixed text, no storage errors             | `tests/unit/advisories.test.ts`                                                                                                   |
+| FR-009, US4 absent and byte-identical, announced | `tests/contracts/readiness-advisories.test.ts` (CLI and HTTP keys), full contract suites, `CHANGELOG.md`, `docs/compatibility.md` |
+
+## Specification 012: recurring readiness
+
+| Requirement                                                         | Evidence                                                                                         |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| FR-001, FR-003 draft advisory on create and reads, gone when active | `tests/integration/readiness-advisories.test.ts`, `tests/contracts/readiness-advisories.test.ts` |
+| FR-002 paused and waiting tasks excluded                            | `tests/integration/readiness-advisories.test.ts`                                                 |
+| FR-004 web                                                          | `tests/e2e/advisories.spec.ts`                                                                   |
+| FR-005 derived local time                                           | `tests/unit/derive-local-time.test.ts`, `tests/integration/readiness-advisories.test.ts`         |
+| FR-006 mismatch until decided                                       | `tests/integration/readiness-advisories.test.ts`                                                 |
+| FR-007, FR-008 nothing newly rejected                               | existing recurrence suites unchanged and green                                                   |

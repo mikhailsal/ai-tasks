@@ -5,6 +5,27 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Announced change: advisories on success responses (spec 010)
+
+- Success envelopes may now carry two more top-level keys, `advisories` (at most 10) and
+  `advisories_omitted`. They appear only when an advisory applies; every other response is
+  byte-identical to before. They never change `ok`, `data`, `meta`, the exit status or stored
+  data, and never appear on error envelopes.
+- **Who must update**: a client that rejects unknown top-level keys in a success envelope must
+  accept these two (or ignore them). The CLI, HTTP API and web client in this repository do.
+- CLI human mode prints each advisory as `advisory: <code>: <message> (<remedy>)` on stderr.
+- Catalogue: [`docs/advisories.md`](docs/advisories.md). See also `docs/compatibility.md`.
+
+### Agent-visible changes: recurring readiness (spec 012)
+
+- `recurring_not_generating` on create and on every read of a recurring task in a draft-category
+  status (task get, list, board, priorities, agenda, recurrence get, transitions); gone once
+  active. Paused, archived and waiting tasks raise nothing.
+- Calendar schedules accept an omitted `local_time`: it is derived from `first_deadline` in the
+  application time zone and stored; the response carries `schedule_time_derived`.
+- Both given and different: accepted as before, with `schedule_time_mismatch` until the first
+  occurrence is decided. No request accepted before is refused now.
+
 ### Agent-visible changes: write shortcuts (spec 009)
 
 - New CLI command `occurrence done <task> (--day YYYY-MM-DD | --occurrence ID) [--at] [--note]`:

@@ -21,7 +21,9 @@ const serverPackages = [
   'emoji-regex',
 ];
 const browserSchemaFiles = new Set([
+  'advisories.ts',
   'audit.ts',
+  'diagnostics.ts',
   'board.ts',
   'values.ts',
   'envelopes.ts',

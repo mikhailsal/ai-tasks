@@ -12,6 +12,10 @@ export const hintActions = [
   'run_tick',
   'run_migration',
   'use_supported_option',
+  // Advisory remedies (spec 010, 012).
+  'transition_task',
+  'review_schedule',
+  'no_action',
 ] as const;
 
 /** Blocker reasons in the order the steps must be taken. */

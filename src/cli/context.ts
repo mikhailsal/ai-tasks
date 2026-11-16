@@ -10,6 +10,8 @@ import { errorEnvelopeSchema } from '../schema/envelopes.js';
 import { metaEnvelopeSchema } from '../schema/meta.js';
 import { slugSchema } from '../schema/values.js';
 import { runLocked } from '../runtime/locked-entry.js';
+import { adviseFor } from '../core/advisories/attach.js';
+import { rememberAdvisories, rememberedRequest } from './advisory-request.js';
 export { createReadContext };
 const DEFAULT_DATABASE_PATH = 'data/ai-tasks.sqlite';
 /** Names how the location is chosen without echoing the configured path (FR-014). */
@@ -45,7 +47,11 @@ export async function withCliDatabase<Output>(
   return runLocked({ databasePath: path, mode: 'shared' }, async (lock) => {
     const connection = openDatabase({ path, lock });
     try {
-      return await run(connection);
+      const result = await run(connection);
+      const request = rememberedRequest();
+      // Spec 010: advisories come from current state while the connection is still open.
+      if (request !== undefined) rememberAdvisories(adviseFor(connection.db, request, result));
+      return result;
     } finally {
       connection.close();
     }

@@ -11,6 +11,7 @@ import {
   recurrenceInputSchema,
   scheduleSchema,
   type RecurrenceInput,
+  type Schedule,
 } from '../../schema/recurrence-input.js';
 import { timezoneSchema } from '../../schema/values.js';
 import type { DatabaseTransaction } from '../database/types.js';
@@ -20,6 +21,7 @@ import { requireTask } from '../tasks/read.js';
 import { parseTimestamp, readClock } from '../time.js';
 import { parseInput } from '../validation.js';
 import { writeDeclarations } from './values.js';
+import { localTimeOf } from './derive-local-time.js';
 
 export type RecurringTask = typeof tasks.$inferSelect;
 export type ScheduleGeneration = typeof scheduleGenerations.$inferSelect;
@@ -142,6 +144,14 @@ function assertGenerationChange(
   }
 }
 
+/** Spec 012 R2: an omitted calendar `local_time` is the first deadline's local time. */
+function completeSchedule(input: RecurrenceInput, timezone: string): Schedule {
+  const schedule = input.schedule;
+  if (schedule.mode !== 'calendar' || schedule.local_time !== undefined)
+    return parseInput(scheduleSchema, schedule);
+  const local_time = localTimeOf(parseTimestamp(input.first_deadline), timezone);
+  return parseInput(scheduleSchema, { ...schedule, local_time });
+}
 /** Callers reconcile old owed anchors before publishing a replacement generation. */
 export function publishGeneration(
   transaction: DatabaseTransaction,
@@ -154,8 +164,9 @@ export function publishGeneration(
 ) {
   if (options.task.kind !== 'recurring')
     throw domainError('VALIDATION_ERROR', 'Only recurring parents have schedule generations');
-  const input = parseInput(recurrenceInputSchema, options.input);
+  const parsed = parseInput(recurrenceInputSchema, options.input);
   const timezone = parseInput(timezoneSchema, options.timezone);
+  const input = { ...parsed, schedule: completeSchedule(parsed, timezone) };
   const now = readClock(() => options.now);
   assertGenerationChange(transaction, { ...options, input, now });
   const prior = transaction

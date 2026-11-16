@@ -24,6 +24,12 @@ export const taskFieldsSchema = z.strictObject({
   recurrence: z._default(recurrenceFieldsSchema, blankRecurrenceFields),
 });
 export type TaskFields = z.infer<typeof taskFieldsSchema>;
+/** Spec 010: the task's advisories and when they were computed. */
+function taskAdvisories(task: Awaited<ReturnType<typeof readTask>> | null) {
+  return task === null
+    ? { advisories: [], checkedAt: undefined }
+    : { advisories: task.advisories ?? [], checkedAt: task.meta.now };
+}
 export async function loadTaskPage(projectSlug: string, taskId?: string) {
   const [project, configuration, task, settings] = await Promise.all([
     readProject(projectSlug),
@@ -43,6 +49,7 @@ export async function loadTaskPage(projectSlug: string, taskId?: string) {
     project: project.data,
     configuration: configuration.data,
     task: task?.data ?? null,
+    ...taskAdvisories(task),
     epoch: project.meta.database_epoch,
     timezone: settings.data.timezone,
     settingsRevision: settings.data.revision,

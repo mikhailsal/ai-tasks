@@ -61,6 +61,7 @@ export function useTaskGroups(view: 'agenda' | 'priorities', search: string) {
     groups: mergeGroups(pages.map((page) => page.data.groups)),
     metadata: pages[0]?.meta,
     lastRefresh: pages.at(-1)?.meta.now,
+    advisories: pages.flatMap((page) => page.advisories ?? []),
     restart,
   };
 }

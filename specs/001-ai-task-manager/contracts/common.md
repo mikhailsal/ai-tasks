@@ -7,6 +7,10 @@ over the same validated core operations. [CLI](cli.md), [HTTP](http.md), and
 
 ## Values and envelopes
 
+A success envelope is `{ok:true,data,meta}`. It may also carry `advisories` (at most 10) and
+`advisories_omitted`, only when an advisory applies (spec 010, catalogue in
+`docs/advisories.md`); error envelopes never do.
+
 JSON keys use `snake_case`; unknown input keys are rejected. Omission in an update means
 unchanged; `null` clears only an explicitly nullable field. Technical resource IDs, `operation_id` and `database_epoch` are UUIDs; configuration-local status/level IDs are stable ASCII keys, not resource UUIDs. Project slugs are immutable ASCII
 `[a-z0-9]+(?:-[a-z0-9]+)*`, at most 64 characters. Task kind is `ordinary` or `recurring`;

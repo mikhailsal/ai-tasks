@@ -15,6 +15,7 @@ import {
   requireOptions,
   type CliOptions,
 } from './options.js';
+import { rememberRequest, rememberedAdvisories } from './advisory-request.js';
 export { mutationOptions, readOptions };
 const queryFlags = [
   ['limit', 'limit'],
@@ -34,8 +35,11 @@ const queryFlags = [
 /** Allowed options come from the command's registry descriptor (spec 005 R1). */
 export async function readCommand(command: Command) {
   const options = commandOptions(command);
-  requireOptions(options, descriptorFor(command).options);
-  return { options, body: await readJsonInput(options.input) };
+  const descriptor = descriptorFor(command);
+  requireOptions(options, descriptor.options);
+  const body = await readJsonInput(options.input);
+  rememberRequest(descriptor.path, options.project, body);
+  return { options, body };
 }
 export function singleProjectInput(options: CliOptions, body: CliInput) {
   const scope = readScope(options);
@@ -177,9 +181,18 @@ function humanResult(data: JsonValue): string {
   return humanItem(data);
 }
 export function writeSuccess(value: unknown, options: CliOptions): void {
-  const result = successEnvelopeSchema.parse(value);
+  const result = { ...successEnvelopeSchema.parse(value), ...rememberedAdvisories() };
   if (options.json) writeJson(result);
-  else process.stdout.write(`${humanResult(result.data)}\n`);
+  else {
+    process.stdout.write(`${humanResult(result.data)}\n`);
+    // Spec 010 FR-007: advisories go to stderr so the main output stays as it was.
+    for (const advisory of result.advisories ?? [])
+      process.stderr.write(
+        `advisory: ${advisory.code}: ${advisory.message} (${advisory.remedy.text})\n`,
+      );
+    if (result.advisories_omitted !== undefined)
+      process.stderr.write(`advisory: ${String(result.advisories_omitted)} more not shown\n`);
+  }
 }
 /** Mutation payload validation and all lifecycle reads remain inside executeMutation. */
 export async function runMutation(

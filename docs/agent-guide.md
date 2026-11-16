@@ -35,6 +35,13 @@ without a database.
 ai help occurrence complete --json
 ```
 
+### Advisories
+
+A successful response may carry `advisories`: short notes that do not change the result but
+change what you should do next. Each has a stable `code`, a fixed `message`, a `remedy` hint
+and, when it concerns one item, a `subject`. Act on the remedy; the list of codes is in
+[advisories.md](advisories.md). In human mode they are printed on stderr.
+
 ## 1. Choose a read scope
 
 Every application read needs a scope. Writes always need `--project`.
@@ -262,6 +269,12 @@ EOF
 ai task create --project demo --input recurring.json --json > created.json
 HABIT=$(field 'd.data.id' < created.json)
 ```
+
+`local_time` may be left out: it is then the local time of `first_deadline`, and the
+response says so with the advisory `schedule_time_derived`. If you give both and they differ,
+the task is created as asked and `schedule_time_mismatch` names both times; later occurrences
+use `local_time`. While the task is in `draft` every response about it carries
+`recurring_not_generating` with the statuses to move it to.
 
 For a cycle that follows the real completion date use
 `"schedule":{"mode":"after_completion","unit":"days","every":3}`.

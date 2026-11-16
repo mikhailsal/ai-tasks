@@ -13,40 +13,50 @@ export const recurrenceEverySchema = z.int().check(z.minimum(1)).check(z.maximum
 export const localTimeSchema = z
   .string()
   .check(z.regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d\.\d{3}$/u));
-export const calendarScheduleSchema = z.discriminatedUnion('pattern', [
-  z.strictObject({
-    mode: z.literal('calendar'),
-    pattern: z.enum(['days', 'weeks']),
-    every: recurrenceEverySchema,
-    local_time: localTimeSchema,
-  }),
-  z.strictObject({
-    mode: z.literal('calendar'),
-    pattern: z.literal('weekdays'),
-    weekdays: z
-      .array(z.int().check(z.minimum(1)).check(z.maximum(7)))
-      .check(z.minLength(1))
-      .check(z.maxLength(7))
-      .check(z.refine((days) => new Set(days).size === days.length, 'Weekdays must be distinct')),
-    local_time: localTimeSchema,
-  }),
-  z.strictObject({
-    mode: z.literal('calendar'),
-    pattern: z.literal('months'),
-    every: recurrenceEverySchema,
-    day_of_month: z.int().check(z.minimum(1)).check(z.maximum(31)),
-    local_time: localTimeSchema,
-  }),
-]);
+function calendarVariants<Time extends z.ZodMiniType>(localTime: Time) {
+  return z.discriminatedUnion('pattern', [
+    z.strictObject({
+      mode: z.literal('calendar'),
+      pattern: z.enum(['days', 'weeks']),
+      every: recurrenceEverySchema,
+      local_time: localTime,
+    }),
+    z.strictObject({
+      mode: z.literal('calendar'),
+      pattern: z.literal('weekdays'),
+      weekdays: z
+        .array(z.int().check(z.minimum(1)).check(z.maximum(7)))
+        .check(z.minLength(1))
+        .check(z.maxLength(7))
+        .check(z.refine((days) => new Set(days).size === days.length, 'Weekdays must be distinct')),
+      local_time: localTime,
+    }),
+    z.strictObject({
+      mode: z.literal('calendar'),
+      pattern: z.literal('months'),
+      every: recurrenceEverySchema,
+      day_of_month: z.int().check(z.minimum(1)).check(z.maximum(31)),
+      local_time: localTime,
+    }),
+  ]);
+}
+/** Stored schedules always carry `local_time`. */
+export const calendarScheduleSchema = calendarVariants(localTimeSchema);
+/** Spec 012 R2: input may omit it; core derives it from the first deadline. */
+export const calendarScheduleInputSchema = calendarVariants(z.exactOptional(localTimeSchema));
 export const afterCompletionScheduleSchema = z.strictObject({
   mode: z.literal('after_completion'),
   unit: z.enum(['hours', 'days']),
   every: recurrenceEverySchema,
 });
 export const scheduleSchema = z.union([calendarScheduleSchema, afterCompletionScheduleSchema]);
+export const scheduleInputSchema = z.union([
+  calendarScheduleInputSchema,
+  afterCompletionScheduleSchema,
+]);
 export const recurrenceInputSchema = z.strictObject({
   first_deadline: timestampSchema,
-  schedule: scheduleSchema,
+  schedule: scheduleInputSchema,
   miss_policy: missPolicySchema,
   confirmation_window_ms: confirmationWindowSchema,
   // Spec 008: named values a completion may carry; [] clears; absent keeps them.

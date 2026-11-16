@@ -1479,3 +1479,21 @@ dd {
 .day-filter input {
   min-height: 44px;
 }
+/* Spec 010: advisories are neutral notes, not errors. */
+.advisory-notice {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #d9e2ee;
+  border-left: 4px solid #8a9bb4;
+  border-radius: 12px;
+  background: #f1f4f8;
+  padding: 10px 12px;
+  margin-block: 8px;
+}
+.advisory-notice p {
+  margin: 0;
+}
+.advisory-item {
+  display: grid;
+  gap: 2px;
+}

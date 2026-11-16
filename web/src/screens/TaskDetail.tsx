@@ -8,6 +8,7 @@ import { OfflineBanner } from '../components/OfflineBanner.js';
 import './task-detail.css';
 import { useMutationAvailability } from '../app/MutationBoundary.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
+import { AdvisoryNotice, itemAdvisories } from '../components/AdvisoryNotice.js';
 import { ConflictReview } from '../components/ConflictReview.js';
 import { TaskSavedDetails } from './TaskSavedDetails.js';
 import { TaskForm } from './TaskForm.js';
@@ -56,6 +57,11 @@ function TaskNotices({
           {page.project.archived_at !== null ? ' проекта' : ''}.
         </p>
       )}
+      <AdvisoryNotice
+        advisories={itemAdvisories(page.advisories, page.task?.id)}
+        checkedAt={page.checkedAt}
+        timezone={page.timezone}
+      />
       {editor.storageError && <p role="alert">{editor.storageError}</p>}
       {commands.error && <p role="alert">{commands.error}</p>}
       {editor.pendingProposal && !commands.pending && (
