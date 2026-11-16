@@ -9,6 +9,8 @@ export type AdvisoryRequest = {
   projectSlug: string | null;
   data: unknown;
   input?: unknown;
+  /** The connection's clock; reads and advisories agree on "now". */
+  now?: () => number;
 };
 export type Finding = { code: AdvisoryCode; remedy: Hint; subject?: AdvisorySubject };
 /** Read-only; it must not write (spec 010 FR-002). */

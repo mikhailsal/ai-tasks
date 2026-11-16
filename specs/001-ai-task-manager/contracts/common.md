@@ -179,6 +179,9 @@ The window and policy are required, with no implicit defaults; the window is inc
 - `{mode:"calendar",pattern:"days"|"weeks",every:positive_integer,local_time:"HH:mm:ss.SSS"}`;
 - `{mode:"calendar",pattern:"weekdays",weekdays:[1..7],local_time:"HH:mm:ss.SSS"}` (ISO Monday = 1, distinct nonempty selection);
 - `{mode:"calendar",pattern:"months",every:positive_integer,day_of_month:1..31,local_time:"HH:mm:ss.SSS"}`;
+- (spec 012) on task create and recurrence configure input a calendar `local_time` may be omitted:
+  it is derived from `first_deadline` in the application time zone; stored and returned schedules
+  always carry it;
 - `{mode:"after_completion",unit:"hours"|"days",every:positive_integer}`.
 
 Every interval `every` is an integer in `[1,3650]`. The explicit first deadline, which may be

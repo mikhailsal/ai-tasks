@@ -44,6 +44,14 @@ export function workerCallbacks(
   const read = createReadContext({ connection });
   // Spec 011: a pass that finds nothing is the healthy case and is recorded too.
   const recordPass = createPassRecorder(connection, projectSlug);
+  // The liveness record is advisory: a failed write must not fail a pass that already committed.
+  const heartbeat = () => {
+    try {
+      recordPass(now());
+    } catch {
+      process.stderr.write('Worker liveness could not be recorded; it will be retried\n');
+    }
+  };
   const context = createContext({
     connection,
     actor: `ai-cli:${projectSlug}`,
@@ -57,7 +65,7 @@ export function workerCallbacks(
       if (pending === undefined) {
         const discovered = discoverDueWork(read, projectSlug);
         if (discovered.data.tasks.length === 0) {
-          recordPass(now());
+          heartbeat();
           return { hasMore: false };
         }
         pending = workerTickInput(projectSlug, discovered);
@@ -67,7 +75,7 @@ export function workerCallbacks(
       try {
         const result = tickRecurrence(context, projectSlug, pending);
         pending = undefined;
-        recordPass(now());
+        heartbeat();
         process.stderr.write('Recurring work processed\n');
         return { hasMore: progressSchema.parse(result.data).has_more || moreDiscovered };
       } catch (error) {

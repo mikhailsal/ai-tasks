@@ -50,7 +50,8 @@ export async function withCliDatabase<Output>(
       const result = await run(connection);
       const request = rememberedRequest();
       // Spec 010: advisories come from current state while the connection is still open.
-      if (request !== undefined) rememberAdvisories(adviseFor(connection.db, request, result));
+      if (request !== undefined)
+        rememberAdvisories(adviseFor(connection.db, { ...request, now: connection.now }, result));
       return result;
     } finally {
       connection.close();

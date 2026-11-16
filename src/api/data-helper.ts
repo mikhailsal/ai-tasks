@@ -119,7 +119,7 @@ export async function runDataHelper(): Promise<void> {
                   })
                 : attachAdvisories(
                     connection.db,
-                    advisoryRequest(request),
+                    { ...advisoryRequest(request), now: connection.now },
                     dispatch(context, request),
                   ),
           });

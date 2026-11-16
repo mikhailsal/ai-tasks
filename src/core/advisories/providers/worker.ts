@@ -9,7 +9,7 @@ import { workflows } from './workflows.js';
 
 type Database = DatabaseConnection['db'];
 /** Reads whose completeness depends on the worker (spec 011 R4). */
-const dependentOperations = new Set([
+export const dependentOperations = new Set([
   'occurrence.list',
   'occurrence.get',
   'occurrence.progress',
@@ -61,8 +61,10 @@ function remedy(slug: string, last: number | undefined) {
   );
 }
 
-export function workerProvider(now: () => number): AdvisoryProvider {
+/** `now` overrides the request's clock (tests); otherwise the connection's clock is used. */
+export function workerProvider(now?: () => number): AdvisoryProvider {
   return (database, request) => {
+    const clock = now ?? request.now ?? Date.now;
     if (!dependentOperations.has(request.operation)) return [];
     const scope =
       request.projectSlug === null ? [...projectsShown(request.data)] : [request.projectSlug];
@@ -71,7 +73,7 @@ export function workerProvider(now: () => number): AdvisoryProvider {
     const passes = lastPasses(database, projects);
     return projects.flatMap((slug): Finding[] => {
       const last = passes.get(slug);
-      const status = workerStatus(last ?? null, now());
+      const status = workerStatus(last ?? null, clock());
       if (status === 'healthy') return [];
       return [
         {

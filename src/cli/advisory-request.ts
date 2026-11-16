@@ -18,14 +18,20 @@ export function rememberRequest(
   const joined = path.join('.');
   current = { operation: renamed[joined] ?? joined, projectSlug: projectSlug ?? null, input };
 }
+/** Taken once: a later command in the same process never sees this request. */
 export function rememberedRequest() {
-  return current;
+  const request = current;
+  current = undefined;
+  return request;
 }
 let found: { advisories?: Advisory[]; advisories_omitted?: number } = {};
 /** Advisories computed while the database was open, added when the response is written. */
 export function rememberAdvisories(value: typeof found): void {
   found = value;
 }
+/** Taken once, like the request. */
 export function rememberedAdvisories() {
-  return found;
+  const value = found;
+  found = {};
+  return value;
 }

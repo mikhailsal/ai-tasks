@@ -6,7 +6,7 @@
 |---|---|
 | `meta --json`, `GET /api/meta` | `data.workers: [{project_slug, status, last_pass_at?, tolerance_seconds}]` |
 | `project get/list`, HTTP project resources | `worker: {status, last_pass_at?}` |
-| Dependent reads (occurrence list/get, recurrence get, agenda, task list/get) | advisory `worker_stale` or `worker_never_ran` (010) when the project has an active recurring task |
+| Dependent reads (occurrence list/get/progress, recurrence get, agenda, task list/get) | advisory `worker_stale` or `worker_never_ran` (010) when the project has an active recurring task |
 
 Status values: `healthy`, `stale`, `never`. Tolerance 300 s. Remedy: start the service (`serve`
 forks the workers) per the agent guide; `worker run --project SLUG` is the manual alternative.

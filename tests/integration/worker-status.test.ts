@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { workerCallbacks } from '../../src/cli/worker-data.js';
 import { attachAdvisories } from '../../src/core/advisories/attach.js';
 import { workerProvider } from '../../src/core/advisories/providers/worker.js';
 import { readMeta } from '../../src/core/queries/meta.js';
@@ -112,4 +113,50 @@ it('100 passes every 30 s with clock steps of ±2 min and -1 h: never stale (SC-
     if (workerStatus(read(), clock) !== 'healthy') stale.push(pass);
   }
   expect(stale).toEqual([]);
+});
+
+it('an all-projects read names each project that depends on a stopped worker (R4)', () => {
+  const parent = seedOutcomeParent(fixture, {});
+  const result = attachAdvisories(
+    fixture.connection.db,
+    { operation: 'task.list', projectSlug: null },
+    {
+      ok: true,
+      data: { items: [{ id: parent.id, project_slug: 'alpha' }, { project_slug: 'unknown' }] },
+      meta: listOccurrences(readContext(fixture), 'alpha', parent.id, {}).meta,
+    },
+    [workerProvider(() => fixture.clock.now())],
+  ) as { advisories?: { code: string; subject?: { id: string } }[] };
+  expect(result.advisories).toMatchObject([
+    { code: 'worker_never_ran', subject: { type: 'project', id: 'alpha' } },
+  ]);
+});
+
+it('the advisory follows the clock of the request when no clock is fixed (FR-003)', () => {
+  const parent = seedOutcomeParent(fixture, {});
+  const now = fixture.clock.now();
+  createPassRecorder(fixture.connection, 'alpha')(now);
+  const read = (at: number) =>
+    attachAdvisories(
+      fixture.connection.db,
+      { operation: 'occurrence.list', projectSlug: 'alpha', now: () => at },
+      listOccurrences(readContext(fixture), 'alpha', parent.id, {}),
+    ) as { advisories?: { code: string }[] };
+  expect(read(now).advisories).toBeUndefined();
+  expect(read(now + WORKER_TOLERANCE_MS + 1).advisories?.map((item) => item.code)).toEqual([
+    'worker_stale',
+  ]);
+});
+
+it('a failed liveness write does not fail the worker pass', () => {
+  fixture.connection.sqlite.exec('DROP TABLE worker_passes');
+  const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  try {
+    expect(workerCallbacks(fixture.connection, 'alpha').processBatch()).toEqual({ hasMore: false });
+    expect(stderr).toHaveBeenCalledWith(
+      'Worker liveness could not be recorded; it will be retried\n',
+    );
+  } finally {
+    stderr.mockRestore();
+  }
 });

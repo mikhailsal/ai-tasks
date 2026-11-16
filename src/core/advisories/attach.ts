@@ -2,14 +2,14 @@ import type { Advisory } from '../../schema/advisories.js';
 import { successEnvelopeSchema } from '../../schema/envelopes.js';
 import type { DatabaseConnection } from '../database/types.js';
 import { collectAdvisories, type AdvisoryProvider, type AdvisoryRequest } from './collect.js';
-import { readinessProvider } from './providers/readiness.js';
-import { workerProvider } from './providers/worker.js';
+import { readinessProvider, taskOperations } from './providers/readiness.js';
+import { dependentOperations, workerProvider } from './providers/worker.js';
 
 /** Registered providers, in no particular order: the catalogue orders the output. */
-export const advisoryProviders: readonly AdvisoryProvider[] = [
-  readinessProvider,
-  workerProvider(Date.now),
-];
+export const advisoryProviders: readonly AdvisoryProvider[] = [readinessProvider, workerProvider()];
+
+/** Operations some registered provider reads; any other response is passed through unparsed. */
+const advisoryOperations = new Set([...taskOperations, ...dependentOperations]);
 
 /**
  * Adds advisories to a success envelope from current state (spec 010 R3). Anything that is not
@@ -21,6 +21,7 @@ export function adviseFor(
   value: unknown,
   providers: readonly AdvisoryProvider[] = advisoryProviders,
 ): { advisories?: Advisory[]; advisories_omitted?: number } {
+  if (providers === advisoryProviders && !advisoryOperations.has(request.operation)) return {};
   const envelope = successEnvelopeSchema.safeParse(value);
   if (!envelope.success || envelope.data.advisories !== undefined) return {};
   return collectAdvisories(database, { ...request, data: envelope.data.data }, providers);

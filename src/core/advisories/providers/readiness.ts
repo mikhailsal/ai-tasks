@@ -10,7 +10,7 @@ import type { AdvisoryProvider, AdvisoryRequest, Finding } from '../collect.js';
 type Database = DatabaseConnection['db'];
 const MAX_TASKS = 200;
 /** Responses that show recurring tasks (spec 012 R1). */
-const taskOperations = new Set([
+export const taskOperations = new Set([
   'task.create',
   'task.get',
   'task.list',
