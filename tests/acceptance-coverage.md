@@ -262,3 +262,17 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 | FR-009, SC-004 compatibility                       | optional keys only when set; `tests/integration/occurrence-values.test.ts`; human help snapshot gains only the three day options                      |
 | Upgrade from schema 4                              | `tests/integration/migration-0005.test.ts`                                                                                                            |
 | Progress cost                                      | `scripts/benchmark-query.ts` (`occurrence_progress`, 366-day window)                                                                                  |
+
+## Specification 009: write shortcuts
+
+| Requirement                                                      | Evidence                                                                                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-003, FR-004 complete by icon or ID and day, no tokens | `tests/integration/shortcuts-complete.test.ts`, `tests/contracts/shortcuts-cli.test.ts`                                                                             |
+| FR-002 move by target status                                     | `tests/integration/shortcuts-move.test.ts`, `tests/contracts/shortcuts-cli.test.ts`                                                                                 |
+| FR-005 nearest days and candidates                               | `tests/integration/shortcuts-complete.test.ts`, `tests/contracts/shortcuts-cli.test.ts` (exit 3)                                                                    |
+| FR-006 allowed statuses, FR-007 `--from`                         | `tests/integration/shortcuts-move.test.ts`                                                                                                                          |
+| FR-008 repeat safety, two racing processes                       | `tests/integration/shortcuts-complete.test.ts`, `tests/integration/shortcuts-move.test.ts`, `tests/contracts/shortcuts-cli.test.ts` (race through the compiled CLI) |
+| FR-009, SC-003 same audit trail                                  | `tests/integration/shortcuts-parity.test.ts`, `tests/integration/shortcuts-move.test.ts`                                                                            |
+| FR-010 strict form unchanged                                     | `tests/integration/shortcuts-parity.test.ts` (replay and `IDEMPOTENCY_CONFLICT`), full functional suite                                                             |
+| FR-011 follow-up data                                            | strict envelope returned; `tests/integration/shortcuts-complete.test.ts`                                                                                            |
+| FR-012 compatibility                                             | help snapshot gains only the new options and `task move`; no existing input changed                                                                                 |

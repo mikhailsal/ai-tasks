@@ -220,6 +220,27 @@ Timestamps are RFC 3339 with an offset. A deadline in the past is accepted. For 
 `to_status_id` (and `confirmation` when the edge requires one) to `task transition "$TASK"`.
 Re-read `expected_revision` first: the update changed it.
 
+### One-call shortcuts
+
+Two writes need no tokens. The application reads the revisions under its own lock and runs
+the strict handler, so the audit trail is the same as the strict form's.
+
+```bash
+ai task move 📘 --project demo --to planning --from idea --json
+ai occurrence done 🌙 --project demo --day 2026-11-08 --note "время примерное" --json
+```
+
+`<task>` is a task ID or its reserved icon in the project; ⚪ never names a task. A repeat
+with the same data returns `data.existing: true` and writes nothing; different data for a
+completed occurrence is refused with `details.existing`. `--from` refuses without change
+when the task is elsewhere (`details.actual_status`). No match gives `TASK_NOT_FOUND` with
+`details.nearest_days`; several occurrences on one day give `details.candidates`, then pass
+`--occurrence ID`. A not-allowed target lists `details.allowed`.
+
+The shortcut checks `database_epoch` for you, so it cannot detect that the database was
+restored between your last read and this call. After a restore, re-read before writing:
+the shortcut acts on the restored state.
+
 ### Create a recurring task
 
 A recurring task needs all three revision kinds and a nested `recurrence`. It starts in

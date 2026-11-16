@@ -31,6 +31,12 @@ export const cliOptionsSchema = z.strictObject({
   day: z.optional(z.string()),
   fromDay: z.optional(z.string()),
   toDay: z.optional(z.string()),
+  occurrence: z.optional(z.string()),
+  at: z.optional(z.string()),
+  note: z.optional(z.string()),
+  to: z.optional(z.string()),
+  from: z.optional(z.string()),
+  confirmation: z.optional(z.string()),
 });
 export type CliOptions = z.infer<typeof cliOptionsSchema>;
 const valueOptions = [
@@ -57,6 +63,12 @@ const valueOptions = [
   ['--day <date>', 'Occurrence day under the project day rule: YYYY-MM-DD'],
   ['--from-day <date>', 'First occurrence day of a window, inclusive: YYYY-MM-DD'],
   ['--to-day <date>', 'Last occurrence day of a window, inclusive: YYYY-MM-DD'],
+  ['--occurrence <uuid>', 'Occurrence ID, when a day has several occurrences'],
+  ['--at <timestamp>', 'Actual completion time: ISO 8601 with offset'],
+  ['--note <text>', 'Completion note: plain text, at most 500 characters'],
+  ['--to <status>', 'Target status ID'],
+  ['--from <status>', 'Expected current status ID; refused without change if it differs'],
+  ['--confirmation <json>', 'Transition confirmation as JSON, when the workflow requires it'],
 ] as const;
 export function addCommonOptions(command: Command): Command {
   command

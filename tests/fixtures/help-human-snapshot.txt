@@ -30,6 +30,12 @@ Options:
   --day <date>                            Occurrence day under the project day rule: YYYY-MM-DD
   --from-day <date>                       First occurrence day of a window, inclusive: YYYY-MM-DD
   --to-day <date>                         Last occurrence day of a window, inclusive: YYYY-MM-DD
+  --occurrence <uuid>                     Occurrence ID, when a day has several occurrences
+  --at <timestamp>                        Actual completion time: ISO 8601 with offset
+  --note <text>                           Completion note: plain text, at most 500 characters
+  --to <status>                           Target status ID
+  --from <status>                         Expected current status ID; refused without change if it differs
+  --confirmation <json>                   Transition confirmation as JSON, when the workflow requires it
   -V, --version                           output the version number
   -h, --help                              display help for command
 
@@ -66,6 +72,7 @@ Commands:
   position <task-id>    Move a task to an explicitly guarded board position
   get <task-id>         Read a task and its saved description
   create                Create an ordinary or recurring task
+  move <task>           Move a task to a status, without reading revisions first
   update <task-id>      update an ordinary or recurring task
   transition <task-id>  transition an ordinary or recurring task
   archive <task-id>     archive an ordinary or recurring task

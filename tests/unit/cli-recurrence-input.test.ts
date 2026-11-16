@@ -6,7 +6,7 @@ it('registers all recurrence, occurrence, and settings contract commands', () =>
   const program = createProgram();
   for (const [family, commands] of [
     ['recurrence', ['get', 'configure', 'control', 'tick']],
-    ['occurrence', ['list', 'progress', 'get', 'complete', 'cancel', 'miss']],
+    ['occurrence', ['list', 'progress', 'get', 'complete', 'cancel', 'done', 'miss']],
     ['settings', ['get', 'update']],
   ] as const) {
     expect(

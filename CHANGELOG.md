@@ -5,6 +5,21 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Agent-visible changes: write shortcuts (spec 009)
+
+- New CLI command `occurrence done <task> (--day YYYY-MM-DD | --occurrence ID) [--at] [--note]`:
+  completes one occurrence in one call. The application fills the operation identifier, epoch
+  and revisions under its own lock and runs the strict `occurrence complete` handler.
+- New CLI command `task move <task> --to STATUS [--from STATUS] [--confirmation JSON]`: the
+  strict `task transition` in one call. `--from` refuses without change and names
+  `details.actual_status` when the task has moved on.
+- `<task>` is a task ID or the task's reserved icon in the project; the default icon ⚪ is
+  refused. A repeat with the same data returns `data.existing: true` and writes nothing.
+- Refusals name the next step: `details.nearest_days`, `details.candidates`,
+  `details.allowed`, `details.existing`. The audit trail equals the strict form's.
+- New CLI options: `--occurrence`, `--at`, `--note`, `--to`, `--from`, `--confirmation`.
+  HTTP and the web are unchanged: shortcuts are CLI only.
+
 ### Agent-visible changes: occurrence day, recorded values, goal progress (spec 008)
 
 - Projects have `day_start_hour` (0..23, default 0), set by `project update`; the project

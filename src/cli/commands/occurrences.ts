@@ -7,6 +7,7 @@ import {
   requireSubcommand,
   runMutation,
   runProjectRead,
+  runShortcut,
   singleProjectInput,
   writeSuccess,
 } from '../command-helpers.js';
@@ -105,6 +106,23 @@ export function registerOccurrenceCommands(program: Command): void {
         return runMutation(command, (context, slug, input) => mutate(context, slug, id, input));
       });
   }
+  family
+    .command('done <task>')
+    .description('Complete the occurrence of a task on a day, without reading revisions first')
+    .action(async (task: string, _options: unknown, command: Command) => {
+      const { completeByDay } = await import('../../core/shortcuts/complete-by-day.js');
+      return runShortcut(
+        command,
+        (options) => ({
+          task,
+          day: options.day,
+          occurrence: options.occurrence,
+          at: options.at,
+          note: options.note,
+        }),
+        (context, slug, input) => completeByDay(context, slug, input),
+      );
+    });
   family
     .command('miss <task-id>')
     .description('record selected occurrences as missed, optionally with a reason')

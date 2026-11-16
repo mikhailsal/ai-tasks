@@ -6,8 +6,19 @@ import {
   requireSubcommand,
   runMutation,
   runProjectRead,
+  runShortcut,
   writeSuccess,
 } from '../command-helpers.js';
+import { domainError } from '../../core/errors.js';
+import { jsonValueSchema, type JsonValue } from '../../schema/values.js';
+
+function parseJsonOption(text: string): JsonValue {
+  try {
+    return jsonValueSchema.parse(JSON.parse(text));
+  } catch {
+    throw domainError('VALIDATION_ERROR', '--confirmation must be JSON', { field: 'confirmation' });
+  }
+}
 
 export function registerTaskCommands(program: Command): void {
   const family = program
@@ -53,6 +64,23 @@ export function registerTaskCommands(program: Command): void {
     .action(async (_options: unknown, command: Command) => {
       const { createTask } = await import('../../core/tasks/commands.js');
       return runMutation(command, createTask);
+    });
+  family
+    .command('move <task>')
+    .description('Move a task to a status, without reading revisions first')
+    .action(async (task: string, _options: unknown, command: Command) => {
+      const { moveTask } = await import('../../core/shortcuts/move.js');
+      return runShortcut(
+        command,
+        (options) => ({
+          task,
+          to: options.to,
+          from: options.from,
+          confirmation:
+            options.confirmation === undefined ? undefined : parseJsonOption(options.confirmation),
+        }),
+        (context, slug, input) => moveTask(context, slug, input),
+      );
     });
   for (const name of ['update', 'transition', 'archive', 'restore'] as const) {
     family

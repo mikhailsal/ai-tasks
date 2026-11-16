@@ -93,6 +93,8 @@ envelopes. There are no implicit mutations during reads.
 | `recurrence tick` | M | `--project`, `{tasks:[{task_id,expected_revision}],expected_config_revision}` → generated/expired occurrence IDs and updated revisions; server clock only |
 | `occurrence list <task-id>` | R | `--project`, `--state` optional, `--day` or `--from-day`/`--to-day` optional (spec 008), pagination → occurrence list |
 | `occurrence progress <task-id>` | R | `--project`, `--from-day`, `--to-day` (inclusive, at most 366 days) → `{task_id,from_day,to_day,done,decided,open,breakdown}` (spec 008) |
+| `occurrence done <task>` | M | `--project`, `--day` or `--occurrence`, `--at`, `--note`; no input body or tokens; `<task>` is an ID or reserved icon (spec 009) |
+| `task move <task>` | M | `--project`, `--to`, `--from`, `--confirmation`; no input body or tokens (spec 009) |
 | `occurrence get <task-id> <occurrence-id>` | R | `--project` → occurrence with description/settings snapshot |
 | `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times, `note` and `values` (spec 008); expected parent revision → selected occurrences and parent revision |
 | `occurrence cancel <task-id>` | M | Explicit occurrence IDs/revisions plus reason; expected parent revision → cancelled rows and parent revision |

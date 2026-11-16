@@ -58,7 +58,7 @@ describe('complete normative command/route inventory (later rows are data, never
       (match) => `${match[2]} ${match[1]}`,
     );
     const inventoried = commandMatrix.map((row) => `${row.kind} ${row.command}`);
-    expect(specified).toHaveLength(45);
+    expect(specified).toHaveLength(47);
     expect(new Set(inventoried).size).toBe(inventoried.length);
     expect(inventoried.sort()).toEqual(specified.sort());
     for (const utility of informationalCommands) expect(cliContract).toContain(utility.join(' '));
@@ -102,12 +102,14 @@ describe('complete normative command/route inventory (later rows are data, never
         else expect(row.evidence).toMatch(/^tests\/contracts\/.+\.test\.ts$/u);
         if (row.owner === 'US6') expect(row.evidence).toBe(recoveryContractSuite);
         if (row.owner === 'US4') expect(row.evidence).toBe('tests/contracts/read-views.test.ts');
-        if (row.owner === 'US5' && row.command !== 'worker run')
+        if (row.command.endsWith(' <task>'))
+          expect(row.evidence).toBe('tests/contracts/shortcuts-cli.test.ts');
+        else if (row.owner === 'US5' && row.command !== 'worker run')
           expect(row.evidence).toBe('tests/contracts/recurrence-settings.test.ts');
         expect(existsSync(resolve(root, row.evidence ?? ''))).toBe(true);
       }
     }
-    expect(commandMatrix.filter((row) => row.readiness === 'ready')).toHaveLength(45);
+    expect(commandMatrix.filter((row) => row.readiness === 'ready')).toHaveLength(47);
     expect(commandMatrix.filter((row) => row.readiness === 'pending')).toHaveLength(0);
     expect(
       commandMatrix.filter((row) => row.readiness === 'target').map((row) => row.command),

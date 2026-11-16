@@ -119,6 +119,33 @@ export const occurrenceCommands: CommandDescriptor[] = [
     },
   },
   {
+    path: ['occurrence', 'done'],
+    purpose:
+      'Complete the occurrence of a recurring task on a day in one step; revisions are filled in by the application.',
+    kind: 'mutation',
+    scope: 'project',
+    positional: [{ name: 'task', description: 'Task ID, or its icon within the project' }],
+    options: ['json', 'project', 'day', 'occurrence', 'at', 'note'],
+    example: {
+      argv: [
+        'occurrence',
+        'done',
+        '{{task_id}}',
+        '--project',
+        'demo',
+        '--day',
+        '{{day}}',
+        '--json',
+      ],
+      placeholders: {
+        task_id: parentFromList,
+        day: { command: 'occurrence list', path: 'data.items[0].occurrence_day' },
+      },
+      fixture: 'active_recurring_task',
+      fixture_note: 'an active recurring task with a pending occurrence',
+    },
+  },
+  {
     path: ['occurrence', 'miss'],
     purpose:
       'Record selected occurrences as missed now, add a reason to a miss, or close owed work with a reason.',

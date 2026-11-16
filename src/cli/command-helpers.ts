@@ -220,6 +220,33 @@ export async function runProjectRead(
   );
   writeSuccess(result, options);
 }
+/**
+ * A write shortcut (spec 009): flags only, no tokens. The core resolver fills the operation
+ * identifier, epoch and revisions under its own lock.
+ */
+export async function runShortcut(
+  command: Command,
+  input: (options: CliOptions) => Record<string, JsonValue | undefined>,
+  write: (
+    context: ReturnType<typeof createCliMutationContext>,
+    projectSlug: string,
+    input: Record<string, JsonValue>,
+  ) => unknown,
+): Promise<void> {
+  const { options, body } = await readCommand(command);
+  const scoped = singleProjectInput(options, body);
+  requireEmptyInput(scoped.body);
+  const fields = Object.fromEntries(
+    Object.entries(input(options)).flatMap(([key, value]) =>
+      value === undefined ? [] : [[key, value]],
+    ),
+  );
+  const { createCliMutationContext, withCliDatabase } = await import('./context.js');
+  const result = await withCliDatabase((connection) =>
+    write(createCliMutationContext(connection, scoped.projectSlug), scoped.projectSlug, fields),
+  );
+  writeSuccess(result, options);
+}
 export function requireSubcommand(): never {
   throw domainError('VALIDATION_ERROR', 'Choose an application subcommand');
 }

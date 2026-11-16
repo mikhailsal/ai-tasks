@@ -177,6 +177,12 @@ export const commandMatrix: readonly MatrixRow[] = [
     method: 'POST',
   }),
   row('occurrence progress <task-id>', 'R', 'US5', { pattern: `${T}/occurrences/progress` }),
+  // Spec 009 write shortcuts: CLI only, no HTTP route.
+  {
+    ...row('occurrence done <task>', 'M', 'US5'),
+    evidence: 'tests/contracts/shortcuts-cli.test.ts',
+  },
+  { ...row('task move <task>', 'M', 'US1'), evidence: 'tests/contracts/shortcuts-cli.test.ts' },
   row('occurrence miss <task-id>', 'M', 'US5', {
     pattern: `${T}/occurrences/miss`,
     method: 'POST',

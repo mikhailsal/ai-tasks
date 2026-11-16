@@ -93,6 +93,10 @@ supported by its command. Writes require `--project`; backup list/validate/statu
 HTTP mutations use `{operation_id,database_epoch,expected_...?,payload:{...}}` and bind
 project scope from the route. Do not pass the HTTP `payload` wrapper to the CLI.
 
+Two everyday writes have one-call shortcuts that need no tokens (spec 009):
+`occurrence done <task> --day YYYY-MM-DD` and `task move <task> --to STATUS`. `<task>` is
+an ID or the task's icon. They write exactly what the strict commands write.
+
 Use `--input file.json` or `--input -` with piped UTF-8 JSON, at most 1 MiB. Duplicate
 flag/body fields are rejected even when equal. Every new mutation uses a fresh UUID;
 an uncertain result is retried only with its original actor, scope, target, operation ID,

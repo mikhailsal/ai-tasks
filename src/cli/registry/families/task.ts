@@ -173,6 +173,19 @@ export const taskCommands: CommandDescriptor[] = [
     },
   },
   {
+    path: ['task', 'move'],
+    purpose: 'Move a task to a status in one step; revisions are filled in by the application.',
+    kind: 'mutation',
+    scope: 'project',
+    positional: [{ name: 'task', description: 'Task ID, or its icon within the project' }],
+    options: ['json', 'project', 'to', 'from', 'confirmation'],
+    example: {
+      argv: ['task', 'move', '{{task_id}}', '--project', 'demo', '--to', 'planning', '--json'],
+      placeholders: { task_id: firstTask },
+      ...ordinary,
+    },
+  },
+  {
     path: ['task', 'archive'],
     purpose: 'Archive a task, keeping it readable through archive filters.',
     kind: 'mutation',
