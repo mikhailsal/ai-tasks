@@ -4,6 +4,7 @@ import { writeJson } from '../io.js';
 import { commandOptions, requireOptions } from '../options.js';
 import { unknownName } from '../parse-errors.js';
 import { describeCommand } from '../registry/describe.js';
+import { scopeFlags } from '../registry/scope-flags.js';
 import {
   commandIndex,
   descriptorFor,
@@ -50,6 +51,7 @@ async function jsonHelp(program: Command, words: readonly string[]) {
         command: entry.path.join(' '),
         purpose: entry.purpose,
         scope: entry.scope,
+        scope_flags: scopeFlags[entry.scope],
       })),
     };
   const { name, known } = knownNames(words);

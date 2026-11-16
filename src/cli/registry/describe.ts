@@ -2,11 +2,13 @@ import type { Hint } from '../../core/diagnostics/hints.js';
 import { mutationRequirements } from '../../core/database/mutation-requirements.js';
 import { requiredRevisions, revisionSource } from '../../core/database/required-revisions.js';
 import { flattenSchema, type InputField } from './flatten-schema.js';
+import { scopeFlags } from './scope-flags.js';
 import type { CommandDescriptor, CommandExample } from './types.js';
 
 export type RevisionValue = { field: string; required: boolean; condition?: string; source: Hint };
 
 const scopeFields = ['project_slug', 'all_projects'];
+
 const tokenOptions = new Set(['json', 'project', 'allProjects', 'input']);
 
 export function flagName(key: string): string {
@@ -62,6 +64,7 @@ export async function describeCommand(descriptor: CommandDescriptor) {
     purpose: descriptor.purpose,
     kind: descriptor.kind,
     scope: descriptor.scope,
+    scope_flags: scopeFlags[descriptor.scope],
     positional: descriptor.positional ?? [],
     options: descriptor.options.map(flagName).sort(),
     input_forms: inputForms(descriptor),

@@ -12,6 +12,7 @@ import { recurrenceCommands } from './families/recurrence.js';
 import { settingsCommands } from './families/settings.js';
 import { taskCommands } from './families/task.js';
 import { viewsCommands } from './families/views.js';
+import { scopeFlags } from './scope-flags.js';
 import type { CommandDescriptor } from './types.js';
 
 /** Every leaf command, sorted by path (spec 005 R1). */
@@ -56,12 +57,20 @@ export function descriptorFor(command: Command): CommandDescriptor {
 
 /** Whole-interface index grouped by the first path word. */
 export function commandIndex() {
-  const groups = new Map<string, { command: string; purpose: string; scope: string }[]>();
+  const groups = new Map<
+    string,
+    { command: string; purpose: string; scope: string; scope_flags: string }[]
+  >();
   for (const descriptor of registry) {
     const family = descriptor.path[0] ?? '';
     groups.set(family, [
       ...(groups.get(family) ?? []),
-      { command: descriptor.path.join(' '), purpose: descriptor.purpose, scope: descriptor.scope },
+      {
+        command: descriptor.path.join(' '),
+        purpose: descriptor.purpose,
+        scope: descriptor.scope,
+        scope_flags: scopeFlags[descriptor.scope],
+      },
     ]);
   }
   return [...groups].map(([family, commands]) => ({ family, commands }));

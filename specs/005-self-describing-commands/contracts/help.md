@@ -9,7 +9,7 @@ Extends the `help` row of [cli.md](../../001-ai-task-manager/contracts/cli.md). 
 
 | Request | Success `data` | Notes |
 |---|---|---|
-| `help --json` | `{help, commands}` | `help` is today's usage text, unchanged; `commands` is the grouped index; each entry has `command`, `purpose` and `scope` (`project`, `all_projects`, `either`, `none`). |
+| `help --json` | `{help, commands}` | `help` is today's usage text, unchanged; `commands` is the grouped index; each entry has `command`, `purpose`, `scope` (`project`, `all_projects`, `either`, `none`) and `scope_flags`, the flags to pass (for example `--all-projects (required)`). |
 | `help <family> --json` | `{command, members}` | Family members with purposes and scope. |
 | `help <command words> --json` | CommandDescription | One leaf command. |
 | `help` / `<command> --help` (human) | text | Byte-identical to today. |
@@ -23,7 +23,7 @@ effects, identical output for identical requests on the same build. No option ot
 
 ```json
 {"ok":true,"data":{
-  "command":"occurrence complete","kind":"mutation","scope":"project",
+  "command":"occurrence complete","kind":"mutation","scope":"project","scope_flags":"--project SLUG (required)",
   "purpose":"Complete selected occurrences of one recurring task atomically.",
   "positional":[{"name":"task-id","description":"Recurring parent task ID"}],
   "input_forms":{"forms":["--input FILE","--input -","options"],"equivalent":true},
