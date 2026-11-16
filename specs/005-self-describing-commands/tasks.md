@@ -54,7 +54,7 @@ through a pull request (constitution v3.2.0).
 
 - [x] T019 Update `tests/acceptance-coverage.md` and, if mutations changed, `tests/mutation-coverage.md` with this feature's rows
 - [x] T020 Run `npm run lint`, `npm run typecheck`, `npm run test:functional` and the quickstart validator; all green
-- [ ] T021 Walk through `specs/005-self-describing-commands/quickstart.md` on a scratch database (`AI_TASKS_DB_PATH` in a temporary directory) and record the result in the pull request
+- [x] T021 Walk through `specs/005-self-describing-commands/quickstart.md` on a scratch database (`AI_TASKS_DB_PATH` in a temporary directory) and record the result in the pull request
 
 ## Dependencies
 

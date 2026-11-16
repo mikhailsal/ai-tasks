@@ -213,12 +213,13 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 
 ## Specification 005: self-describing commands
 
-| Requirement                                                     | Evidence                                                                                                                                  |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| FR-001, FR-003 fields from the schema                           | `tests/unit/flatten-schema.test.ts`, `tests/contracts/help.test.ts`                                                                       |
-| FR-002, FR-010 revision values and sources shared with refusals | `src/core/database/mutation-requirements.ts`; `tests/contracts/help.test.ts` (US4), source comparison in `tests/fixtures/help-checker.ts` |
-| FR-004, SC-001 runnable examples                                | `tests/contracts/help-examples.test.ts` on `tests/fixtures/help-fixtures.ts` states                                                       |
-| FR-006, FR-007 one registry, no drift                           | coverage and option probes in `tests/contracts/help.test.ts`; drop and unknown-field probes in `tests/fixtures/help-checker.ts`           |
-| SC-002 checks catch faults                                      | `tests/contracts/help-checker.test.ts`                                                                                                    |
-| FR-008, FR-009, FR-011 syntax, no database, unknown names       | `tests/contracts/help.test.ts`                                                                                                            |
-| FR-012 human help unchanged                                     | snapshot `tests/fixtures/help-human-snapshot.txt` in `tests/contracts/help.test.ts`                                                       |
+| Requirement                                                     | Evidence                                                                                                                                                                    |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-003 fields from the schema                           | `tests/unit/flatten-schema.test.ts`, `tests/contracts/help.test.ts`                                                                                                         |
+| FR-002, FR-010 revision values and sources shared with refusals | `src/core/database/mutation-requirements.ts`; `tests/contracts/help.test.ts` (US4), source comparison in `tests/fixtures/help-checker.ts`                                   |
+| FR-004, SC-001 runnable examples                                | `tests/contracts/help-examples.test.ts` on `tests/fixtures/help-fixtures.ts` states                                                                                         |
+| FR-006, FR-007 one registry, no drift                           | coverage and option probes in `tests/contracts/help.test.ts`; drop and unknown-field probes in `tests/fixtures/help-checker.ts`                                             |
+| SC-002 checks catch faults                                      | `tests/contracts/help-checker.test.ts`                                                                                                                                      |
+| FR-008, FR-009, FR-011 syntax, no database, unknown names       | `tests/contracts/help.test.ts`                                                                                                                                              |
+| FR-012 human help unchanged                                     | snapshot `tests/fixtures/help-human-snapshot.txt` in `tests/contracts/help.test.ts`                                                                                         |
+| SC-003 cold agent, help only                                    | 2026-11-16, Haiku, fresh scratch database: project, ordinary task and list in 11 calls, 0 refusals (runs 1 and 2 had one `meta` scope refusal each; fixed by `scope_flags`) |
