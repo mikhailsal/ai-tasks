@@ -8,6 +8,7 @@ import { getApi } from '../data/api.js';
 import { errorMessage, projectPageSchema, readProject } from '../data/resources.js';
 import { ProjectEditor } from './ProjectEditor.js';
 import { ProjectDetail } from './ProjectDetail.js';
+import { WorkerBadge } from '../components/WorkerStatus.js';
 
 function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean }) {
   const choosingTask = new URLSearchParams(window.location.search).get('new_task') === 'true';
@@ -94,6 +95,7 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
                 {project.archived_at !== null ? ' · В архиве' : ''}
               </p>
             )}
+            {project.archived_at === null && <WorkerBadge worker={project.worker} />}
           </li>
         ))}
       </ul>

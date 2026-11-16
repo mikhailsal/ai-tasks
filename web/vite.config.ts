@@ -38,6 +38,7 @@ const browserSchemaFiles = new Set([
   'recurrence-query.ts',
   'settings.ts',
   'tasks.ts',
+  'worker-status.ts',
   'task-query.ts',
   'read-views.ts',
   'recovery.ts',

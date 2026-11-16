@@ -3,7 +3,7 @@ import { tasks } from '../../../schema/entities.js';
 import { occurrences, recurrenceState, scheduleGenerations } from '../../../schema/recurrence.js';
 import { hint } from '../../diagnostics/hints.js';
 import type { DatabaseConnection } from '../../database/types.js';
-import { readProjectConfiguration, requireProject } from '../../projects/read.js';
+import { workflows } from './workflows.js';
 import { localTimeOf } from '../../recurrence/derive-local-time.js';
 import type { AdvisoryProvider, AdvisoryRequest, Finding } from '../collect.js';
 
@@ -37,23 +37,6 @@ export function recurringTaskIds(data: unknown, found = new Set<string>()): Set<
     for (const value of Object.values(data)) recurringTaskIds(value, found);
   }
   return found;
-}
-
-function workflows(database: Database) {
-  const cache = new Map<
-    string,
-    ReturnType<typeof readProjectConfiguration>['recurring_workflow']
-  >();
-  return (slug: string) => {
-    const known = cache.get(slug);
-    if (known) return known;
-    const workflow = readProjectConfiguration(
-      database,
-      requireProject(database, slug),
-    ).recurring_workflow;
-    cache.set(slug, workflow);
-    return workflow;
-  };
 }
 
 /** Rows of the named tasks; an all-projects read covers every project it lists. */

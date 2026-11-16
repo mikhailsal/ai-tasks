@@ -5,6 +5,17 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Agent-visible changes: worker liveness (spec 011)
+
+- `meta` gains `data.workers`: `[{project_slug, status, last_pass_at?, tolerance_seconds}]` for
+  every active project; project reads (CLI and HTTP) gain `worker: {status, last_pass_at?}`.
+  Status is `healthy`, `stale` (no pass for more than 300 s) or `never`.
+- Advisories `worker_stale` and `worker_never_ran` on dependent reads of a project with an
+  active recurring task; the remedy names `serve` and `worker run --project SLUG`.
+- Migration `0006_worker_passes`: one row per project, written by the worker at most once a
+  minute, not audited and not counted in `read_revision`.
+- The web shows the status on the project list, the project, the task and its occurrences.
+
 ### Announced change: advisories on success responses (spec 010)
 
 - Success envelopes may now carry two more top-level keys, `advisories` (at most 10) and

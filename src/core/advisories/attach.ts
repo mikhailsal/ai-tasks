@@ -3,9 +3,13 @@ import { successEnvelopeSchema } from '../../schema/envelopes.js';
 import type { DatabaseConnection } from '../database/types.js';
 import { collectAdvisories, type AdvisoryProvider, type AdvisoryRequest } from './collect.js';
 import { readinessProvider } from './providers/readiness.js';
+import { workerProvider } from './providers/worker.js';
 
 /** Registered providers, in no particular order: the catalogue orders the output. */
-export const advisoryProviders: readonly AdvisoryProvider[] = [readinessProvider];
+export const advisoryProviders: readonly AdvisoryProvider[] = [
+  readinessProvider,
+  workerProvider(Date.now),
+];
 
 /**
  * Adds advisories to a success envelope from current state (spec 010 R3). Anything that is not

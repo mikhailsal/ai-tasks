@@ -1,3 +1,4 @@
+import { AdvisoryNotice } from '../components/AdvisoryNotice.js';
 import { OccurrenceProgress } from './occurrence-progress.js';
 import { shiftDay, todayIn } from './occurrence-values.js';
 import { occurrenceLabels } from './occurrence-model.js';
@@ -15,6 +16,11 @@ export function Occurrences(props: OccurrencesProps) {
   return (
     <section className="stack" aria-label="Повторения задачи">
       <h2>История повторений</h2>
+      <AdvisoryNotice
+        advisories={page.query.data?.advisories ?? []}
+        checkedAt={page.query.data?.meta.now}
+        timezone={props.metadata.timezone}
+      />
       {!page.online && (
         <p role="alert">
           Нет соединения. Выполнение и отмена недоступны; выбор сохранён в черновике.

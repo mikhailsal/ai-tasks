@@ -6,6 +6,7 @@ export const migrationTimes = {
   sharedBoardOrder: 1792710618222,
   occurrenceReasons: 1794823297325,
   occurrenceDay: 1794824922838,
+  workerPasses: 1794832559268,
 } as const;
 
 /** Undoes 0005 (spec 008). */
@@ -36,7 +37,8 @@ export function rewindMigrations(
   from: keyof typeof migrationTimes,
 ): void {
   const time = migrationTimes[from];
-  undoOccurrenceDay(sqlite);
+  sqlite.exec('DROP TABLE worker_passes;');
+  if (time <= migrationTimes.occurrenceDay) undoOccurrenceDay(sqlite);
   if (time <= migrationTimes.occurrenceReasons) undoOccurrenceReasons(sqlite);
   sqlite.prepare('DELETE FROM __drizzle_migrations WHERE created_at >= ?').run(time);
 }

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { attachAdvisories } from '../../src/core/advisories/attach.js';
+import { readinessProvider } from '../../src/core/advisories/providers/readiness.js';
 import { completeByDay } from '../../src/core/shortcuts/complete-by-day.js';
 import { getRecurrence } from '../../src/core/queries/recurrence.js';
 import { localTimeOf } from '../../src/core/recurrence/derive-local-time.js';
@@ -29,6 +30,7 @@ function codes(operation: string, envelope: unknown, input?: unknown) {
     fixture.connection.db,
     { operation, projectSlug: 'alpha', input },
     envelope,
+    [readinessProvider],
   ) as { advisories?: { code: string; subject?: { id: string } }[] };
   return advised.advisories?.map((item) => item.code) ?? [];
 }

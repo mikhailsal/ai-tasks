@@ -8,6 +8,7 @@ import type { CoreContext } from '../database/types.js';
 import { projectResource, requireProject } from '../projects/read.js';
 import { readClock } from '../clock.js';
 import { parseInput } from '../validation.js';
+import { lastPasses, projectWorker, workerView } from '../worker/status.js';
 import { nextPageCursor, paginationContext, queryMetadata, queryState } from './page.js';
 import { queryFingerprint } from './cursor.js';
 type ReadContext = Pick<CoreContext, 'connection' | 'now'>;
@@ -39,7 +40,7 @@ export function getProject(context: ReadContext, projectSlug: string) {
     const project = requireProject(transaction, projectSlug);
     return projectEnvelopeSchema.parse({
       ok: true,
-      data: projectResource(project),
+      data: { ...projectResource(project), worker: projectWorker(transaction, project.slug, now) },
       meta: queryMetadata(state, now),
     });
   });
@@ -71,7 +72,15 @@ export function listProjects(context: ReadContext, input: z.input<typeof project
       .limit(parsed.limit + 1)
       .offset(page.offset)
       .all();
-    const items = rows.slice(0, parsed.limit).map(projectResource);
+    const listed = rows.slice(0, parsed.limit);
+    const passes = lastPasses(
+      transaction,
+      listed.map((row) => row.slug),
+    );
+    const items = listed.map((row) => ({
+      ...projectResource(row),
+      worker: workerView(passes.get(row.slug) ?? null, now),
+    }));
     const nextCursor =
       rows.length > parsed.limit
         ? nextPageCursor({

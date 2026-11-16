@@ -16,6 +16,7 @@ export const hintActions = [
   'transition_task',
   'review_schedule',
   'no_action',
+  'start_service',
 ] as const;
 
 /** Blocker reasons in the order the steps must be taken. */

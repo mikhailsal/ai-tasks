@@ -300,3 +300,17 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 | FR-005 derived local time                                           | `tests/unit/derive-local-time.test.ts`, `tests/integration/readiness-advisories.test.ts`         |
 | FR-006 mismatch until decided                                       | `tests/integration/readiness-advisories.test.ts`                                                 |
 | FR-007, FR-008 nothing newly rejected                               | existing recurrence suites unchanged and green                                                   |
+
+## Specification 011: worker liveness
+
+| Requirement                                                     | Evidence                                                                                                                                                                                |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 pass record, throttle, last write wins                   | `tests/integration/worker-status.test.ts`, `tests/integration/worker-process.test.ts`                                                                                                   |
+| FR-002, US1 status in meta and project reads                    | `tests/integration/worker-process.test.ts` (compiled worker: never, healthy, stale, healthy), `tests/contracts/worker-status-cli.test.ts`, `tests/contracts/worker-status-http.test.ts` |
+| FR-003, SC-001 tolerance 300 s                                  | `tests/integration/worker-status.test.ts`, `tests/integration/worker-process.test.ts`                                                                                                   |
+| FR-004, US2, SC-002 advisory only with an active recurring task | `tests/integration/worker-status.test.ts` (8 Nov case), `tests/contracts/worker-status-cli.test.ts`                                                                                     |
+| FR-005, US3, SC-003 web                                         | `tests/e2e/worker-notice.spec.ts`                                                                                                                                                       |
+| FR-006 remedy                                                   | `tests/contracts/worker-status-cli.test.ts`                                                                                                                                             |
+| FR-007 reads write nothing                                      | `tests/integration/worker-status.test.ts` (total_changes)                                                                                                                               |
+| FR-008 compatibility                                            | `tests/integration/migration-0006.test.ts`, existing suites, `CHANGELOG.md`                                                                                                             |
+| SC-004 100 passes with clock steps                              | `tests/integration/worker-status.test.ts`                                                                                                                                               |

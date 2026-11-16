@@ -37,8 +37,10 @@ response, so it stays while its condition holds and disappears when the conditio
 
 ## Catalogue
 
-| Code                       | Message                                                             | Meaning                                                                                                                       | Spec |
-| -------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `recurring_not_generating` | This recurring task generates no occurrences in its current status. | The status category is draft, so no occurrence is created.                                                                    | 012  |
-| `schedule_time_mismatch`   | The first deadline and the schedule local time differ.              | Both times were given and differ; later occurrences use the schedule local time. Shown until the first occurrence is decided. | 012  |
-| `schedule_time_derived`    | The schedule local time was derived from the first deadline.        | local_time was omitted in this create or configure request.                                                                   | 012  |
+| Code                       | Message                                                                          | Meaning                                                                                                                       | Spec |
+| -------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---- |
+| `worker_stale`             | The recurring worker has not run recently; occurrence lists may be incomplete.   | No worker pass for this project within the tolerance (300 s), and it has an active recurring task.                            | 011  |
+| `worker_never_ran`         | The recurring worker has never run for this project; no occurrences are created. | No worker pass was ever recorded for this project, and it has an active recurring task.                                       | 011  |
+| `recurring_not_generating` | This recurring task generates no occurrences in its current status.              | The status category is draft, so no occurrence is created.                                                                    | 012  |
+| `schedule_time_mismatch`   | The first deadline and the schedule local time differ.                           | Both times were given and differ; later occurrences use the schedule local time. Shown until the first occurrence is decided. | 012  |
+| `schedule_time_derived`    | The schedule local time was derived from the first deadline.                     | local_time was omitted in this create or configure request.                                                                   | 012  |

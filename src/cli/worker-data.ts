@@ -6,6 +6,7 @@ import { DomainError } from '../core/errors.js';
 import { discoverDueWork } from '../core/queries/due-work.js';
 import { readMeta } from '../core/queries/meta.js';
 import { tickRecurrence } from '../core/recurrence/tick.js';
+import { createPassRecorder } from '../core/worker/record-pass.js';
 import { mutationEnvelopeSchema, successEnvelopeSchema } from '../schema/envelopes.js';
 /** Stable identity covers the exact core request, excluding the discovery clock/has_more. */
 export function workerTickInput(
@@ -35,8 +36,14 @@ const changedProposalCodes = new Set([
   'CONFIG_CONFLICT',
   'DATABASE_EPOCH_CONFLICT',
 ]);
-export function workerCallbacks(connection: DatabaseConnection, projectSlug: string) {
+export function workerCallbacks(
+  connection: DatabaseConnection,
+  projectSlug: string,
+  now: () => number = Date.now,
+) {
   const read = createReadContext({ connection });
+  // Spec 011: a pass that finds nothing is the healthy case and is recorded too.
+  const recordPass = createPassRecorder(connection, projectSlug);
   const context = createContext({
     connection,
     actor: `ai-cli:${projectSlug}`,
@@ -49,7 +56,10 @@ export function workerCallbacks(connection: DatabaseConnection, projectSlug: str
     processBatch() {
       if (pending === undefined) {
         const discovered = discoverDueWork(read, projectSlug);
-        if (discovered.data.tasks.length === 0) return { hasMore: false };
+        if (discovered.data.tasks.length === 0) {
+          recordPass(now());
+          return { hasMore: false };
+        }
         pending = workerTickInput(projectSlug, discovered);
         selectedIds = discovered.data.tasks.map((task) => task.task_id);
         moreDiscovered = discovered.data.has_more;
@@ -57,6 +67,7 @@ export function workerCallbacks(connection: DatabaseConnection, projectSlug: str
       try {
         const result = tickRecurrence(context, projectSlug, pending);
         pending = undefined;
+        recordPass(now());
         process.stderr.write('Recurring work processed\n');
         return { hasMore: progressSchema.parse(result.data).has_more || moreDiscovered };
       } catch (error) {

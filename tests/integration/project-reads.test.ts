@@ -102,6 +102,8 @@ describe('coherent pure project and configuration reads', () => {
       config_revision: 1,
       created_at: new Date(seedTime).toISOString(),
       updated_at: new Date(seedTime).toISOString(),
+      // Spec 011: reads show the worker; no pass was ever recorded here.
+      worker: { status: 'never' },
     });
     expect(getProjectConfiguration(context, 'alpha').data).toEqual({
       revision: 1,

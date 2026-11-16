@@ -8,6 +8,7 @@ import {
   timestampSchema,
   uuidSchema,
 } from './values.js';
+import { workerViewSchema } from './worker-status.js';
 export const projectPrioritySchema = z
   .int()
   .check(z.minimum(-2147483648))
@@ -49,5 +50,7 @@ export const projectResourceSchema = z.strictObject({
   created_at: timestampSchema,
   updated_at: timestampSchema,
   day_start_hour: z.exactOptional(dayStartHourSchema),
+  // Spec 011: present on project reads, absent in mutation results and audit snapshots.
+  worker: z.exactOptional(workerViewSchema),
 });
 export type ProjectResource = z.infer<typeof projectResourceSchema>;

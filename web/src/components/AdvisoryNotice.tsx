@@ -5,10 +5,22 @@ import { Button } from './Button.js';
 
 const VISIBLE = 2;
 
-/** Advisories for one item, or the list-wide ones when `subjectId` is left out (spec 010 R4). */
+/**
+ * Advisories for one item, or the list-wide ones when `subjectId` is left out (spec 010 R4).
+ * A project advisory (spec 011) concerns the whole list, so it is list-wide.
+ */
 export function itemAdvisories(advisories: readonly Advisory[], subjectId?: string): Advisory[] {
   return advisories.filter((advisory) =>
-    subjectId === undefined ? advisory.subject === undefined : advisory.subject?.id === subjectId,
+    subjectId === undefined
+      ? advisory.subject === undefined || advisory.subject.type === 'project'
+      : advisory.subject?.id === subjectId,
+  );
+}
+
+/** One item's own advisories plus the project-wide ones, for a screen that shows one item. */
+export function pageAdvisories(advisories: readonly Advisory[], subjectId?: string): Advisory[] {
+  return advisories.filter(
+    (advisory) => advisory.subject?.type === 'project' || advisory.subject?.id === subjectId,
   );
 }
 

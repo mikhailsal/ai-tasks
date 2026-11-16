@@ -42,6 +42,18 @@ change what you should do next. Each has a stable `code`, a fixed `message`, a `
 and, when it concerns one item, a `subject`. Act on the remedy; the list of codes is in
 [advisories.md](advisories.md). In human mode they are printed on stderr.
 
+### Is the recurring worker running?
+
+Occurrences are created by a worker, not by reads. `meta --all-projects --json` lists
+`data.workers`: per active project `status` (`healthy`, `stale`, `never`), `last_pass_at` and
+`tolerance_seconds` (300). Project reads carry the same `worker` field. A worker that has not
+passed for more than 300 s is `stale`. While it is `stale` or `never`, reads of a project with
+an active recurring task (occurrence list and get, recurrence get, agenda, task list and get)
+carry `worker_stale` or `worker_never_ran`: an empty occurrence list then means "not created
+yet", not "nothing due". Start the service with `serve --all-projects`, which runs a worker for
+each active project; `worker run --project SLUG` runs one by hand. Reading the status never
+starts or stops a worker.
+
 ## 1. Choose a read scope
 
 Every application read needs a scope. Writes always need `--project`.
