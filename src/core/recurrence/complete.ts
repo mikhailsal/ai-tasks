@@ -96,7 +96,7 @@ export function completeOccurrences(
     projectSlug,
     operation: 'occurrence.complete',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: true },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       const command = occurrenceCommandContext(transaction, projectSlug, taskId);
       const payload = parseInput(completeOccurrencesSchema, input.payload);

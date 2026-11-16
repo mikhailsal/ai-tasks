@@ -50,7 +50,6 @@ export function createTask(context: CoreContext, projectSlug: string, input: Mut
     projectSlug,
     operation: 'task.create',
     input,
-    guards: { settings: 'recurring' },
     handler(transaction, now) {
       const project = requireProject(transaction, projectSlug);
       assertProjectActive(project);
@@ -194,7 +193,7 @@ export function archiveTask(
     projectSlug,
     operation: 'task.archive',
     input,
-    guards: { entity: { type: 'task', id }, settings: 'recurring' },
+    guards: { entity: { type: 'task', id } },
     handler(transaction, now) {
       const project = requireProject(transaction, projectSlug);
       assertProjectActive(project);
@@ -243,7 +242,7 @@ export function restoreTask(
     projectSlug,
     operation: 'task.restore',
     input,
-    guards: { entity: { type: 'task', id }, settings: 'recurring' },
+    guards: { entity: { type: 'task', id } },
     handler(transaction, now) {
       const project = requireProject(transaction, projectSlug);
       assertProjectActive(project);

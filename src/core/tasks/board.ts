@@ -63,7 +63,7 @@ export function moveBoardTask(
     projectSlug,
     operation: 'task.position',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: 'recurring' },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       const { project, before, data, config, oldPosition } = prepareMove(transaction, {
         projectSlug,

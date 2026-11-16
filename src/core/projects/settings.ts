@@ -40,7 +40,6 @@ export function updateSettings(context: CoreContext, projectSlug: string, input:
     projectSlug,
     input,
     operation: 'settings.update',
-    guards: { settings: true },
     handler(transaction, now) {
       const payload = parseInput(settingsInputSchema, input.payload);
       const before = recurrenceSettings(transaction);

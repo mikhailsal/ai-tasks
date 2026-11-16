@@ -21,7 +21,6 @@ export function createProject(context: CoreContext, projectSlug: string, input: 
     projectSlug,
     operation: 'project.create',
     input,
-    guards: { projectRequired: false, config: false },
     handler(transaction, now) {
       const data = parseInput(projectCreateSchema, input.payload);
       if (data.slug !== projectSlug)

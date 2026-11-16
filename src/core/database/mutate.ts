@@ -17,6 +17,7 @@ import { findReceipt, fingerprintRequest, storeReceipt } from '../audit/receipts
 import { domainError, normalizeError } from '../errors.js';
 import { formatTimestamp } from '../time.js';
 import { enforceMutationGuards, mutationGuardsSchema } from './guards.js';
+import { requirementsFor, type RevisionRequirements } from './mutation-requirements.js';
 import {
   missingRevisions,
   missingRevisionsError,
@@ -29,6 +30,8 @@ type MutationCommand = {
   projectSlug: string;
   input: MutationEnvelope;
   guards?: z.input<typeof mutationGuardsSchema>;
+  /** Only for operations outside `mutationRequirements` (test harnesses). */
+  requirements?: RevisionRequirements;
   handler: (
     transaction: DatabaseTransaction,
     now: number,
@@ -46,6 +49,7 @@ function parseCommand(command: MutationCommand) {
       projectSlug: slugSchema.parse(command.projectSlug),
       guards: mutationGuardsSchema.parse(command.guards ?? {}),
       operation: z.string().check(z.minLength(1)).parse(command.operation),
+      requirements: requirementsFor(command.operation, command.requirements),
     };
   } catch (error) {
     throw envelopeFailure(command, error);
@@ -61,18 +65,10 @@ function recurringPayload(input: unknown): boolean {
 /** Missing envelope tokens are reported together with every other missing revision value. */
 function envelopeFailure(command: MutationCommand, error: unknown) {
   const normalized = normalizeError(error);
-  const guards = mutationGuardsSchema.safeParse(command.guards ?? {});
-  if (!guards.success) return normalized;
+  const requirements = requirementsFor(command.operation, command.requirements);
   const missing = missingRevisions(
     command.input,
-    requiredRevisions(
-      {
-        settings: guards.data.settings,
-        entity: guards.data.entity !== undefined,
-        config: guards.data.config !== false && guards.data.projectRequired !== false,
-      },
-      { recurring: recurringPayload(command.input) },
-    ),
+    requiredRevisions(requirements, { recurring: recurringPayload(command.input) }),
   );
   if (!missing.includes('operation_id') && !missing.includes('database_epoch')) return normalized;
   const details =
@@ -81,7 +77,7 @@ function envelopeFailure(command: MutationCommand, error: unknown) {
     !Array.isArray(normalized.details)
       ? normalized.details
       : {};
-  return missingRevisionsError(missing, details);
+  return missingRevisionsError(missing, details, requirements);
 }
 function currentState(transaction: DatabaseTransaction) {
   const state = transaction.select().from(applicationState).where(eq(applicationState.id, 1)).get();
@@ -91,7 +87,7 @@ function currentState(transaction: DatabaseTransaction) {
 /** Every state write, immutable event and receipt shares this synchronous transaction. */
 export function executeMutation(command: MutationCommand) {
   const { context } = command;
-  const { input, projectSlug, guards, operation } = parseCommand(command);
+  const { input, projectSlug, guards, operation, requirements } = parseCommand(command);
   const requestHash = fingerprintRequest({
     operation,
     project_slug: projectSlug,
@@ -124,6 +120,7 @@ export function executeMutation(command: MutationCommand) {
           projectSlug,
           input,
           guards,
+          requirements,
           settingsRevision: state.revision,
         });
         const now = context.now();

@@ -31,7 +31,8 @@ function command(overrides: Partial<Command> = {}) {
       expected_settings_revision: 1,
       payload: { priority: 5 },
     },
-    guards: { entity: { type: 'project', id: fixture.ids.alpha }, settings: true },
+    guards: { entity: { type: 'project', id: fixture.ids.alpha } },
+    requirements: { entity: 'project', settings: true },
     handler(transaction, now) {
       transaction
         .update(projects)
@@ -247,8 +248,7 @@ it.each([
         JSON.parse('{"priority":5,"values":[1,2],"__proto__":{"changed":true}}'),
       ),
     };
-  if (change === 'target')
-    changed.guards = { entity: { type: 'project', id: fixture.ids.beta }, settings: true };
+  if (change === 'target') changed.guards = { entity: { type: 'project', id: fixture.ids.beta } };
   expect(() => command(changed)).toThrowError(
     expect.objectContaining({ code: 'IDEMPOTENCY_CONFLICT' }),
   );
@@ -419,7 +419,7 @@ it('commits creation in a new explicit scope without nonexistent entity/config r
     operation: 'test.project.create',
     projectSlug: 'gamma',
     input,
-    guards: { projectRequired: false, config: false },
+    requirements: { projectRequired: false, config: false },
     handler(transaction, now) {
       transaction
         .insert(projects)
@@ -477,7 +477,7 @@ it('rolls back an internally inconsistent new-project guard configuration', () =
   const before = mutationSnapshot(fixture);
   expect(() =>
     command({
-      guards: { projectRequired: false },
+      requirements: { projectRequired: false },
       handler() {
         throw new Error('Invalid guards reached the handler');
       },

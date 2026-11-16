@@ -90,7 +90,7 @@ export function configureRecurrence(
     projectSlug,
     operation: 'recurrence.configure',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: true },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       const command = commandContext(transaction, projectSlug, taskId);
       const before = command.task;
@@ -336,7 +336,7 @@ export function controlRecurrence(
     projectSlug,
     operation: 'recurrence.control',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: true },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       const command = commandContext(transaction, projectSlug, taskId);
       const payload = parseInput(controlRecurrenceSchema, input.payload);

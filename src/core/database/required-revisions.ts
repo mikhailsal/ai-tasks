@@ -1,14 +1,11 @@
 import type { JsonValue } from '../../schema/values.js';
 import { domainError, normalizeError, type DomainError } from '../errors.js';
-import { revisionSources, type RevisionField } from '../diagnostics/hints.js';
+import { hint, revisionSources, type Hint, type RevisionField } from '../diagnostics/hints.js';
+import type { RevisionRequirements } from './mutation-requirements.js';
+
+export type { RevisionRequirements };
 
 /** Revision values a mutation needs, in guard order (spec 004 R4; reused by spec 005 help). */
-export type RevisionRequirements = {
-  settings?: boolean | 'recurring' | undefined;
-  entity?: boolean | undefined;
-  config?: boolean | undefined;
-};
-
 export function requiredRevisions(
   requirements: RevisionRequirements,
   options: { recurring?: boolean } = {},
@@ -16,12 +13,35 @@ export function requiredRevisions(
   const fields: RevisionField[] = ['operation_id', 'database_epoch'];
   if (requirements.settings === true) fields.push('expected_settings_revision');
   if (requirements.entity) fields.push('expected_revision');
-  if (requirements.config !== false) fields.push('expected_config_revision');
+  if (requirements.config !== false && requirements.projectRequired !== false)
+    fields.push('expected_config_revision');
   // The recurring settings check runs after the generic guards today, so it is listed last
   // and `details.field` keeps naming the same first problem as before.
   if (requirements.settings === 'recurring' && options.recurring)
     fields.push('expected_settings_revision');
   return fields;
+}
+
+const entitySources = {
+  task: revisionSources.expected_revision,
+  project: hint('read_revision', 'Read data.revision from project get', {
+    command: 'project get',
+    field: 'expected_revision',
+  }),
+  config: hint('read_revision', 'Read data.revision from config get', {
+    command: 'config get',
+    field: 'expected_revision',
+  }),
+};
+
+/** Where one revision value is read for this mutation. */
+export function revisionSource(
+  field: RevisionField,
+  requirements: RevisionRequirements = {},
+): Hint {
+  if (field === 'expected_revision' && requirements.entity)
+    return entitySources[requirements.entity];
+  return revisionSources[field];
 }
 
 function present(input: unknown, field: string): boolean {
@@ -44,11 +64,9 @@ export function missingRevisions(
 export function missingRevisionsError(
   missing: readonly RevisionField[],
   base: Record<string, JsonValue> = {},
+  requirements: RevisionRequirements = {},
 ): DomainError {
-  const list = missing.map((field) => {
-    const source = revisionSources[field];
-    return { field, source };
-  });
+  const list = missing.map((field) => ({ field, source: revisionSource(field, requirements) }));
   const text = list
     .map((entry) =>
       'command' in entry.source ? `${entry.field} (${entry.source.command})` : entry.field,

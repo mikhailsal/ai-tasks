@@ -57,7 +57,7 @@ export function transitionTask(
     projectSlug,
     operation: 'task.transition',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: 'recurring' },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       return applyTaskTransition(transaction, { projectSlug, taskId, input, now });
     },
