@@ -87,6 +87,25 @@ function joinAllowed(detail: Detail): string {
   return `${allowed.join(', ')}${more}`;
 }
 
+function describeKeys(detail: Detail, path: string): string {
+  const keys = Array.isArray(detail.keys) ? detail.keys.map(String) : [];
+  return keys.length > 0
+    ? `unknown field ${keys.join(', ')} in ${path}`
+    : `unknown field in ${path}`;
+}
+
+function describeUnion(detail: Detail, path: string): string {
+  const alternatives = Array.isArray(detail.alternatives) ? detail.alternatives : [];
+  const [only] = alternatives;
+  const allowed: unknown =
+    alternatives.length === 1 && typeof only === 'object' && only !== null
+      ? Reflect.get(only, 'allowed')
+      : undefined;
+  if (Array.isArray(allowed) && allowed.length > 0)
+    return `${path} must be one of ${allowed.map(String).join(', ')}`;
+  return `${path} must match one of ${String(alternatives.length)} shapes`;
+}
+
 function describe(detail: Detail, path: string): string {
   switch (detail.code) {
     case 'invalid_type':
@@ -95,20 +114,14 @@ function describe(detail: Detail, path: string): string {
       return `${path} must be one of ${joinAllowed(detail)}`;
     case 'invalid_format':
       return `${path} must be a valid ${String(detail.expected)}`;
-    case 'unrecognized_keys': {
-      const keys = Array.isArray(detail.keys) ? detail.keys.map(String) : [];
-      return keys.length > 0
-        ? `unknown field ${keys.join(', ')} in ${path}`
-        : `unknown field in ${path}`;
-    }
+    case 'unrecognized_keys':
+      return describeKeys(detail, path);
     case 'too_small':
       return `${path} must be at least ${String(detail.minimum)}`;
     case 'too_big':
       return `${path} must be at most ${String(detail.maximum)}`;
-    case 'invalid_union': {
-      const alternatives = Array.isArray(detail.alternatives) ? detail.alternatives : [];
-      return `${path} must match one of ${alternatives.length} shapes`;
-    }
+    case 'invalid_union':
+      return describeUnion(detail, path);
     default:
       return `${path} is invalid`;
   }

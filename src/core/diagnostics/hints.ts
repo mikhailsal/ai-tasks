@@ -1,16 +1,7 @@
+import { hintActions } from '../../schema/diagnostics.js';
+
 /** Corrective next steps (spec 004 data-model, Hint). The action list is closed. */
-export const hintActions = [
-  'choose_scope',
-  'read_revision',
-  'read_allowed_values',
-  'pause_parent',
-  'cancel_future',
-  'complete_occurrence',
-  'close_as_missed',
-  'run_tick',
-  'run_migration',
-  'use_supported_option',
-] as const;
+export { hintActions };
 export type HintAction = (typeof hintActions)[number];
 
 export type Hint = { action: HintAction; text: string; command?: string; field?: string };

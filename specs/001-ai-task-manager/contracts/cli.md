@@ -26,7 +26,7 @@ Common options:
 | `--operation-id <uuid>` | Required for every mutation, chosen once and reused for exact retry |
 | `--database-epoch <uuid>` | Required mutation epoch from a successful read |
 | `--expected-revision <integer>` | Existing target revision |
-| `--expected-config-revision <integer>` | Current project config revision for project-owned writes |
+| `--expected-config-revision <integer>` | Current project config revision for project-owned writes; `config migrate` also sends it as `expected_revision` |
 | `--expected-settings-revision <integer>` | Required for schedule-dependent writes to detect timezone changes |
 | `--input <file>` or `--input -` | UTF-8 JSON payload from file or stdin; mutually exclusive sources |
 | `--limit <1..200>`, `--cursor <opaque>` | Pagination for list/read views |

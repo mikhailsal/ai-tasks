@@ -36,6 +36,37 @@ The API supervisor starts recurring workers for active projects. Workers process
 at startup, continue bounded catch-up batches, and check again every 30 seconds. Reads do
 not tick recurrence or silently change task state.
 
+## First task from the CLI
+
+This path goes from a fresh checkout to a created and listed task. Run `npm ci` and
+`npm run build` first. Prepare the environment once per shell:
+
+```bash
+export AI_TASKS_DB_PATH="$(mktemp -d)/ai-tasks.sqlite"
+export AI_TASKS_BACKUP_DIR="$(dirname "$AI_TASKS_DB_PATH")/backups"
+```
+
+When `AI_TASKS_DB_PATH` is not set, the CLI and server use `data/ai-tasks.sqlite` in the
+current working directory. A command against a database that does not exist yet fails with
+`INTERNAL_ERROR` and a `run_migration` hint; it never creates the file.
+
+Then five commands:
+
+```bash
+npm run db:migrate
+EPOCH=$(node dist/cli.js meta --all-projects --json | node -pe 'JSON.parse(require("fs").readFileSync(0)).meta.database_epoch')
+echo "{\"operation_id\":\"$(node -p 'crypto.randomUUID()')\",\"database_epoch\":\"$EPOCH\",\"slug\":\"demo\",\"name\":\"Demo\",\"emoji\":\"🧭\"}" | node dist/cli.js project create --project demo --input - --json
+echo "{\"operation_id\":\"$(node -p 'crypto.randomUUID()')\",\"database_epoch\":\"$EPOCH\",\"expected_config_revision\":1,\"kind\":\"ordinary\",\"title\":\"First task\"}" | node dist/cli.js task create --project demo --input - --json
+node dist/cli.js task list --project demo --json
+```
+
+A new project starts at configuration revision 1; later changes read it with `config get`.
+Every example uses `--json`. Without it, a success prints only `data` in a readable form and
+omits `meta` (database epoch, revisions of the response); refusals are JSON on stderr in
+both modes. A refusal's `error.details` names what to fix: allowed values, every missing
+revision value and where to read it, nearest command or option names, and blockers in the
+order to resolve them. The [agent guide](docs/agent-guide.md) has recipes for common jobs.
+
 ## CLI and contracts
 
 Use the compiled entry directly; a global installation is unnecessary:

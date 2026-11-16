@@ -59,7 +59,8 @@ revision but no task revision. Schedule-dependent operations (recurring create/c
 revision; task edits, transitions, dependency changes, recurrence changes, and occurrence
 batches use parent task revision. Occurrence batches also provide every selected occurrence's
 revision. Each accepted change increments the affected entity's revision. Config migrations
-include the revisions of every affected task. Global settings writes use
+include the revisions of every affected task and send the current configuration revision twice:
+as `expected_revision` and as `expected_config_revision`. Global settings writes use
 `expected_settings_revision` instead of a separate `expected_revision`, plus the attribution
 project's `expected_config_revision`, and name that project explicitly; restore has the
 special preconditions below.
@@ -140,7 +141,8 @@ task values. Migration covers archived tasks too as an explicit configuration-ma
 emoji reservations, recurrence retirement rules, and values atomically; only ordinary
 workflow edges and their confirmation requirements are bypassed. History retains old values
 and their config meaning. Unknown, duplicate, missing, or invalid mappings reject the whole
-operation. Dependency satisfaction is checked against the complete projected state for each
+operation; a mapping for a status or priority that no task uses is unknown for this purpose, and
+preview names it with its position and stored key and points to the required mappings. Dependency satisfaction is checked against the complete projected state for each
 ordinary task whose status ID or category changes and whose resulting category is in_progress,
 review, or completed. A label/color/edge-only change or priority-only remapping does not count as
 a status transition. Unchanged dependents, including those in other projects, may remain in an

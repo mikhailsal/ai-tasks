@@ -8,8 +8,15 @@ import { priorityColumns } from './priorities.js';
 import { requireWorkflowStatus, workflowFor } from './workflows.js';
 import type { MigrationPlan, ProjectedTask, StoredTask } from './migration-types.js';
 
+/** Preview issues name where the problem is; exact duplicates are reported once (FR-013). */
 function invalid(plan: MigrationPlan, message: string): void {
+  if (plan.issues.some((issue) => issue.code === 'VALIDATION_ERROR' && issue.message === message))
+    return;
   plan.issues.push({ code: 'VALIDATION_ERROR', message });
+}
+
+function safeStatus(kind: string, status: string): string {
+  return /^[a-z0-9_-]{1,64}$/u.test(status) ? `${kind}:${status}` : kind;
 }
 
 function statusKey(kind: string, status: string): string {
@@ -23,14 +30,16 @@ function priorityKey(value: unknown): string {
 function statusMappings(plan: MigrationPlan, rows: StoredTask[]) {
   const used = new Set(rows.map((task) => statusKey(task.kind, task.statusId)));
   const mappings = new Map<string, string>();
-  for (const mapping of plan.input.status_mappings) {
+  for (const [index, mapping] of plan.input.status_mappings.entries()) {
     const key = statusKey(mapping.kind, mapping.from_status_id);
-    if (mappings.has(key)) invalid(plan, 'Status mappings must have distinct sources');
-    if (!used.has(key)) invalid(plan, 'A status mapping source is not in use');
+    const at = `status_mappings[${String(index)}] (${safeStatus(mapping.kind, mapping.from_status_id)})`;
+    if (mappings.has(key)) invalid(plan, `${at}: status mappings must have distinct sources`);
+    if (!used.has(key))
+      invalid(plan, `${at}: no task uses this status; see required_status_mappings`);
     const target = workflowFor(plan.input.config, mapping.kind).statuses.find(
       (status) => status.id === mapping.to_status_id,
     );
-    if (!target) invalid(plan, 'A status mapping target does not exist');
+    if (!target) invalid(plan, `${at}: the target status does not exist in the new configuration`);
     mappings.set(key, mapping.to_status_id);
   }
   return mappings;
@@ -39,15 +48,17 @@ function statusMappings(plan: MigrationPlan, rows: StoredTask[]) {
 function priorityMappings(plan: MigrationPlan, rows: StoredTask[]) {
   const used = new Set(rows.map((task) => priorityKey(task.priority)));
   const mappings = new Map<string, ReturnType<typeof priorityValueSchema.parse>>();
-  for (const mapping of plan.input.priority_mappings) {
+  for (const [index, mapping] of plan.input.priority_mappings.entries()) {
     const key = priorityKey(mapping.from);
-    if (mappings.has(key)) invalid(plan, 'Priority mappings must have distinct sources');
-    if (!used.has(key)) invalid(plan, 'A priority mapping source is not in use');
+    const at = `priority_mappings[${String(index)}]`;
+    if (mappings.has(key)) invalid(plan, `${at}: priority mappings must have distinct sources`);
+    if (!used.has(key))
+      invalid(plan, `${at}: no task uses this priority; see required_priority_mappings`);
     try {
       validatePriorityForModel(mapping.to, plan.input.config.priority_model);
       mappings.set(key, mapping.to);
     } catch {
-      invalid(plan, 'A priority mapping target is incompatible with the new model');
+      invalid(plan, `${at}: the target priority is incompatible with the new model`);
     }
   }
   return mappings;
@@ -63,7 +74,11 @@ function projectStatus(plan: MigrationPlan, task: StoredTask, mappings: Map<stri
   if (mandatory) plan.requiredStatuses.push({ kind: task.kind, from_status_id: task.statusId });
   const target = statuses.find((status) => status.id === (mapped ?? task.statusId));
   const unresolved = (mandatory && mapped === undefined) || target === undefined;
-  if (unresolved) invalid(plan, 'Supply an explicit valid mapping for each changed status meaning');
+  if (unresolved)
+    invalid(
+      plan,
+      `${safeStatus(task.kind, task.statusId)}: supply a status mapping; see required_status_mappings`,
+    );
   return { old, target: target ?? old, unresolved };
 }
 
@@ -81,7 +96,8 @@ function projectPriority(
     plan.requiredPriorities.push({ from: priorityValueSchema.parse(task.priority) });
   }
   const unresolved = mandatory && !mappings.has(key);
-  if (unresolved) invalid(plan, 'Supply an explicit valid mapping for each incompatible priority');
+  if (unresolved)
+    invalid(plan, 'A stored priority needs a mapping; see required_priority_mappings');
   const value = mappings.has(key) ? mappings.get(key) : task.priority;
   const columns = unresolved
     ? { priority: task.priority, priorityScaled: task.priorityScaled }

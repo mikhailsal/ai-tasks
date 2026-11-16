@@ -191,3 +191,22 @@ All original scenarios/assertions and per-case budgets remain intact. The comman
 checks both actual entry registrations and the shared named scenarios; recovery delegation
 continues to cover all five operations without placeholder backup/job identities. This is
 a scheduling refinement after a timed-out whole run, not a claim that the rerun passed.
+
+## Specification 004: agent diagnostics and onboarding
+
+| Requirement                                                              | Evidence                                                                                                                                          |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-002, FR-003 first-task path, environment block, JSON examples | `README.md` "First task from the CLI"; executed by `scripts/validate-readme.mjs` from `scripts/validate-quickstart.mjs`                           |
+| FR-004 scope choices                                                     | `tests/contracts/diagnostics-cli.test.ts`, `tests/contracts/diagnostics-http.test.ts`                                                             |
+| FR-005, FR-006 allowed values, expected types, union alternatives        | `tests/unit/diagnostics-issues.test.ts`, `tests/contracts/diagnostics-cli.test.ts`                                                                |
+| FR-007 every missing revision value with its source                      | `tests/contracts/diagnostics-cli.test.ts`, `tests/contracts/diagnostics-http.test.ts`                                                             |
+| FR-008, FR-010, FR-011 safe names, suggestions, supported options        | `tests/unit/suggest.test.ts`, `tests/unit/diagnostics-issues.test.ts`, `tests/contracts/diagnostics-cli.test.ts`                                  |
+| FR-012, FR-015, FR-023 blockers in step order                            | `tests/integration/recurring-refusals.test.ts`, `tests/integration/recurrence-retirement.test.ts`, `tests/integration/recurrence-control.test.ts` |
+| FR-013 named, de-duplicated preview issues                               | `src/core/projects/migration-plan.ts`; existing preview suites in `tests/contracts/configuration-dependencies.test.ts`                            |
+| FR-014 missing database                                                  | `tests/contracts/diagnostics-cli.test.ts`                                                                                                         |
+| FR-016, FR-017 agent guide                                               | `docs/agent-guide.md` (recipes executed on a scratch database during authoring)                                                                   |
+| FR-018 change list                                                       | `CHANGELOG.md`                                                                                                                                    |
+| FR-019, FR-020 unchanged codes and statuses, additive details            | existing contract suites unchanged except assertions that now also expect the added keys                                                          |
+| FR-021 bounds                                                            | `tests/integration/recurring-refusals.test.ts` (bounded ids), `tests/unit/diagnostics-issues.test.ts`                                             |
+| SC-002 correction from details alone                                     | `tests/contracts/diagnostics-correction.test.ts`                                                                                                  |
+| FR-022 cold-agent walkthrough                                            | recorded in the pull request                                                                                                                      |

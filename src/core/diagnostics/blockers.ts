@@ -1,15 +1,8 @@
+import { blockerReasons } from '../../schema/diagnostics.js';
 import { diagnosticBounds } from './bounds.js';
 import { hint, type Hint } from './hints.js';
 
-/** Blocker reasons in the order the steps must be taken (spec 004 data-model, Blocker). */
-export const blockerReasons = [
-  'owed_anchors',
-  'parent_not_paused',
-  'future_pending',
-  'past_pending',
-  'owed',
-  'not_pending',
-] as const;
+export { blockerReasons };
 export type BlockerReason = (typeof blockerReasons)[number];
 
 export type Blocker = {
