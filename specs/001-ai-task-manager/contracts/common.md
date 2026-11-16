@@ -110,7 +110,7 @@ key. Read-only derived fields cannot be supplied as edits.
 | TaskArchive | empty payload for ordinary; `confirmation?` for a configured recurring archive edge |
 | TaskRestore | `confirmation?`, `replacement_emoji?`, `emoji_collision?:"reject"|"use_default"` |
 | Dependency | `task_id`, `prerequisite_task_id`, `prerequisite_project_slug`, `satisfied:boolean`; mutation body: `prerequisite_task_id`, `prerequisite_project_slug` |
-| Occurrence | `id`, `task_id`, `project_slug`, `deadline`, `state`, `revision`, `description_snapshot`, `rendered_html_snapshot`, `schedule_snapshot`, `miss_policy`, `confirmation_window_ms`, `actual_completed_at:Timestamp|null`, `completion_recorded_at:Timestamp|null`, `missed_at:Timestamp|null`, `cancel_reason:string|null`, `created_at` |
+| Occurrence | `id`, `task_id`, `project_slug`, `deadline`, `state`, `revision`, `description_snapshot`, `rendered_html_snapshot`, `schedule_snapshot`, `miss_policy`, `confirmation_window_ms`, `actual_completed_at:Timestamp|null`, `completion_recorded_at:Timestamp|null`, `missed_at:Timestamp|null`, `cancel_reason:string|null`, `created_at`; optional `miss_reason`, `miss_reason_recorded_at:Timestamp`, `completion_note`, present only when set (spec 007) |
 | Audit | `id`, `operation_id`, `project_slug`, `actor`, `origin`, `timestamp`, `entity_type`, `entity_id`, `action`, `changes:[{field,before,after}]`, `confirmation:null|{asserted,user_text}`, `config_revision`, `database_epoch` |
 | Settings | `timezone` (IANA zone), `revision`, `database_epoch` |
 | Backup | `id`, `created_at`, `source_database_epoch`, `schema_version`, `project_slugs`, `size_bytes`, `checksum` |
@@ -203,6 +203,15 @@ precede the previous actual completion in the same schedule generation. Explicit
 All selected rows must belong to the named parent/project and be completable; any conflict
 rolls back the entire batch. Double completion with a new operation ID fails validation;
 an exact idempotent retry returns the original result.
+
+Recording a miss (spec 007): `occurrence miss` turns a `pending` row whose window is still open
+into `missed` at once (`missed_at` = now), adds a reason to a `missed` row that has none, or
+closes a `debt` row as `missed` with a required reason, keeping its original `missed_at`. A
+miss recorded on a carry-forward row also requires a reason, because it declines the make-up
+work. Expiry runs first, so a stale `pending` row is judged in its real state. A `missed` row
+never becomes `debt` again and can still be completed later (`completed_late`, reason kept).
+Owed work still cannot be cancelled. Reasons and completion notes are plain text, non-empty
+after trimming, at most 500 characters, and are never edited.
 
 Cancellation accepts `{occurrences:[{id,expected_revision}],reason:string}` only for future
 pending occurrences (`deadline > now`) of a paused parent; reason is required. Pause first

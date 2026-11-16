@@ -68,8 +68,15 @@ export function requireEmptyInput(body: CliInput): void {
 function isObject(value: JsonValue): value is Record<string, JsonValue> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+/** One occurrence line with its reason and note (spec 007 US4). */
+function humanOccurrence(value: Record<string, JsonValue>): string {
+  const text = (label: string, field: JsonValue | undefined) =>
+    typeof field === 'string' ? `; ${label}: ${field}` : '';
+  return `${String(value.id)} ${String(value.state)} ${String(value.deadline)}${text('причина пропуска', value.miss_reason)}${text('заметка', value.completion_note)}${text('причина отмены', value.cancel_reason)}`;
+}
 function humanItem(value: JsonValue): string {
   if (!isObject(value)) return JSON.stringify(value);
+  if (typeof value.occurrence_key === 'string') return humanOccurrence(value);
   if (typeof value.id === 'string' && typeof value.title === 'string')
     return `${value.id}: ${value.title}`;
   if (typeof value.slug === 'string' && typeof value.name === 'string')

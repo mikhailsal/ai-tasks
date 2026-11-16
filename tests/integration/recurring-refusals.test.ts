@@ -53,7 +53,8 @@ it('the 11 Nov case: cancelling owed work names completion, not pausing', () => 
   expect(cancel(parent, [owed])).toThrow(
     expect.objectContaining({
       code: 'VALIDATION_ERROR',
-      message: 'Owed occurrences cannot be cancelled. Complete them instead',
+      message:
+        'Owed occurrences cannot be cancelled. Complete them, or close them as missed with a reason (occurrence miss)',
       details: {
         entity_id: owed.id,
         blockers: [
@@ -61,7 +62,10 @@ it('the 11 Nov case: cancelling owed work names completion, not pausing', () => 
             reason: 'owed',
             count: 1,
             occurrence_ids: [owed.id],
-            step: expect.objectContaining({ action: 'complete_occurrence' }),
+            step: expect.objectContaining({
+              action: 'close_as_missed',
+              command: 'occurrence miss',
+            }),
           }),
         ],
       },

@@ -26,11 +26,26 @@ const steps: Record<BlockerReason, Hint> = {
   past_pending: hint('complete_occurrence', 'Complete occurrences whose deadline has passed', {
     command: 'occurrence complete',
   }),
-  owed: hint('complete_occurrence', 'Owed occurrences cannot be cancelled. Complete them instead', {
-    command: 'occurrence complete',
-  }),
+  owed: hint(
+    'close_as_missed',
+    'Owed occurrences cannot be cancelled. Complete them, or close them as missed with a reason',
+    { command: 'occurrence miss' },
+  ),
   not_pending: hint('read_revision', 'Re-read the occurrence list; these are no longer pending', {
     command: 'occurrence list',
+  }),
+  already_completed: hint('read_revision', 'Already completed; nothing to record as missed', {
+    command: 'occurrence list',
+  }),
+  cancelled: hint('read_revision', 'Cancelled; a cancelled occurrence cannot be missed', {
+    command: 'occurrence list',
+  }),
+  reason_exists: hint('read_revision', 'This miss already has a reason; reasons are not edited', {
+    command: 'occurrence get',
+  }),
+  reason_required: hint('close_as_missed', 'Send a reason: declining owed work needs one', {
+    command: 'occurrence miss',
+    field: 'reason',
   }),
 };
 
@@ -41,6 +56,10 @@ const labels: Record<BlockerReason, string> = {
   past_pending: 'past pending',
   owed: 'owed',
   not_pending: 'not pending',
+  already_completed: 'already completed',
+  cancelled: 'cancelled',
+  reason_exists: 'reason already recorded',
+  reason_required: 'reason required',
 };
 
 export type OpenOccurrence = { id: string; state: string; deadline: number };
@@ -57,12 +76,21 @@ export function collectBlockers(
   rows: readonly OpenOccurrence[],
   options: { now: number; extra?: readonly BlockerReason[] },
 ): Blocker[] {
+  return groupBlockers(
+    rows.map((row) => ({ id: row.id, reason: occurrenceReason(row, options.now) })),
+    options.extra,
+  );
+}
+
+/** Ordered, bounded blockers from occurrences already classified by the caller. */
+export function groupBlockers(
+  entries: readonly { id: string; reason: BlockerReason }[],
+  extra: readonly BlockerReason[] = [],
+): Blocker[] {
   const groups = new Map<BlockerReason, string[]>();
-  for (const reason of options.extra ?? []) groups.set(reason, []);
-  for (const row of rows) {
-    const reason = occurrenceReason(row, options.now);
-    groups.set(reason, [...(groups.get(reason) ?? []), row.id]);
-  }
+  for (const reason of extra) groups.set(reason, []);
+  for (const entry of entries)
+    groups.set(entry.reason, [...(groups.get(entry.reason) ?? []), entry.id]);
   return blockerReasons
     .filter((reason) => groups.has(reason))
     .map((reason) => {

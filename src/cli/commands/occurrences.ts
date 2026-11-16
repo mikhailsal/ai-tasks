@@ -73,4 +73,13 @@ export function registerOccurrenceCommands(program: Command): void {
         return runMutation(command, (context, slug, input) => mutate(context, slug, id, input));
       });
   }
+  family
+    .command('miss <task-id>')
+    .description('record selected occurrences as missed, optionally with a reason')
+    .action(async (id: string, _options: unknown, command: Command) => {
+      const { missOccurrences } = await import('../../core/recurrence/miss.js');
+      return runMutation(command, (context, slug, input) =>
+        missOccurrences(context, slug, id, input),
+      );
+    });
 }

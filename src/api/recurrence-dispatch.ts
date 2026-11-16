@@ -4,6 +4,7 @@ import { getSettings, updateSettings } from '../core/projects/settings.js';
 import { getOccurrence, getRecurrence, listOccurrences } from '../core/queries/recurrence.js';
 import { cancelOccurrences } from '../core/recurrence/cancel.js';
 import { completeOccurrences } from '../core/recurrence/complete.js';
+import { missOccurrences } from '../core/recurrence/miss.js';
 import { configureRecurrence, controlRecurrence } from '../core/recurrence/control.js';
 import { tickRecurrence } from '../core/recurrence/tick.js';
 import { parseInput } from '../core/validation.js';
@@ -47,6 +48,8 @@ export function recurrenceDispatch(context: CoreContext, command: RecurrenceComm
       return completeOccurrences(context, slug, command.task_id, command.input);
     case 'occurrence.cancel':
       return cancelOccurrences(context, slug, command.task_id, command.input);
+    case 'occurrence.miss':
+      return missOccurrences(context, slug, command.task_id, command.input);
     case 'settings.update':
       return updateSettings(context, slug, command.input);
   }

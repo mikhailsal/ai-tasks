@@ -49,6 +49,9 @@ export const occurrenceResourceSchema = z.strictObject({
   cancelled_at: z.nullable(timestampSchema),
   cancel_reason: z.nullable(z.string()),
   created_at: timestampSchema,
+  miss_reason: z.optional(z.string()),
+  miss_reason_recorded_at: z.optional(timestampSchema),
+  completion_note: z.optional(z.string()),
 });
 export const occurrenceListInputSchema = z.strictObject({
   state: z.optional(occurrenceStateSchema),

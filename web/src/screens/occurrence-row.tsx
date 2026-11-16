@@ -73,6 +73,8 @@ export function OccurrenceRow({
         </p>
       )}
       {row.cancel_reason !== null && <p>Причина отмены: {row.cancel_reason}</p>}
+      {row.miss_reason !== undefined && <p>Причина пропуска: {row.miss_reason}</p>}
+      {row.completion_note !== undefined && <p>Заметка: {row.completion_note}</p>}
       <p>
         Сохранённые условия: поколение {row.schedule_snapshot.generation_number},{' '}
         {row.schedule_snapshot.timezone};{' '}

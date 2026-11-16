@@ -232,3 +232,18 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 | FR-003, FR-004, FR-006 nothing hidden, JSON and data unchanged | no change under `src/schema`, `src/core`; existing contract suites green                  |
 | FR-005 documentation                                           | `specs/001-ai-task-manager/contracts/common.md`, `docs/agent-guide.md`, `CHANGELOG.md`    |
 | SC-001 old wording gone                                        | search test in `tests/unit/occurrence-wording.test.ts`                                    |
+
+## Specification 007: reasons and notes on occurrence outcomes
+
+| Requirement                                                              | Evidence                                                                                                                                            |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-003, FR-007 miss now, add a reason, close owed work, refusals | `tests/integration/occurrence-miss.test.ts`                                                                                                         |
+| FR-002, FR-006 note on completion, history keeps both                    | `tests/integration/occurrence-miss.test.ts`                                                                                                         |
+| FR-004 text rules                                                        | `src/schema/recurrence-input.ts` (`outcomeTextSchema`), CHECKs in `drizzle/0004_occurrence_reasons.sql`; `tests/integration/migration-0004.test.ts` |
+| FR-005, US4 visibility                                                   | `tests/contracts/occurrence-miss.test.ts` (CLI, HTTP), `tests/e2e/occurrence-reasons.spec.ts` (430 px, plain text)                                  |
+| FR-008 repeat safety                                                     | receipt replay of `executeMutation` (unchanged), stated in `docs/agent-guide.md`                                                                    |
+| FR-009 owed refusal names the alternative                                | `tests/integration/recurring-refusals.test.ts`                                                                                                      |
+| FR-010, SC-003 compatibility                                             | optional keys only when set; `tests/integration/occurrence-miss.test.ts` (no `completion_note` key without a note)                                  |
+| FR-011, SC-004 retired schedule archives with no completion              | `tests/integration/occurrence-miss.test.ts` (11 Nov case)                                                                                           |
+| Race (T015)                                                              | `tests/contention/occurrence-miss-race.test.ts`                                                                                                     |
+| Upgrade from schema 3                                                    | `tests/integration/migration-0004.test.ts`                                                                                                          |

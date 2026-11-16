@@ -5,6 +5,17 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Agent-visible changes: reasons and notes on occurrence outcomes (spec 007)
+
+- New `occurrence miss <task-id>` (HTTP `POST .../occurrences/miss`): record a miss now with an
+  optional reason, add a reason to a reasonless miss, or close owed work as missed with a
+  required reason. A missed row is never owed again and can still be completed later.
+- `occurrence complete` items accept an optional `note`.
+- Occurrence resources gain optional `miss_reason`, `miss_reason_recorded_at` and
+  `completion_note`, present only when set. Clients that reject unknown keys must accept them.
+- The refusal to cancel owed work now names closing it as missed (`close_as_missed`).
+- Migration `0004_occurrence_reasons` adds three nullable columns; existing rows are unchanged.
+
 ### Wording: completions recorded after the window (spec 006)
 
 - The web label and the human `stats` summary for `completed_late` now read «Записано после

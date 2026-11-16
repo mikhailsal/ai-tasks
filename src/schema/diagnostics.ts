@@ -22,6 +22,10 @@ export const blockerReasons = [
   'past_pending',
   'owed',
   'not_pending',
+  'already_completed',
+  'cancelled',
+  'reason_exists',
+  'reason_required',
 ] as const;
 
 export const hintSchema = z.strictObject({

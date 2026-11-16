@@ -65,6 +65,7 @@ function completeSelected(
   options: {
     row: OccurrenceRow;
     actual: number;
+    note: string | undefined;
     now: number;
   },
 ) {
@@ -76,6 +77,7 @@ function completeSelected(
       state: before.state === 'pending' ? 'completed' : 'completed_late',
       actualCompletedAt: options.actual,
       completionRecordedAt: options.now,
+      ...(options.note === undefined ? {} : { completionNote: options.note }),
       revision: before.revision + 1,
     })
     .where(and(eq(occurrences.id, before.id), eq(occurrences.revision, before.revision)))
@@ -116,11 +118,17 @@ export function completeOccurrences(
         }),
       );
       const plans = completionPlan(transaction, { rows, actuals });
+      const notes = new Map(payload.occurrences.map((selected) => [selected.id, selected.note]));
       const current = currentRecurrence(transaction, command.task);
       const events: AuditEvent[] = [];
       const completed: OccurrenceRow[] = [];
       for (const plan of plans) {
-        const result = completeSelected(transaction, { row: plan.row, actual: plan.actual, now });
+        const result = completeSelected(transaction, {
+          row: plan.row,
+          actual: plan.actual,
+          note: notes.get(plan.row.id),
+          now,
+        });
         completed.push(result.row);
         events.push(...result.events);
         if (

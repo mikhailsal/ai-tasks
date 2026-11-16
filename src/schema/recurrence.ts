@@ -103,6 +103,9 @@ export const occurrences = sqliteTable(
     missedAt: integer('missed_at'),
     cancelledAt: integer('cancelled_at'),
     cancelReason: text('cancel_reason'),
+    missReason: text('miss_reason'),
+    missReasonRecordedAt: integer('miss_reason_recorded_at'),
+    completionNote: text('completion_note'),
     createdAt: integer('created_at').notNull(),
   },
   (table) => [
@@ -159,6 +162,14 @@ export const occurrences = sqliteTable(
     check(
       'occurrence_cancel_fields',
       sql`(${table.state} = 'cancelled' AND ${table.cancelledAt} IS NOT NULL AND ${table.cancelReason} IS NOT NULL AND length(trim(${table.cancelReason})) > 0) OR (${table.state} != 'cancelled' AND ${table.cancelledAt} IS NULL AND ${table.cancelReason} IS NULL)`,
+    ),
+    check(
+      'occurrence_miss_reason_fields',
+      sql`(${table.missReason} IS NULL AND ${table.missReasonRecordedAt} IS NULL) OR (${table.state} IN ('missed','completed_late') AND length(trim(${table.missReason})) > 0 AND length(${table.missReason}) <= 500 AND ${integerConstraint(table.missReasonRecordedAt)})`,
+    ),
+    check(
+      'occurrence_completion_note_fields',
+      sql`${table.completionNote} IS NULL OR (${table.state} IN ('completed','completed_late') AND length(trim(${table.completionNote})) > 0 AND length(${table.completionNote}) <= 500)`,
     ),
     index('occurrences_task_state_deadline_idx').on(
       table.taskId,

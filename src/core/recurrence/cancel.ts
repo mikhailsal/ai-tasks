@@ -47,7 +47,7 @@ export function cancelOccurrences(
         throw domainError(
           'VALIDATION_ERROR',
           owedOnly
-            ? 'Owed occurrences cannot be cancelled. Complete them instead'
+            ? 'Owed occurrences cannot be cancelled. Complete them, or close them as missed with a reason (occurrence miss)'
             : `${String(refused.length)} of ${String(selected.length)} occurrences cannot be cancelled: ${describeBlockers(blockers)}`,
           { entity_id: first.id, blockers },
         );

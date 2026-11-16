@@ -53,8 +53,21 @@ const selectedOccurrenceSchema = z.strictObject({
   id: uuidSchema,
   expected_revision: revisionSchema,
 });
+/** Reasons and notes (spec 007 FR-004): plain text, non-empty after trimming, at most 500. */
+export const OUTCOME_TEXT_MAX = 500;
+export const outcomeTextSchema = z
+  .string()
+  .check(z.refine((text) => text.isWellFormed(), 'Text must be well-formed Unicode'))
+  .check(z.refine((text) => text.trim().length > 0, 'Text must not be empty after trimming'))
+  .check(
+    z.refine(
+      (text) => [...text].length <= OUTCOME_TEXT_MAX,
+      `Text must be at most ${String(OUTCOME_TEXT_MAX)} characters`,
+    ),
+  );
 export const selectedCompletionSchema = z.extend(selectedOccurrenceSchema, {
   actual_completed_at: z.optional(timestampSchema),
+  note: z.optional(outcomeTextSchema),
 });
 function distinctSelection<
   T extends {
@@ -82,6 +95,13 @@ export const cancelOccurrencesSchema = z.strictObject({
         'A cancellation reason is required',
       ),
     ),
+});
+export const missOccurrencesSchema = z.strictObject({
+  occurrences: z
+    .array(selectedOccurrenceSchema)
+    .check(z.minLength(1))
+    .check(z.refine(distinctSelection, 'Occurrence IDs must be distinct')),
+  reason: z.optional(outcomeTextSchema),
 });
 export const controlRecurrenceSchema = z.strictObject({
   to_status_id: configKeySchema,

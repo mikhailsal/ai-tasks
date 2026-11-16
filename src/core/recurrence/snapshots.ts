@@ -44,6 +44,12 @@ export function occurrenceResource(row: OccurrenceRow) {
     cancelled_at: nullableTimestamp(row.cancelledAt),
     cancel_reason: row.cancelReason,
     created_at: formatTimestamp(row.createdAt),
+    // Spec 007: present only when set, so responses without them stay byte-identical.
+    ...(row.missReason === null ? {} : { miss_reason: row.missReason }),
+    ...(row.missReasonRecordedAt === null
+      ? {}
+      : { miss_reason_recorded_at: formatTimestamp(row.missReasonRecordedAt) }),
+    ...(row.completionNote === null ? {} : { completion_note: row.completionNote }),
   };
 }
 
@@ -61,7 +67,10 @@ export function occurrenceEvent(
     )
     .map(([field, value]) => ({
       field,
-      before: jsonValueSchema.parse(previous === null ? null : Reflect.get(previous, field)),
+      // A key absent before (an optional field set for the first time) diffs as null.
+      before: jsonValueSchema.parse(
+        previous === null ? null : (Reflect.get(previous, field) ?? null),
+      ),
       after: jsonValueSchema.parse(value),
     }));
   return {

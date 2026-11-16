@@ -87,8 +87,9 @@ POSTs and operational actions, still requires the browser request boundary.
 | POST M | `P/recurrence/tick` | `{tasks:[{task_id,expected_revision}]}` → generated/expired IDs, affected revisions |
 | GET | `T/occurrences` | `state` filter/pagination → Occurrence list |
 | GET | `T/occurrences/:occurrence_id` | Occurrence detail with immutable snapshots |
-| POST M | `T/occurrences/complete` | `{occurrences:[{id,expected_revision,actual_completed_at?}]}` → selected rows and parent revision |
+| POST M | `T/occurrences/complete` | `{occurrences:[{id,expected_revision,actual_completed_at?,note?}]}` → selected rows and parent revision |
 | POST M | `T/occurrences/cancel` | `{occurrences:[{id,expected_revision}],reason}` → selected rows and parent revision |
+| POST M | `T/occurrences/miss` | `{occurrences:[{id,expected_revision}],reason?}` → missed rows and parent revision (spec 007) |
 | GET | `/agenda` | Explicit scope/common filters → project-first agenda groups |
 | GET | `/priorities` | Explicit scope/common filters → project/priority groups |
 | GET | `/stats` | Explicit scope/common filters → separate task/occurrence counters |

@@ -92,6 +92,29 @@ export const occurrenceCommands: CommandDescriptor[] = [
     },
   },
   {
+    path: ['occurrence', 'miss'],
+    purpose:
+      'Record selected occurrences as missed now, add a reason to a miss, or close owed work with a reason.',
+    kind: 'mutation',
+    scope: 'project',
+    positional: [taskId],
+    options: mutationOptions,
+    input: async () => (await import('../../../schema/recurrence-input.js')).missOccurrencesSchema,
+    mutation: 'occurrence.miss',
+    example: {
+      argv: ['occurrence', 'miss', '{{task_id}}', '--project', 'demo', '--input', '-', '--json'],
+      input: {
+        ...tokens,
+        expected_settings_revision: '{{settings_revision}}',
+        occurrences: [{ id: '{{occurrence_id}}', expected_revision: '{{occurrence_revision}}' }],
+        reason: 'The person said no today',
+      },
+      placeholders: tokenSources,
+      fixture: 'active_recurring_task',
+      fixture_note: 'an active recurring task with a pending occurrence',
+    },
+  },
+  {
     path: ['occurrence', 'cancel'],
     purpose: 'Cancel selected future occurrences of a paused recurring task atomically.',
     kind: 'mutation',

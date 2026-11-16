@@ -29,6 +29,7 @@ export const mutationRequirements = {
   'dependency.remove': task,
   'occurrence.complete': scheduledTask,
   'occurrence.cancel': task,
+  'occurrence.miss': scheduledTask,
   'recurrence.configure': scheduledTask,
   'recurrence.control': scheduledTask,
   'recurrence.tick': { settings: true },

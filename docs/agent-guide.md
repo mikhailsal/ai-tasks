@@ -315,6 +315,28 @@ ai occurrence complete "$HABIT" --project demo --input complete.json --json
 The batch is all or nothing: one stale or foreign row rolls back everything. To complete a
 pending occurrence, use the same input with `--state pending`.
 
+### Record a miss or close owed work
+
+When the person says an occurrence will not be done, record it as missed right away, with
+the reason they gave. Owed rows (`debt`) and rows of a carry-forward task need a reason; the
+row then stops being owed and never becomes owed again. Add `"note"` to a completion item to
+say, for example, that the time is an estimate.
+
+```bash
+REV=$(ai task get "$HABIT" --project demo --json | field 'd.data.revision')
+OCC=$(ai occurrence list "$HABIT" --project demo --state debt --json | field 'JSON.stringify(d.data.items.map(o=>({id:o.id,expected_revision:o.revision})))')
+cat > miss.json <<EOF
+{"operation_id":"$(uuidgen)","database_epoch":"$EPOCH","expected_revision":$REV,
+ "expected_config_revision":$CONFIG_REV,"expected_settings_revision":$SETTINGS_REV,
+ "occurrences":$OCC,"reason":"The person decided not to make these up"}
+EOF
+ai occurrence miss "$HABIT" --project demo --input miss.json --json
+```
+
+A row that is already completed, cancelled or missed with a reason is refused with
+`blockers[]` naming its state. Repeating the same request with the same `operation_id`
+returns the stored result and writes nothing.
+
 ### Archive a recurring task
 
 Archive is refused while the task is active or has open occurrences. The refusal lists every

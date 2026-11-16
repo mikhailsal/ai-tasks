@@ -93,8 +93,9 @@ envelopes. There are no implicit mutations during reads.
 | `recurrence tick` | M | `--project`, `{tasks:[{task_id,expected_revision}],expected_config_revision}` → generated/expired occurrence IDs and updated revisions; server clock only |
 | `occurrence list <task-id>` | R | `--project`, `--state` optional, pagination → occurrence list |
 | `occurrence get <task-id> <occurrence-id>` | R | `--project` → occurrence with description/settings snapshot |
-| `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times; expected parent revision → selected occurrences and parent revision |
+| `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times and `note`; expected parent revision → selected occurrences and parent revision |
 | `occurrence cancel <task-id>` | M | Explicit occurrence IDs/revisions plus reason; expected parent revision → cancelled rows and parent revision |
+| `occurrence miss <task-id>` | M | Explicit occurrence IDs/revisions plus optional reason (required for owed and carry-forward rows); expected parent, config and settings revisions → missed rows and parent revision (spec 007) |
 | `agenda` | R | Scope/filters/pagination → project/agenda groups containing Task summaries |
 | `priorities` | R | Scope/filters/pagination → project/priority groups containing Task summaries |
 | `stats` | R | Scope/filters → separate task and occurrence counters |

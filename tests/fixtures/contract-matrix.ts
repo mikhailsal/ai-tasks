@@ -176,6 +176,10 @@ export const commandMatrix: readonly MatrixRow[] = [
     pattern: `${T}/occurrences/cancel`,
     method: 'POST',
   }),
+  row('occurrence miss <task-id>', 'M', 'US5', {
+    pattern: `${T}/occurrences/miss`,
+    method: 'POST',
+  }),
   row('agenda', 'R', 'US4', { pattern: '/agenda' }),
   row('priorities', 'R', 'US4', { pattern: '/priorities' }),
   row('stats', 'R', 'US4', { pattern: '/stats' }),

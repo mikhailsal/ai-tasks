@@ -41,4 +41,10 @@ export function registerOccurrenceRoutes(app: FastifyInstance, helper: DataHelpe
     operation: 'occurrence.cancel',
     task: true,
   });
+  registerMutationRoute(app, helper, {
+    method: 'POST',
+    url: `${base}/miss`,
+    operation: 'occurrence.miss',
+    task: true,
+  });
 }
