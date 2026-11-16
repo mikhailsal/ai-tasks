@@ -5,7 +5,6 @@ import { backupListInputSchema, recoveryStatusInputSchema } from '../../schema/r
 import { uuidSchema } from '../../schema/values.js';
 import {
   readCommand,
-  readOptions,
   queryInput,
   requireEmptyInput,
   requireSubcommand,
@@ -14,13 +13,6 @@ import {
 import { mutationInput, scopedInput, type CliInput } from '../io.js';
 import type { CliOptions } from '../options.js';
 
-const operationalOptions = [
-  ...readOptions,
-  'operationId',
-  'databaseEpoch',
-  'expectedConfigRevision',
-  'expectedSettingsRevision',
-] as const;
 function strictKeys(input: CliInput, allowed: readonly string[]) {
   if (Object.keys(input).some((key) => !allowed.includes(key)))
     throw domainError('VALIDATION_ERROR', 'Unknown backup query field');
@@ -53,7 +45,7 @@ export function registerBackupCommands(program: Command): void {
     .command('list')
     .description('List managed backups in explicit aggregate scope')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [...readOptions, 'limit', 'cursor']);
+      const { options, body } = await readCommand(command);
       const input = queryInput(options, body);
       strictKeys(input, ['all_projects', 'limit', 'cursor']);
       const query = parseInput(backupListInputSchema, input);
@@ -71,7 +63,7 @@ export function registerBackupCommands(program: Command): void {
     .command('create')
     .description('Create an online backup with original operation guards')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, operationalOptions);
+      const { options, body } = await readCommand(command);
       const mutation = mutationInput(options, body);
       const [{ createBackup }, { backupPaths }, context] = await Promise.all([
         import('../../core/recovery/index.js'),
@@ -92,7 +84,7 @@ export function registerBackupCommands(program: Command): void {
     .command('validate <backup-id>')
     .description('Validate a managed snapshot and exact affected-project union')
     .action(async (id: string, _options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, readOptions);
+      const { options, body } = await readCommand(command);
       const query = queryInput(options, body);
       strictKeys(query, ['all_projects']);
       parseInput(backupListInputSchema, query);
@@ -117,7 +109,7 @@ export function registerBackupCommands(program: Command): void {
       noWaitOption,
     )
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [...operationalOptions, 'wait']);
+      const { options, body } = await readCommand(command);
       const mutation = mutationInput(options, body);
       const { restoreFromCli } = await import('../backups-restore.js');
       writeSuccess(
@@ -129,7 +121,7 @@ export function registerBackupCommands(program: Command): void {
     .command('status [job-id]')
     .description('Read external job status without opening SQLite')
     .action(async (id: string | undefined, _options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [...readOptions, 'operationId']);
+      const { options, body } = await readCommand(command);
       const query = backupStatusInput(options, body, id);
       const [{ getRecoveryStatus }, { backupPaths }] = await Promise.all([
         import('../../core/recovery/index.js'),

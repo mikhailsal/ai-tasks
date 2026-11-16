@@ -2,6 +2,7 @@ import { networkInterfaces } from 'node:os';
 import type { Command } from 'commander';
 import { domainError } from '../../core/errors.js';
 import { resolveListenAddress, type ListenAddress } from '../../runtime/listen-address.js';
+import { descriptorFor } from '../registry/index.js';
 import { writeJson } from '../io.js';
 import { commandOptions, readScope, requireOptions } from '../options.js';
 
@@ -20,7 +21,7 @@ export function registerServeCommands(program: Command): void {
     .description('Start the API and web interface (loopback unless AI_TASKS_HOST is set)')
     .action(async (_options: unknown, command: Command) => {
       const options = commandOptions(command);
-      requireOptions(options, ['json', 'allProjects', 'project']);
+      requireOptions(options, descriptorFor(command).options);
       const scope = readScope(options);
       if (!('all_projects' in scope))
         throw domainError('VALIDATION_ERROR', 'Serve requires --all-projects');

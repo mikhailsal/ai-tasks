@@ -4,6 +4,8 @@ import { domainError } from '../core/errors.js';
 import { successEnvelopeSchema, type MutationEnvelope } from '../schema/envelopes.js';
 import type { JsonValue } from '../schema/values.js';
 import type { createCliMutationContext, createReadContext } from './context.js';
+import { mutationOptions, readOptions } from './registry/option-sets.js';
+import { descriptorFor } from './registry/index.js';
 import { mutationInput, readJsonInput, scopedInput, writeJson, type CliInput } from './io.js';
 import {
   commandOptions,
@@ -12,18 +14,7 @@ import {
   requireOptions,
   type CliOptions,
 } from './options.js';
-export const readOptions = ['json', 'project', 'allProjects', 'input'] as const;
-const mutationOptions = [
-  'json',
-  'project',
-  'allProjects',
-  'input',
-  'operationId',
-  'databaseEpoch',
-  'expectedRevision',
-  'expectedConfigRevision',
-  'expectedSettingsRevision',
-] as const;
+export { mutationOptions, readOptions };
 const queryFlags = [
   ['limit', 'limit'],
   ['cursor', 'cursor'],
@@ -39,9 +30,10 @@ const queryFlags = [
   ['deadlinePreset', 'deadline_preset'],
   ['deadlineDay', 'deadline_day'],
 ] as const;
-export async function readCommand(command: Command, allowed: readonly (keyof CliOptions)[]) {
+/** Allowed options come from the command's registry descriptor (spec 005 R1). */
+export async function readCommand(command: Command) {
   const options = commandOptions(command);
-  requireOptions(options, allowed);
+  requireOptions(options, descriptorFor(command).options);
   return { options, body: await readJsonInput(options.input) };
 }
 export function singleProjectInput(options: CliOptions, body: CliInput) {
@@ -194,7 +186,7 @@ export async function runMutation(
     input: MutationEnvelope,
   ) => unknown,
 ): Promise<void> {
-  const { options, body } = await readCommand(command, mutationOptions);
+  const { options, body } = await readCommand(command);
   const mutation = mutationInput(options, body);
   const { createCliMutationContext, withCliDatabase } = await import('./context.js');
   const result = await withCliDatabase((connection) =>
@@ -215,7 +207,7 @@ export async function runProjectRead(
   ) => unknown,
   acceptsBody = false,
 ): Promise<void> {
-  const { options, body } = await readCommand(command, readOptions);
+  const { options, body } = await readCommand(command);
   const input = singleProjectInput(options, body);
   if (!acceptsBody) requireEmptyInput(input.body);
   const { createReadContext, withCliDatabase } = await import('./context.js');

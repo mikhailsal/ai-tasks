@@ -4,7 +4,6 @@ import { parseInput } from '../../core/validation.js';
 import { occurrenceListInputSchema } from '../../schema/recurrence-query.js';
 import {
   readCommand,
-  readOptions,
   requireSubcommand,
   runMutation,
   runProjectRead,
@@ -39,12 +38,7 @@ export function registerOccurrenceCommands(program: Command): void {
     .command('list <task-id>')
     .description('List frozen occurrences with optional state and pagination filters')
     .action(async (id: string, _options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [
-        ...readOptions,
-        'state',
-        'limit',
-        'cursor',
-      ]);
+      const { options, body } = await readCommand(command);
       const { projectSlug, query } = occurrenceQueryInput(options, body);
       const [{ listOccurrences }, context] = await Promise.all([
         import('../../core/queries/recurrence.js'),

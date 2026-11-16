@@ -30,7 +30,7 @@ function deepest(program: Command, argv: readonly string[]): { command: Command;
   return { command: current, depth };
 }
 
-function unknownName(
+export function unknownName(
   kind: 'command' | 'option',
   name: string | undefined,
   known: string[],

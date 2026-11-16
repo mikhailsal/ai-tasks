@@ -7,7 +7,7 @@ import type { CoreContext } from '../database/types.js';
 import { domainError, normalizeError } from '../errors.js';
 import { readMeta } from '../queries/meta.js';
 import { renderMarkdown } from './render.js';
-const previewInputSchema = z.strictObject({ description: descriptionSchema });
+export const previewInputSchema = z.strictObject({ description: descriptionSchema });
 export function previewDescription(
   context: Pick<CoreContext, 'connection' | 'now'>,
   projectSlug: string,

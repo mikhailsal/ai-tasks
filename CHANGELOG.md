@@ -5,6 +5,19 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Agent-visible changes: self-describing commands (spec 005)
+
+- `help <command words> --json` describes one command: purpose, kind, scope, positional
+  arguments, accepted options, input fields (types, required, allowed values, list items,
+  union alternatives, where configuration-dependent values are read), revision values with
+  the command that supplies each, and a runnable example with placeholder sources.
+- `help <family> --json` lists the family's commands; `help --json` keeps `data.help` and
+  adds `data.commands`, an index grouped by family.
+- An unknown name in `help` is refused with `VALIDATION_ERROR`, `names` and `suggestions`.
+- Help never opens the database and returns no `meta`. Human help text is unchanged.
+- Missing `expected_revision` on project and configuration changes is now listed with the
+  other missing values and names `project get` or `config get` as its source.
+
 ### Agent-visible changes: diagnostics and onboarding (spec 004)
 
 Compatibility: error codes, CLI exit statuses, HTTP statuses, `retryable` and all success

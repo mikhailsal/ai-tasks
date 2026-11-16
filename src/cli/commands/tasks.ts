@@ -3,7 +3,6 @@ import type { Command } from 'commander';
 import {
   queryInput,
   readCommand,
-  readOptions,
   requireSubcommand,
   runMutation,
   runProjectRead,
@@ -20,20 +19,7 @@ export function registerTaskCommands(program: Command): void {
     .command('list')
     .description('List tasks in an explicit scope')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [
-        ...readOptions,
-        'limit',
-        'cursor',
-        'q',
-        'status',
-        'category',
-        'kind',
-        'emoji',
-        'archive',
-        'includeTerminal',
-        'deadlinePreset',
-        'deadlineDay',
-      ]);
+      const { options, body } = await readCommand(command);
       const [{ listTasks, taskListInputSchema }, { parseInput }, context] = await Promise.all([
         import('../../core/queries/tasks.js'),
         import('../../core/validation.js'),

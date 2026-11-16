@@ -22,6 +22,19 @@ ai() { node dist/cli.js "$@"; }
 field() { node -pe "const d=JSON.parse(require('fs').readFileSync(0));$1"; }
 ```
 
+## 0. Ask the command
+
+`help <command words> --json` returns everything one command needs: its fields with types
+and allowed values, every revision value with the command that supplies it, and a runnable
+example whose placeholders name their source (`{"command":"task get","path":"data.revision"}`)
+or say `{"generate":"uuid"}`. Paths use dots, `[n]` for an index and `[key=value]` to pick a
+list item. `help --json` lists all commands; `help task --json` lists one family. Help works
+without a database.
+
+```bash
+ai help occurrence complete --json
+```
+
 ## 1. Choose a read scope
 
 Every application read needs a scope. Writes always need `--project`.

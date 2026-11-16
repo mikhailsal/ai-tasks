@@ -2,7 +2,6 @@ import type { Command } from 'commander';
 import {
   queryInput,
   readCommand,
-  readOptions,
   requireSubcommand,
   runMutation,
   runProjectRead,
@@ -18,12 +17,7 @@ export function registerProjectCommands(program: Command): void {
     .command('list')
     .description('List projects in an explicit scope')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [
-        ...readOptions,
-        'limit',
-        'cursor',
-        'archive',
-      ]);
+      const { options, body } = await readCommand(command);
       const [{ listProjects, projectListInputSchema }, { parseInput }, context] = await Promise.all(
         [
           import('../../core/queries/projects.js'),

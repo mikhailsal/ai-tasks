@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 import { domainError } from '../../core/errors.js';
+import { descriptorFor } from '../registry/index.js';
 import { writeJson } from '../io.js';
 import { commandOptions, readScope, requireOptions } from '../options.js';
 
@@ -10,7 +11,7 @@ export function registerWorkerCommands(program: Command): void {
     .description('Process recurring work for one project')
     .action(async (_options: unknown, command: Command) => {
       const options = commandOptions(command);
-      requireOptions(options, ['json', 'project', 'allProjects']);
+      requireOptions(options, descriptorFor(command).options);
       const scope = readScope(options);
       if (!('project_slug' in scope))
         throw domainError('VALIDATION_ERROR', 'Worker requires an explicit project');

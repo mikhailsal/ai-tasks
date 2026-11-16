@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import { domainError } from '../../core/errors.js';
 import { requireEmptyInput } from '../command-helpers.js';
 import { readJsonInput, scopedInput, writeJson } from '../io.js';
+import { descriptorFor } from '../registry/index.js';
 import { commandOptions, readScope, requireOptions } from '../options.js';
 
 export function registerMetaCommands(program: Command): void {
@@ -10,7 +11,7 @@ export function registerMetaCommands(program: Command): void {
     .description('Read global metadata without mutations')
     .action(async (_options: unknown, command: Command) => {
       const options = commandOptions(command);
-      requireOptions(options, ['json', 'allProjects', 'project', 'input']);
+      requireOptions(options, descriptorFor(command).options);
       const scope = readScope(options);
       if (!('all_projects' in scope))
         throw domainError('VALIDATION_ERROR', 'Metadata requires --all-projects');

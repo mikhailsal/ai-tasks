@@ -42,6 +42,13 @@ effects, identical output for identical requests on the same build. No option ot
     "fixture_note":"an active recurring task with a pending occurrence"}}}
 ```
 
+A placeholder is one of `{command, path}` (run that command with the same scope and read
+`path`), `{generate: "uuid"}` (a fresh UUID), or `{example, path}` (run the named command's
+own help example and read `path` from its response; used where only a mutation returns the
+value, such as a restore job ID for `backup status`). Paths use dots, `[n]` for an index and
+`[key=value]` to pick a list item. A source command may carry flags (`task board --kind
+ordinary --status idea`).
+
 Field names and sources in this example are illustrative of the shape; the registry is the
 normative source and the contract tests check it against behavior.
 

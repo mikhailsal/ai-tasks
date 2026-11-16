@@ -74,6 +74,7 @@ Use the compiled entry directly; a global installation is unnecessary:
 
 ```bash
 node dist/cli.js help --json
+node dist/cli.js help task create --json
 node dist/cli.js meta --all-projects --json
 node dist/cli.js project list --all-projects --json
 node dist/cli.js task list --project demo --json

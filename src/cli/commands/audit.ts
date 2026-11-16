@@ -1,11 +1,5 @@
 import type { Command } from 'commander';
-import {
-  queryInput,
-  readCommand,
-  readOptions,
-  requireSubcommand,
-  writeSuccess,
-} from '../command-helpers.js';
+import { queryInput, readCommand, requireSubcommand, writeSuccess } from '../command-helpers.js';
 
 export function registerAuditCommands(program: Command): void {
   program
@@ -15,13 +9,7 @@ export function registerAuditCommands(program: Command): void {
     .command('list')
     .description('List audit events by project, entity, operation, and page')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, [
-        ...readOptions,
-        'entityId',
-        'operation',
-        'limit',
-        'cursor',
-      ]);
+      const { options, body } = await readCommand(command);
       const [{ listAudit }, { parseInput }, { auditListInputSchema }, context] = await Promise.all([
         import('../../core/queries/audit.js'),
         import('../../core/validation.js'),

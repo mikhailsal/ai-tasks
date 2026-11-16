@@ -11,7 +11,10 @@ Commander argument parsing, writes one structured error envelope and newline to 
 writes no success stdout, and exits according to the common error table. Human success
 output is concise text; failure JSON is stable in both modes. No prompts, pagers, spinners,
 ANSI colors in JSON, or diagnostic stdout. `--help` and `--version` are informational;
-`help --json` and `version --json` provide machine-readable equivalents.
+`help --json` and `version --json` provide machine-readable equivalents. `help <command words>
+--json` describes one command (fields, revision values with their sources, a runnable example)
+or lists a family; `help --json` adds a `commands` index. See
+[specification 005](../../005-self-describing-commands/contracts/help.md).
 These informational commands work without opening a database and return
 `{ok:true,data:{...}}` without database metadata. Domain and operational application
 commands retain the full shared response envelopes.

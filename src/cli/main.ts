@@ -23,6 +23,8 @@ import { registerOccurrenceCommands } from './commands/occurrences.js';
 import { registerSettingsCommands } from './commands/settings.js';
 import { registerViewCommands } from './commands/views.js';
 import { registerBackupCommands } from './commands/backups.js';
+import { registerHelpCommand } from './commands/help.js';
+import { descriptorFor } from './registry/index.js';
 function packageVersion(): string {
   const path = findPackageJSON(import.meta.url);
   if (!path) throw domainError('INTERNAL_ERROR', 'CLI package metadata is unavailable');
@@ -44,22 +46,13 @@ export function createProgram(): Command {
   program.action(() => {
     throw domainError('VALIDATION_ERROR', 'Choose an application command');
   });
-  program
-    .command('help')
-    .description('Show command help')
-    .action((_options: unknown, command: Command) => {
-      const options = commandOptions(command);
-      requireOptions(options, ['json']);
-      const help = program.helpInformation();
-      if (options.json) writeJson({ ok: true, data: { help } });
-      else process.stdout.write(help);
-    });
+  registerHelpCommand(program);
   program
     .command('version')
     .description('Show application version')
     .action((_options: unknown, command: Command) => {
       const options = commandOptions(command);
-      requireOptions(options, ['json']);
+      requireOptions(options, descriptorFor(command).options);
       if (options.json) writeJson({ ok: true, data: { version: program.version() } });
       else process.stdout.write(`${program.version()}\n`);
     });

@@ -21,6 +21,15 @@ schemas imported lazily from core inside each action.
 - **Alternatives**: hand-written help JSON files with a diff test (two sources of truth);
   reading Commander metadata only (it knows options, not input fields or revisions).
 
+- **Implementation note (2026-11-16, review)**: the cheaper variant was taken. Commander
+  registration stays in `src/cli/commands/*.ts`; descriptors live per family in
+  `src/cli/registry/families/`. Each action reads its allowed options from its own descriptor
+  (`descriptorFor(command)`), so options have one source. A coverage test checks that every
+  Commander leaf has exactly one descriptor, and a probe test checks that each command refuses
+  an unlisted option with `supported_options` equal to its descriptor. Revision requirements
+  are one table in `src/core/database/mutation-requirements.ts` read by the guards by operation
+  name, so they cannot differ from help.
+
 ## R2. Fields from the schema itself (FR-001, FR-003)
 
 - **Decision**: Input fields are derived with Zod's own `toJSONSchema` (`zod/v4/core`) with
