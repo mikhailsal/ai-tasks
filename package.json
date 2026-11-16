@@ -56,6 +56,7 @@
   },
   "scripts": {
     "check:runtime": "node scripts/check-runtime.mjs",
+    "hooks:install": "node scripts/install-hooks.mjs",
     "db:migrate": "tsup && node dist/migrate.js",
     "typecheck": "tsc -p tsconfig.json && tsc -p web/tsconfig.json && tsc -p web/tsconfig.sw.json",
     "lint": "eslint .",

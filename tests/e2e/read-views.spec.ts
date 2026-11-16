@@ -211,7 +211,7 @@ test('workload distinguishes parent inventory and occurrence outcomes and explai
     await expect(tasks).toContainText('Обычные: 3');
     await expect(tasks).toContainText('Повторяемые: 1');
     await expect(occurrences).toContainText('Всего: 6');
-    await expect(occurrences).toContainText('Выполнено поздно: 1');
+    await expect(occurrences).toContainText('Записано после окна: 1');
     const local = deadlineDraft(new Date(seed.completedAt).toISOString(), 'Europe/Berlin');
     await openReadPanel(page, 'Период нагрузки');
     await page.getByLabel('Дата от (включительно)', { exact: true }).fill(local.date);

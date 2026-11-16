@@ -42,6 +42,15 @@ Drafts preserve original fields, timezone interpretation, base tokens, and uncer
 identity until explicit reconciliation. Upgrades must not auto-send persisted mutations.
 Browser cache persistence remains best-effort and is not a durable database migration path.
 
+## Advisories (announced change, spec 010)
+
+A success envelope may carry `advisories` and `advisories_omitted` next to `ok`, `data` and
+`meta`, only when an advisory applies; otherwise it is byte-identical to before. Clients that
+reject unknown top-level keys must accept or ignore these two keys. Advisories never change
+the result, the exit status or stored data, and never appear on errors. Codes are listed in
+[advisories.md](advisories.md); a new code ships only with its catalogue entry. Cached web
+reads keep the advisories they were fetched with and show their fetch time.
+
 ## Obligations before a future upgrade
 
 1. Identify the actual released versions, contract changes, schema changes, renderer changes,

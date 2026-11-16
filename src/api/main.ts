@@ -1,14 +1,14 @@
-import { domainError, errorEnvelope } from '../core/errors.js';
+import { networkInterfaces } from 'node:os';
+import { errorEnvelope } from '../core/errors.js';
+import { resolveListenAddress } from '../runtime/listen-address.js';
 import { superviseApi } from '../runtime/supervisor.js';
 
 function configuration() {
-  const port = Number(process.env.AI_TASKS_PORT ?? 3000);
-  if (!Number.isInteger(port) || port < 1 || port > 65535)
-    throw domainError('VALIDATION_ERROR', 'Invalid local API port');
-  const origin = process.env.AI_TASKS_ORIGIN ?? `http://127.0.0.1:${port}`;
+  const { host, port, origin } = resolveListenAddress(process.env, networkInterfaces());
   const developmentOrigin =
     process.env.NODE_ENV === 'development' ? process.env.AI_TASKS_DEV_ORIGIN : undefined;
   return {
+    host,
     port,
     security: {
       host: new URL(origin).host,

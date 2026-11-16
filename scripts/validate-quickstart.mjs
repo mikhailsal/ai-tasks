@@ -6,6 +6,7 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import { validateReadmeFirstTask } from './validate-readme.mjs';
 
 // Run after npm ci, runtime verification, and the production build. The enclosing
 // run-suite supervisor owns the job deadline and any detached recovery descendants.
@@ -297,6 +298,7 @@ try {
   for (const args of [['task', 'list'], ['agenda'], ['priorities'], ['stats']])
     await cli(args, { aggregate: true });
   await transportAndRecovery(task);
+  checks.push(await validateReadmeFirstTask());
   process.stdout.write(
     `${JSON.stringify({ ok: true, checks, duration_ms: Math.round(performance.now() - started) })}\n`,
   );

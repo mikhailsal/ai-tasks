@@ -1,12 +1,26 @@
+import { AdvisoryNotice } from '../components/AdvisoryNotice.js';
+import { OccurrenceProgress } from './occurrence-progress.js';
+import { shiftDay, todayIn } from './occurrence-values.js';
 import { occurrenceLabels } from './occurrence-model.js';
 import { useOccurrencePage, type OccurrencesProps } from './occurrence-page.js';
 import { OccurrenceResults } from './occurrence-results.js';
 import { OccurrenceActions, OccurrenceNotices } from './occurrence-actions.js';
+/** The chosen window, or the last 7 days ending today (spec 008 R6). */
+function progressWindow(days: { from: string; to: string }, timezone: string) {
+  const to = days.to || days.from || todayIn(timezone);
+  const from = days.from && days.to ? days.from : shiftDay(to, -6);
+  return from <= to ? { from, to } : { from: to, to: from };
+}
 export function Occurrences(props: OccurrencesProps) {
   const page = useOccurrencePage(props);
   return (
     <section className="stack" aria-label="Повторения задачи">
       <h2>История повторений</h2>
+      <AdvisoryNotice
+        advisories={page.query.data?.advisories ?? []}
+        checkedAt={page.query.data?.meta.now}
+        timezone={props.metadata.timezone}
+      />
       {!page.online && (
         <p role="alert">
           Нет соединения. Выполнение и отмена недоступны; выбор сохранён в черновике.
@@ -26,6 +40,32 @@ export function Occurrences(props: OccurrencesProps) {
           ))}
         </select>
       </label>
+      <fieldset className="day-filter">
+        <legend>Дни повторений</legend>
+        <label className="field">
+          С дня
+          <input
+            type="date"
+            value={page.days.from}
+            onChange={(event) => page.filterDays({ ...page.days, from: event.target.value })}
+          />
+        </label>
+        <label className="field">
+          По день
+          <input
+            type="date"
+            value={page.days.to}
+            onChange={(event) => page.filterDays({ ...page.days, to: event.target.value })}
+          />
+        </label>
+      </fieldset>
+      <OccurrenceProgress
+        path={page.path}
+        epoch={props.metadata.database_epoch}
+        revision={props.recurrence.task_revision}
+        window={progressWindow(page.days, props.metadata.timezone)}
+        online={page.online}
+      />
       <OccurrenceResults page={page} />
       <OccurrenceActions page={page} />
       <OccurrenceNotices page={page} />

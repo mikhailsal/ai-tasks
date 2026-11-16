@@ -1,3 +1,4 @@
+import type { JsonValue } from '../../schema/values.js';
 import { and, eq, max } from 'drizzle-orm';
 import { completeOccurrencesSchema } from '../../schema/recurrence-input.js';
 import { occurrences } from '../../schema/recurrence.js';
@@ -18,6 +19,7 @@ import {
 } from './outcomes.js';
 import { occurrenceEvent, type OccurrenceRow } from './snapshots.js';
 import { createCompletionSuccessor } from './successors.js';
+import { readDeclarations, recordedValues } from './values.js';
 
 function completionPlan(
   transaction: DatabaseTransaction,
@@ -65,6 +67,8 @@ function completeSelected(
   options: {
     row: OccurrenceRow;
     actual: number;
+    note: string | undefined;
+    values: Record<string, JsonValue> | undefined;
     now: number;
   },
 ) {
@@ -76,6 +80,10 @@ function completeSelected(
       state: before.state === 'pending' ? 'completed' : 'completed_late',
       actualCompletedAt: options.actual,
       completionRecordedAt: options.now,
+      ...(options.note === undefined ? {} : { completionNote: options.note }),
+      ...(options.values === undefined || Object.keys(options.values).length === 0
+        ? {}
+        : { recordedValues: options.values }),
       revision: before.revision + 1,
     })
     .where(and(eq(occurrences.id, before.id), eq(occurrences.revision, before.revision)))
@@ -96,64 +104,83 @@ export function completeOccurrences(
     projectSlug,
     operation: 'occurrence.complete',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: true },
-    handler(transaction, now) {
-      const command = occurrenceCommandContext(transaction, projectSlug, taskId);
-      const payload = parseInput(completeOccurrencesSchema, input.payload);
-      const rows = selectOccurrences(transaction, {
-        task: command.task,
-        selected: payload.occurrences,
-      });
-      const actuals = new Map(
-        payload.occurrences.map((selected) => {
-          const actual =
-            selected.actual_completed_at === undefined
-              ? now
-              : parseTimestamp(selected.actual_completed_at);
-          if (actual > now)
-            throw domainError('VALIDATION_ERROR', 'Actual completion cannot be in the future');
-          return [selected.id, actual];
-        }),
+    guards: { entity: { type: 'task', id: taskId } },
+    handler: (transaction, now) =>
+      applyCompletion(transaction, { projectSlug, taskId, input, now }),
+  });
+}
+
+/** The strict completion handler; `occurrence done` (spec 009) runs exactly this. */
+export function applyCompletion(
+  transaction: DatabaseTransaction,
+  options: { projectSlug: string; taskId: string; input: MutationEnvelope; now: number },
+) {
+  const { projectSlug, taskId, input, now } = options;
+  const command = occurrenceCommandContext(transaction, projectSlug, taskId);
+  const payload = parseInput(completeOccurrencesSchema, input.payload);
+  const rows = selectOccurrences(transaction, {
+    task: command.task,
+    selected: payload.occurrences,
+  });
+  const actuals = new Map(
+    payload.occurrences.map((selected) => {
+      const actual =
+        selected.actual_completed_at === undefined
+          ? now
+          : parseTimestamp(selected.actual_completed_at);
+      if (actual > now)
+        throw domainError('VALIDATION_ERROR', 'Actual completion cannot be in the future');
+      return [selected.id, actual];
+    }),
+  );
+  const plans = completionPlan(transaction, { rows, actuals });
+  const notes = new Map(payload.occurrences.map((selected) => [selected.id, selected.note]));
+  const declarations = readDeclarations(transaction, command.task.id);
+  const values = new Map(
+    payload.occurrences.map((selected) => [
+      selected.id,
+      selected.values === undefined ? undefined : recordedValues(declarations, selected.values),
+    ]),
+  );
+  const current = currentRecurrence(transaction, command.task);
+  const events: AuditEvent[] = [];
+  const completed: OccurrenceRow[] = [];
+  for (const plan of plans) {
+    const result = completeSelected(transaction, {
+      row: plan.row,
+      actual: plan.actual,
+      note: notes.get(plan.row.id),
+      values: values.get(plan.row.id),
+      now,
+    });
+    completed.push(result.row);
+    events.push(...result.events);
+    if (plan.generation.id === current.generation.id && plan.schedule.mode === 'after_completion') {
+      events.push(
+        ...createCompletionSuccessor(transaction, {
+          task: command.task,
+          generation: plan.generation,
+          schedule: plan.schedule,
+          predecessor: result.row,
+          now,
+          active: command.status.category === 'active',
+        }).events,
       );
-      const plans = completionPlan(transaction, { rows, actuals });
-      const current = currentRecurrence(transaction, command.task);
-      const events: AuditEvent[] = [];
-      const completed: OccurrenceRow[] = [];
-      for (const plan of plans) {
-        const result = completeSelected(transaction, { row: plan.row, actual: plan.actual, now });
-        completed.push(result.row);
-        events.push(...result.events);
-        if (
-          plan.generation.id === current.generation.id &&
-          plan.schedule.mode === 'after_completion'
-        ) {
-          events.push(
-            ...createCompletionSuccessor(transaction, {
-              task: command.task,
-              generation: plan.generation,
-              schedule: plan.schedule,
-              predecessor: result.row,
-              now,
-              active: command.status.category === 'active',
-            }).events,
-          );
-        }
-      }
-      const snapshot = jsonValueSchema.parse({
-        revision: command.project.configRevision,
-        ...command.config,
-      });
-      return finishOccurrenceCommand(transaction, {
-        context: command,
-        rows: completed,
-        events: events.map((event) => ({
-          ...event,
-          config_snapshot: event.config_snapshot ?? snapshot,
-        })),
-        now,
-        action: 'occurrence.complete',
-        advanceParent: plans.some((plan) => plan.generation.id === current.generation.id),
-      });
-    },
+    }
+  }
+  const snapshot = jsonValueSchema.parse({
+    revision: command.project.configRevision,
+    ...command.config,
+  });
+  return finishOccurrenceCommand(transaction, {
+    context: command,
+    rows: completed,
+    events: events.map((event) => ({
+      ...event,
+      config_snapshot: event.config_snapshot ?? snapshot,
+    })),
+    now,
+    action: 'occurrence.complete',
+    advanceParent: plans.some((plan) => plan.generation.id === current.generation.id),
   });
 }

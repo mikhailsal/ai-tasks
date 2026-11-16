@@ -1,23 +1,7 @@
 import { expect, test, type BrowserContext } from '@playwright/test';
 import { z } from 'zod/mini';
+import { insecureOrigin, proxyApplication } from '../fixtures/insecure-origin.js';
 import { boardProject, projectBoardServer } from '../fixtures/project-board.js';
-const insecureOrigin = 'http://192.0.2.2';
-/** Preserve the real app/assets/API and mutation bytes behind a plain HTTP browser origin. */
-async function proxyApplication(context: BrowserContext, upstreamOrigin: string) {
-  await context.route(`${insecureOrigin}/**`, async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    const headers: Record<string, string> = { ...request.headers(), origin: upstreamOrigin };
-    // Host is routing metadata and must be derived from the real upstream URL.
-    delete headers.host;
-    const upstream = await route.fetch({
-      url: `${upstreamOrigin}${url.pathname}${url.search}`,
-      headers,
-    });
-    await route.fulfill({ response: upstream });
-  });
-}
-
 test('a real app drag on insecure HTTP commits shared order and survives a fresh browser context', async ({
   page,
   browser,

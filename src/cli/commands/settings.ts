@@ -1,7 +1,6 @@
 import type { Command } from 'commander';
 import {
   readCommand,
-  readOptions,
   requireEmptyInput,
   requireSubcommand,
   runMutation,
@@ -19,7 +18,7 @@ export function registerSettingsCommands(program: Command): void {
     .command('get')
     .description('Read global settings in an explicit project or aggregate scope')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, readOptions);
+      const { options, body } = await readCommand(command);
       const scope = readScope(options);
       requireEmptyInput(scopedInput(options, body));
       const [{ getSettings }, context] = await Promise.all([

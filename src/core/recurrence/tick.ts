@@ -65,7 +65,6 @@ export function tickRecurrence(context: CoreContext, projectSlug: string, input:
     projectSlug,
     operation: 'recurrence.tick',
     input,
-    guards: { settings: true },
     handler(transaction, now) {
       const project = requireProject(transaction, projectSlug);
       assertProjectActive(project);

@@ -176,6 +176,17 @@ export const commandMatrix: readonly MatrixRow[] = [
     pattern: `${T}/occurrences/cancel`,
     method: 'POST',
   }),
+  row('occurrence progress <task-id>', 'R', 'US5', { pattern: `${T}/occurrences/progress` }),
+  // Spec 009 write shortcuts: CLI only, no HTTP route.
+  {
+    ...row('occurrence done <task>', 'M', 'US5'),
+    evidence: 'tests/contracts/shortcuts-cli.test.ts',
+  },
+  { ...row('task move <task>', 'M', 'US1'), evidence: 'tests/contracts/shortcuts-cli.test.ts' },
+  row('occurrence miss <task-id>', 'M', 'US5', {
+    pattern: `${T}/occurrences/miss`,
+    method: 'POST',
+  }),
   row('agenda', 'R', 'US4', { pattern: '/agenda' }),
   row('priorities', 'R', 'US4', { pattern: '/priorities' }),
   row('stats', 'R', 'US4', { pattern: '/stats' }),
@@ -526,7 +537,10 @@ export async function matrixInvocation(
       priority_mappings: [],
       affected_tasks: [],
     };
-  else if (row.command === 'description preview')
+  else if (row.command === 'occurrence progress <task-id>') {
+    input.command.push('--from-day', '2026-11-01', '--to-day', '2026-11-07');
+    input.path += '?from_day=2026-11-01&to_day=2026-11-07';
+  } else if (row.command === 'description preview')
     input.body = { description: '## Точный исходник\n<script>ignored</script>' };
   return input;
 }

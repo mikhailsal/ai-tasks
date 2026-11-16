@@ -5,6 +5,7 @@ import {
   prioritiesPageEnvelopeSchema,
 } from '../../../src/schema/read-views.js';
 import { getApi } from './api.js';
+import type { Advisory } from '../../../src/schema/advisories.js';
 export type ViewGroup = z.output<typeof prioritiesPageEnvelopeSchema>['data']['groups'][number];
 function mergeGroups(pages: ViewGroup[][]): ViewGroup[] {
   const groups = new Map<string, ViewGroup>();
@@ -61,6 +62,18 @@ export function useTaskGroups(view: 'agenda' | 'priorities', search: string) {
     groups: mergeGroups(pages.map((page) => page.data.groups)),
     metadata: pages[0]?.meta,
     lastRefresh: pages.at(-1)?.meta.now,
+    advisories: distinctAdvisories(pages.flatMap((page) => page.advisories ?? [])),
     restart,
   };
+}
+/** Each page carries its own advisories; a project-wide one repeats on every page (spec 010). */
+function distinctAdvisories(advisories: readonly Advisory[]): Advisory[] {
+  const seen = new Map<string, Advisory>();
+  // The last page is the freshest, so a later copy replaces an earlier one.
+  for (const advisory of advisories)
+    seen.set(
+      `${advisory.code}:${advisory.subject?.type ?? ''}:${advisory.subject?.id ?? ''}`,
+      advisory,
+    );
+  return [...seen.values()];
 }

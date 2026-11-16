@@ -130,7 +130,10 @@ fill `affected_tasks` with the returned task revisions, and add a fresh `operati
 current `database_epoch`, and both `expected_revision` and `expected_config_revision`
 set to the current configuration revision from `config get` (`data.revision`). Include current `expected_settings_revision` when recurring
 behavior changes. Keep these CLI guards at the top level beside the four migration fields;
-re-read metadata, project and configuration before preparing the guarded file. Commit via
+re-read metadata, project and configuration before preparing the guarded file. The configuration revision is used twice: as `expected_revision` (the
+configuration is the target) and as `expected_config_revision` (the project guard). Mappings for
+statuses or priorities that no task uses are rejected as issues; use the `required_*_mappings`
+from `config preview`. Commit via
 `config migrate --project demo --input config-migration.json --json`. Verify incomplete
 mappings roll back config, task state, and success audit; complete mappings preserve old
 meanings in history. Config update races must produce `CONFIG_CONFLICT`.
@@ -172,8 +175,9 @@ For a later rule change, configure it using
 }
 ```
 
-Replace the illustrative entity/config/settings revisions with fresh reads. For a manual
-run, choose a future first deadline; automated fixtures use injected domain time. Schedule-dependent create/configure/control/complete/tick requests include the settings revision. Activate using `recurrence control` with `to_status_id:"active"`. Use `recurrence get`,
+Replace the illustrative entity/config/settings revisions with fresh reads. A past first deadline is
+accepted: missed periods become owed work once the task is activated. For a manual run, choose a
+future first deadline to avoid owed work; automated fixtures use injected domain time. Schedule-dependent create/configure/control/complete/tick requests include the settings revision. Activate using `recurrence control` with `to_status_id:"active"`. Use `recurrence get`,
 `occurrence list`, and `occurrence get` to observe conditions/snapshots. A project-scoped
 `recurrence tick --input tick.json` supplies the selected task IDs/revisions and fresh
 envelope; it does not accept a production clock override.

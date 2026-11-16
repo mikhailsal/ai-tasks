@@ -1,17 +1,31 @@
-import { and, asc, eq, inArray, lt } from 'drizzle-orm';
+import { and, eq, lt } from 'drizzle-orm';
 import * as z from 'zod/mini';
 import { occurrences, recurrenceIntervals } from '../../schema/recurrence.js';
 import type { DatabaseTransaction } from '../database/types.js';
+import {
+  collectBlockers,
+  describeSteps,
+  occurrenceReason,
+  type Blocker,
+  type BlockerReason,
+} from '../diagnostics/blockers.js';
 import { domainError } from '../errors.js';
 import { readClock } from '../time.js';
 import { parseInput } from '../validation.js';
 import { nextCalendarDeadline } from './calendar.js';
-import { closeRecurrenceInterval, currentRecurrence, type RecurringTask } from './generations.js';
+import {
+  closeRecurrenceInterval,
+  currentRecurrence,
+  openOccurrences,
+  type RecurringTask,
+} from './generations.js';
 import { advanceCalendar } from './calendar-enumeration.js';
 import { expireTaskOccurrences } from './expire.js';
 type RetirementOptions = {
   task: RecurringTask;
   now: number;
+  /** When false and future rows exist, pausing is the step before cancelling them. */
+  paused?: boolean;
 };
 export function hasOwedCalendarSnapshot(options: {
   current: ReturnType<typeof currentRecurrence>;
@@ -65,7 +79,7 @@ export function hasOwedCalendarAnchors(
     .all();
   return hasOwedCalendarSnapshot({ current, intervals, now });
 }
-function owedError(taskId: string) {
+function owedError(taskId: string, blockers?: Blocker[]) {
   return domainError(
     'VALIDATION_ERROR',
     'Run explicit recurrence ticks to reconcile owed anchors before changing or retiring this schedule',
@@ -73,6 +87,7 @@ function owedError(taskId: string) {
       reason: 'owed_anchors',
       action: 'tick',
       task_id: taskId,
+      ...(blockers ? { blockers } : {}),
     },
   );
 }
@@ -81,31 +96,25 @@ export function assertRetirable(
   transaction: DatabaseTransaction,
   options: RetirementOptions,
 ): void {
-  if (hasOwedCalendarAnchors(transaction, options)) throw owedError(options.task.id);
-  const open = transaction
-    .select({ id: occurrences.id, state: occurrences.state, deadline: occurrences.deadline })
-    .from(occurrences)
-    .where(
-      and(
-        eq(occurrences.projectSlug, options.task.projectSlug),
-        eq(occurrences.taskId, options.task.id),
-        inArray(occurrences.state, ['pending', 'debt']),
-      ),
-    )
-    .orderBy(asc(occurrences.deadline), asc(occurrences.id))
-    .limit(1)
-    .get();
+  const owed = hasOwedCalendarAnchors(transaction, options);
+  const rows = openOccurrences(transaction, options.task.id);
+  const now = readClock(() => options.now);
+  const needsPause =
+    options.paused === false && rows.some((row) => occurrenceReason(row, now) === 'future_pending');
+  const extra: BlockerReason[] = [];
+  if (owed) extra.push('owed_anchors');
+  if (needsPause) extra.push('parent_not_paused');
+  const blockers = collectBlockers(rows, { now, extra });
+  if (owed) throw owedError(options.task.id, blockers);
+  const open = rows[0];
   if (open)
-    throw domainError(
-      'VALIDATION_ERROR',
-      'Close pending occurrences and debts before retiring this schedule; future pending rows must be explicitly cancelled while paused',
-      {
-        reason: 'open_occurrences',
-        task_id: options.task.id,
-        occurrence_id: open.id,
-        state: open.state,
-      },
-    );
+    throw domainError('VALIDATION_ERROR', `Retirement is blocked: ${describeSteps(blockers)}`, {
+      reason: 'open_occurrences',
+      task_id: options.task.id,
+      occurrence_id: open.id,
+      state: open.state,
+      blockers,
+    });
 }
 /** Lifecycle intervals end half-open. Timezone continuation includes the effective anchor
  * because its new generation starts strictly later. Neither path precreates old future work. */

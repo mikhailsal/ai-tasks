@@ -15,10 +15,12 @@ import { domainError } from '../errors.js';
 import { readProjectConfiguration, requireProject } from '../projects/read.js';
 import { currentRecurrence, requireRecurring } from '../recurrence/generations.js';
 import { occurrenceResource, type OccurrenceRow } from '../recurrence/snapshots.js';
+import { readDeclarations } from '../recurrence/values.js';
 import { taskStatus } from '../tasks/read.js';
 import { formatTimestamp, readClock } from '../time.js';
 import { parseInput } from '../validation.js';
 import { queryFingerprint } from './cursor.js';
+import { dayCondition, listDayWindow } from './day-window.js';
 import { nextPageCursor, paginationContext, queryMetadata, queryState } from './page.js';
 
 type ReadContext = Pick<CoreContext, 'connection' | 'now'>;
@@ -34,6 +36,12 @@ function frozenResource(row: OccurrenceRow) {
   } catch {
     throw domainError('INTERNAL_ERROR', 'The stored occurrence resource is invalid');
   }
+}
+
+/** Spec 008: declared values appear only when the task declares some. */
+function valuesField(transaction: DatabaseTransaction, taskId: string) {
+  const declared = readDeclarations(transaction, taskId);
+  return declared.length === 0 ? {} : { values: declared };
 }
 
 export function getRecurrence(context: ReadContext, projectSlug: string, taskId: string) {
@@ -92,6 +100,7 @@ export function getRecurrence(context: ReadContext, projectSlug: string, taskId:
         waiting_predecessor_id: current.state.waitingPredecessorId,
       },
       occurrences: counts,
+      ...valuesField(transaction, task.id),
     });
     if (!resource.success)
       throw domainError('INTERNAL_ERROR', 'The stored recurrence resource is invalid');
@@ -110,6 +119,7 @@ export function listOccurrences(
   input: OccurrenceListInput = {},
 ) {
   const parsed = parseInput(occurrenceListInputSchema, input);
+  const days = listDayWindow(parsed);
   return context.connection.db.transaction((transaction) => {
     const state = queryState(transaction);
     const now = readClock(context.now);
@@ -131,6 +141,7 @@ export function listOccurrences(
           eq(occurrences.projectSlug, projectSlug),
           eq(occurrences.taskId, taskId),
           parsed.state === undefined ? undefined : eq(occurrences.state, parsed.state),
+          dayCondition(days),
         ),
       )
       .orderBy(asc(occurrences.deadline), asc(occurrences.id))

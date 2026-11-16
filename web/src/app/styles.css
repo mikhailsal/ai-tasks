@@ -1460,3 +1460,45 @@ dd {
   font-size: 11px;
   line-height: 1.5;
 }
+/* Spec 008: goal progress and the day filter. */
+.progress-figure {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2a3d;
+}
+.progress-skeleton {
+  min-height: 4.5rem;
+  border-radius: 12px;
+  background: #eef2f7;
+}
+.day-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.day-filter input {
+  min-height: 44px;
+}
+/* Spec 010: advisories are neutral notes, not errors. */
+.advisory-notice {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #d9e2ee;
+  border-left: 4px solid #8a9bb4;
+  border-radius: 12px;
+  background: #f1f4f8;
+  padding: 10px 12px;
+  margin-block: 8px;
+}
+.advisory-notice p {
+  margin: 0;
+}
+.advisory-item {
+  display: grid;
+  gap: 2px;
+}
+/* Remedy and check time are what to act on: keep them readable (WCAG AA on the notice). */
+.advisory-notice .subtle {
+  color: #4a5870;
+  font-size: 0.875rem;
+}

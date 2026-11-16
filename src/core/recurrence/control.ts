@@ -90,7 +90,7 @@ export function configureRecurrence(
     projectSlug,
     operation: 'recurrence.configure',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: true },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       const command = commandContext(transaction, projectSlug, taskId);
       const before = command.task;
@@ -204,7 +204,11 @@ function changeBehavior(
 ) {
   const events: AuditEvent[] = [];
   if (move.target.category === 'archived')
-    assertRetirable(transaction, { task: options.task, now: options.now });
+    assertRetirable(transaction, {
+      task: options.task,
+      now: options.now,
+      paused: move.source.category === 'paused',
+    });
   if (move.source.category === move.target.category) return events;
   if (resumingActivation(transaction, options, move))
     return resumeRecurrence(transaction, {
@@ -332,7 +336,7 @@ export function controlRecurrence(
     projectSlug,
     operation: 'recurrence.control',
     input,
-    guards: { entity: { type: 'task', id: taskId }, settings: true },
+    guards: { entity: { type: 'task', id: taskId } },
     handler(transaction, now) {
       const command = commandContext(transaction, projectSlug, taskId);
       const payload = parseInput(controlRecurrenceSchema, input.payload);

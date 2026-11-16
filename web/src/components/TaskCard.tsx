@@ -4,6 +4,8 @@ import { AppLink } from '../app/router.js';
 import type { ViewGroup } from '../data/task-groups.js';
 import { categoryLabels, modelLabel, priorityLabel, viewTime } from '../data/view-format.js';
 import { CopyTextButton } from './CopyTextButton.js';
+import type { Advisory } from '../../../src/schema/advisories.js';
+import { AdvisoryNotice, itemAdvisories } from './AdvisoryNotice.js';
 
 export function ProjectHeading({ group }: { group: ViewGroup }) {
   return (
@@ -100,12 +102,14 @@ export function TaskCard({
   timezone,
   asOf,
   compact = false,
+  advisories = [],
 }: {
   task: TaskResource;
   group: ViewGroup;
   timezone: string;
   asOf: string;
   compact?: boolean;
+  advisories?: readonly Advisory[];
 }) {
   const search = boardReadContext(window.location.search);
   const statuses = task.kind === 'ordinary' ? group.ordinary_statuses : group.recurring_statuses;
@@ -145,6 +149,7 @@ export function TaskCard({
       </p>
       <TaskDeadline task={task} timezone={timezone} search={search} />
       {!compact && <TaskExtras task={task} timezone={timezone} />}
+      <AdvisoryNotice advisories={itemAdvisories(advisories, task.id)} timezone={timezone} />
     </li>
   );
 }

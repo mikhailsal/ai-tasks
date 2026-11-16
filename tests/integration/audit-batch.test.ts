@@ -23,6 +23,7 @@ function batchMutation(rejectLast = false) {
   return executeMutation({
     context: createContext({ connection: fixture.connection, actor: 'human-web' }),
     operation: 'test.project.archive_batch',
+    requirements: {},
     projectSlug: 'alpha',
     input: {
       operation_id: randomUUID(),

@@ -1,5 +1,7 @@
 import * as z from 'zod/mini';
 import type { FastifyInstance, HTTPMethods } from 'fastify';
+import { envelopeRefusal } from '../../core/database/required-revisions.js';
+import { scopeRefusal } from '../../core/diagnostics/scope.js';
 import { domainError } from '../../core/errors.js';
 import { readScopeSchema } from '../../schema/scopes.js';
 import { jsonValueSchema, slugSchema, uuidSchema, type JsonValue } from '../../schema/values.js';
@@ -67,7 +69,14 @@ export function queryInput(value: unknown, allowed: readonly string[]): Record<s
   );
 }
 export function queryScope(value: unknown) {
-  return readScopeSchema.parse(queryInput(value, ['project_slug', 'all_projects']));
+  const query = queryInput(value, ['project_slug', 'all_projects']);
+  const parsed = readScopeSchema.safeParse(query);
+  if (parsed.success) return parsed.data;
+  if (Object.hasOwn(query, 'project_slug')) throw parsed.error;
+  throw scopeRefusal(parsed.error, 'Choose a read scope: project_slug or all_projects=true', [
+    'project_slug',
+    'all_projects=true',
+  ]);
 }
 export function registerMutationRoute(
   app: FastifyInstance,
@@ -86,12 +95,14 @@ export function registerMutationRoute(
     handler: async (request, reply) => {
       emptyQuery(request.query);
       const params = routeParams(request.params, options.task);
-      const command = helperCommandSchema.parse({
+      const parsed = helperCommandSchema.safeParse({
         operation: options.operation,
         scope: { project_slug: params.project_slug },
         ...('task_id' in params ? { task_id: params.task_id } : {}),
         input: request.body,
       });
+      if (!parsed.success) throw envelopeRefusal(request.body, parsed.error);
+      const command = parsed.data;
       const result = await helper.request(command);
       return reply.code(options.created ? 201 : 200).send(result);
     },

@@ -4,6 +4,9 @@ import { domainError } from '../core/errors.js';
 import { successEnvelopeSchema, type MutationEnvelope } from '../schema/envelopes.js';
 import type { JsonValue } from '../schema/values.js';
 import type { createCliMutationContext, createReadContext } from './context.js';
+import { humanOccurrence, humanProgress } from './human-occurrence.js';
+import { mutationOptions, readOptions } from './registry/option-sets.js';
+import { descriptorFor } from './registry/index.js';
 import { mutationInput, readJsonInput, scopedInput, writeJson, type CliInput } from './io.js';
 import {
   commandOptions,
@@ -12,18 +15,8 @@ import {
   requireOptions,
   type CliOptions,
 } from './options.js';
-export const readOptions = ['json', 'project', 'allProjects', 'input'] as const;
-const mutationOptions = [
-  'json',
-  'project',
-  'allProjects',
-  'input',
-  'operationId',
-  'databaseEpoch',
-  'expectedRevision',
-  'expectedConfigRevision',
-  'expectedSettingsRevision',
-] as const;
+import { rememberRequest, rememberedAdvisories } from './advisory-request.js';
+export { mutationOptions, readOptions };
 const queryFlags = [
   ['limit', 'limit'],
   ['cursor', 'cursor'],
@@ -39,10 +32,14 @@ const queryFlags = [
   ['deadlinePreset', 'deadline_preset'],
   ['deadlineDay', 'deadline_day'],
 ] as const;
-export async function readCommand(command: Command, allowed: readonly (keyof CliOptions)[]) {
+/** Allowed options come from the command's registry descriptor (spec 005 R1). */
+export async function readCommand(command: Command) {
   const options = commandOptions(command);
-  requireOptions(options, allowed);
-  return { options, body: await readJsonInput(options.input) };
+  const descriptor = descriptorFor(command);
+  requireOptions(options, descriptor.options);
+  const body = await readJsonInput(options.input);
+  rememberRequest(descriptor.path, options.project, body);
+  return { options, body };
 }
 export function singleProjectInput(options: CliOptions, body: CliInput) {
   const scope = readScope(options);
@@ -78,6 +75,7 @@ function isObject(value: JsonValue): value is Record<string, JsonValue> {
 }
 function humanItem(value: JsonValue): string {
   if (!isObject(value)) return JSON.stringify(value);
+  if (typeof value.occurrence_key === 'string') return humanOccurrence(value);
   if (typeof value.id === 'string' && typeof value.title === 'string')
     return `${value.id}: ${value.title}`;
   if (typeof value.slug === 'string' && typeof value.name === 'string')
@@ -148,7 +146,7 @@ function humanCounters(value: Record<string, JsonValue>): string[] {
   return [
     `Задачи: ${tasks.total}; обычные ${kinds.ordinary ?? 0}; повторяющиеся ${kinds.recurring ?? 0}`,
     `Обычные: не завершены ${ordinary.unfinished}; просрочены ${ordinary.overdue}; завершены ${ordinary.completed}`,
-    `Повторения: ожидают ${occurrences.pending}; долги ${occurrences.debt}; пропуски ${occurrences.missed}; завершены ${occurrences.completed}; поздние ${occurrences.completed_late}; отменены ${occurrences.cancelled}; всего ${occurrences.total}`,
+    `Повторения: ожидают ${occurrences.pending}; долги ${occurrences.debt}; пропуски ${occurrences.missed}; завершены ${occurrences.completed}; записаны после окна ${occurrences.completed_late}; отменены ${occurrences.cancelled}; всего ${occurrences.total}`,
   ];
 }
 function humanGroups(data: Record<string, JsonValue>): string | undefined {
@@ -169,6 +167,8 @@ function humanGroups(data: Record<string, JsonValue>): string | undefined {
 function humanResult(data: JsonValue): string {
   if (!isObject(data)) return humanItem(data);
   if (typeof data.rendered_html === 'string') return data.rendered_html;
+  const progress = humanProgress(data);
+  if (progress !== undefined) return progress;
   const grouped = humanGroups(data);
   if (grouped !== undefined) return grouped;
   if (Array.isArray(data.items)) return data.items.map(humanItem).join('\n') || 'No results';
@@ -181,9 +181,18 @@ function humanResult(data: JsonValue): string {
   return humanItem(data);
 }
 export function writeSuccess(value: unknown, options: CliOptions): void {
-  const result = successEnvelopeSchema.parse(value);
+  const result = { ...successEnvelopeSchema.parse(value), ...rememberedAdvisories() };
   if (options.json) writeJson(result);
-  else process.stdout.write(`${humanResult(result.data)}\n`);
+  else {
+    process.stdout.write(`${humanResult(result.data)}\n`);
+    // Spec 010 FR-007: advisories go to stderr so the main output stays as it was.
+    for (const advisory of result.advisories ?? [])
+      process.stderr.write(
+        `advisory: ${advisory.code}: ${advisory.message} (${advisory.remedy.text})\n`,
+      );
+    if (result.advisories_omitted !== undefined)
+      process.stderr.write(`advisory: ${String(result.advisories_omitted)} more not shown\n`);
+  }
 }
 /** Mutation payload validation and all lifecycle reads remain inside executeMutation. */
 export async function runMutation(
@@ -194,7 +203,7 @@ export async function runMutation(
     input: MutationEnvelope,
   ) => unknown,
 ): Promise<void> {
-  const { options, body } = await readCommand(command, mutationOptions);
+  const { options, body } = await readCommand(command);
   const mutation = mutationInput(options, body);
   const { createCliMutationContext, withCliDatabase } = await import('./context.js');
   const result = await withCliDatabase((connection) =>
@@ -215,12 +224,39 @@ export async function runProjectRead(
   ) => unknown,
   acceptsBody = false,
 ): Promise<void> {
-  const { options, body } = await readCommand(command, readOptions);
+  const { options, body } = await readCommand(command);
   const input = singleProjectInput(options, body);
   if (!acceptsBody) requireEmptyInput(input.body);
   const { createReadContext, withCliDatabase } = await import('./context.js');
   const result = await withCliDatabase((connection) =>
     read(createReadContext({ connection }), input.projectSlug, input.body),
+  );
+  writeSuccess(result, options);
+}
+/**
+ * A write shortcut (spec 009): flags only, no tokens. The core resolver fills the operation
+ * identifier, epoch and revisions under its own lock.
+ */
+export async function runShortcut(
+  command: Command,
+  input: (options: CliOptions) => Record<string, JsonValue | undefined>,
+  write: (
+    context: ReturnType<typeof createCliMutationContext>,
+    projectSlug: string,
+    input: Record<string, JsonValue>,
+  ) => unknown,
+): Promise<void> {
+  const { options, body } = await readCommand(command);
+  const scoped = singleProjectInput(options, body);
+  requireEmptyInput(scoped.body);
+  const fields = Object.fromEntries(
+    Object.entries(input(options)).flatMap(([key, value]) =>
+      value === undefined ? [] : [[key, value]],
+    ),
+  );
+  const { createCliMutationContext, withCliDatabase } = await import('./context.js');
+  const result = await withCliDatabase((connection) =>
+    write(createCliMutationContext(connection, scoped.projectSlug), scoped.projectSlug, fields),
   );
   writeSuccess(result, options);
 }

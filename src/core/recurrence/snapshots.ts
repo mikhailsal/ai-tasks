@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import type { tasks } from '../../schema/entities.js';
+import { projects, type tasks } from '../../schema/entities.js';
 import { confirmationWindowSchema, scheduleSchema } from '../../schema/recurrence-input.js';
 import { occurrences, type scheduleGenerations } from '../../schema/recurrence.js';
 import { jsonValueSchema } from '../../schema/values.js';
@@ -10,6 +10,7 @@ import { domainError } from '../errors.js';
 import { renderMarkdown, RENDER_POLICY_VERSION } from '../markdown/render.js';
 import { formatTimestamp, readClock } from '../time.js';
 import { parseInput } from '../validation.js';
+import { occurrenceDay } from './day.js';
 
 export type OccurrenceRow = typeof occurrences.$inferSelect;
 
@@ -44,6 +45,15 @@ export function occurrenceResource(row: OccurrenceRow) {
     cancelled_at: nullableTimestamp(row.cancelledAt),
     cancel_reason: row.cancelReason,
     created_at: formatTimestamp(row.createdAt),
+    // Spec 007: present only when set, so responses without them stay byte-identical.
+    ...(row.missReason === null ? {} : { miss_reason: row.missReason }),
+    ...(row.missReasonRecordedAt === null
+      ? {}
+      : { miss_reason_recorded_at: formatTimestamp(row.missReasonRecordedAt) }),
+    ...(row.completionNote === null ? {} : { completion_note: row.completionNote }),
+    // Spec 008: always present (null only for rows not yet backfilled).
+    occurrence_day: row.occurrenceDay,
+    ...(row.recordedValues === null ? {} : { recorded_values: row.recordedValues }),
   };
 }
 
@@ -61,7 +71,10 @@ export function occurrenceEvent(
     )
     .map(([field, value]) => ({
       field,
-      before: jsonValueSchema.parse(previous === null ? null : Reflect.get(previous, field)),
+      // A key absent before (an optional field set for the first time) diffs as null.
+      before: jsonValueSchema.parse(
+        previous === null ? null : (Reflect.get(previous, field) ?? null),
+      ),
       after: jsonValueSchema.parse(value),
     }));
   return {
@@ -71,6 +84,17 @@ export function occurrenceEvent(
     changes,
     config_snapshot: after.scheduleSnapshot,
   };
+}
+
+/** The project's day rule at materialization; later rule changes never touch this row. */
+function projectDayStart(transaction: DatabaseTransaction, task: typeof tasks.$inferSelect) {
+  return (
+    transaction
+      .select({ hour: projects.dayStartHour })
+      .from(projects)
+      .where(eq(projects.slug, task.projectSlug))
+      .get()?.hour ?? 0
+  );
 }
 
 /** The caller owns the immediate mutation transaction and appends returned events atomically. */
@@ -153,6 +177,11 @@ export function materializeOccurrence(
       state: 'pending',
       revision: 1,
       createdAt: now,
+      occurrenceDay: occurrenceDay(
+        deadline,
+        generation.timezone,
+        projectDayStart(transaction, task),
+      ),
     })
     .returning()
     .get();

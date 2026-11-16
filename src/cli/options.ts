@@ -1,5 +1,6 @@
 import { type Command, InvalidArgumentError, Option } from 'commander';
 import * as z from 'zod/mini';
+import { scopeRefusal } from '../core/diagnostics/scope.js';
 import { domainError } from '../core/errors.js';
 import { readScopeSchema } from '../schema/scopes.js';
 export const cliOptionsSchema = z.strictObject({
@@ -27,6 +28,15 @@ export const cliOptionsSchema = z.strictObject({
   includeTerminal: z.optional(z.boolean()),
   deadlinePreset: z.optional(z.string()),
   deadlineDay: z.optional(z.string()),
+  day: z.optional(z.string()),
+  fromDay: z.optional(z.string()),
+  toDay: z.optional(z.string()),
+  occurrence: z.optional(z.string()),
+  at: z.optional(z.string()),
+  note: z.optional(z.string()),
+  to: z.optional(z.string()),
+  from: z.optional(z.string()),
+  confirmation: z.optional(z.string()),
 });
 export type CliOptions = z.infer<typeof cliOptionsSchema>;
 const valueOptions = [
@@ -50,6 +60,15 @@ const valueOptions = [
   ['--archive <mode>', 'Archive mode: exclude, include, or only'],
   ['--deadline-preset <preset>', 'Deadline: overdue, today, from_tomorrow, next_3_days, undated'],
   ['--deadline-day <date>', 'Exact local deadline day in application timezone: YYYY-MM-DD'],
+  ['--day <date>', 'Occurrence day under the project day rule: YYYY-MM-DD'],
+  ['--from-day <date>', 'First occurrence day of a window, inclusive: YYYY-MM-DD'],
+  ['--to-day <date>', 'Last occurrence day of a window, inclusive: YYYY-MM-DD'],
+  ['--occurrence <uuid>', 'Occurrence ID, when a day has several occurrences'],
+  ['--at <timestamp>', 'Actual completion time: ISO 8601 with offset'],
+  ['--note <text>', 'Completion note: plain text, at most 500 characters'],
+  ['--to <status>', 'Target status ID'],
+  ['--from <status>', 'Expected current status ID; refused without change if it differs'],
+  ['--confirmation <json>', 'Transition confirmation as JSON, when the workflow requires it'],
 ] as const;
 export function addCommonOptions(command: Command): Command {
   command
@@ -72,10 +91,17 @@ export function addCommonOptions(command: Command): Command {
 export function commandOptions(command: Command): CliOptions {
   return cliOptionsSchema.parse(command.optsWithGlobals());
 }
+function flagName(key: string): string {
+  return `--${key.replaceAll(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)}`;
+}
 export function requireOptions(options: CliOptions, allowed: readonly (keyof CliOptions)[]): void {
   for (const [key, value] of Object.entries(options)) {
     if (value !== undefined && !allowed.some((name) => name === key)) {
-      throw domainError('VALIDATION_ERROR', 'Option is not supported by this command');
+      const option = flagName(key);
+      throw domainError('VALIDATION_ERROR', `Option ${option} is not supported by this command`, {
+        option,
+        supported_options: allowed.map(flagName).sort(),
+      });
     }
   }
 }
@@ -83,11 +109,17 @@ export function readScope(options: CliOptions) {
   if (options.project !== undefined && options.allProjects !== undefined) {
     throw domainError('VALIDATION_ERROR', 'Choose either project or all-projects scope');
   }
-  return readScopeSchema.parse(
+  const parsed = readScopeSchema.safeParse(
     options.project !== undefined
       ? { project_slug: options.project }
       : { all_projects: options.allProjects },
   );
+  if (parsed.success) return parsed.data;
+  if (options.project !== undefined) throw parsed.error;
+  throw scopeRefusal(parsed.error, 'Choose a read scope: --project SLUG or --all-projects', [
+    '--project',
+    '--all-projects',
+  ]);
 }
 export function positiveIntegerOption(value: string): number {
   if (!/^[1-9]\d*$/u.test(value) || !Number.isSafeInteger(Number(value))) {

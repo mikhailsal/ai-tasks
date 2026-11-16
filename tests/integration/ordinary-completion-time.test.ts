@@ -1,3 +1,4 @@
+import { rewindMigrations } from '../fixtures/migration-rewind.js';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod/mini';
@@ -123,6 +124,7 @@ function migrate(id: string, config: ProjectConfigInput, from?: string, to?: str
 function replayCompletionMigration() {
   // Reconstruct the populated schema immediately before 0002. Later migration
   // records must also be removed: Drizzle resumes after the newest timestamp.
+  rewindMigrations(fixture.connection.sqlite, 'occurrenceReasons');
   fixture.connection.sqlite.exec('DROP TABLE board_order; DROP TABLE board_columns');
   fixture.connection.sqlite.exec('ALTER TABLE tasks DROP COLUMN completion_recorded_at');
   fixture.connection.sqlite

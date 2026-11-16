@@ -17,13 +17,21 @@ import { findReceipt, fingerprintRequest, storeReceipt } from '../audit/receipts
 import { domainError, normalizeError } from '../errors.js';
 import { formatTimestamp } from '../time.js';
 import { enforceMutationGuards, mutationGuardsSchema } from './guards.js';
+import { requirementsFor, type RevisionRequirements } from './mutation-requirements.js';
+import {
+  missingRevisions,
+  missingRevisionsError,
+  requiredRevisions,
+} from './required-revisions.js';
 import type { CoreContext, DatabaseTransaction } from './types.js';
-type MutationCommand = {
+export type MutationCommand = {
   context: CoreContext;
   operation: string;
   projectSlug: string;
   input: MutationEnvelope;
   guards?: z.input<typeof mutationGuardsSchema>;
+  /** Only for operations outside `mutationRequirements` (test harnesses). */
+  requirements?: RevisionRequirements;
   handler: (
     transaction: DatabaseTransaction,
     now: number,
@@ -32,7 +40,7 @@ type MutationCommand = {
     events: AuditEvent[];
   };
 };
-function parseCommand(command: MutationCommand) {
+export function parseCommand(command: MutationCommand) {
   try {
     return {
       input: mutationEnvelopeSchema.parse(
@@ -41,110 +49,145 @@ function parseCommand(command: MutationCommand) {
       projectSlug: slugSchema.parse(command.projectSlug),
       guards: mutationGuardsSchema.parse(command.guards ?? {}),
       operation: z.string().check(z.minLength(1)).parse(command.operation),
+      requirements: requirementsFor(command.operation, command.requirements),
     };
   } catch (error) {
-    throw normalizeError(error);
+    throw envelopeFailure(command, error);
   }
 }
-function currentState(transaction: DatabaseTransaction) {
+function recurringPayload(input: unknown): boolean {
+  if (typeof input !== 'object' || input === null) return false;
+  const payload: unknown = Reflect.get(input, 'payload');
+  return (
+    typeof payload === 'object' && payload !== null && Reflect.get(payload, 'kind') === 'recurring'
+  );
+}
+/** Missing envelope tokens are reported together with every other missing revision value. */
+function envelopeFailure(command: MutationCommand, error: unknown) {
+  const normalized = normalizeError(error);
+  const requirements = requirementsFor(command.operation, command.requirements);
+  const missing = missingRevisions(
+    command.input,
+    requiredRevisions(requirements, { recurring: recurringPayload(command.input) }),
+  );
+  if (!missing.includes('operation_id') && !missing.includes('database_epoch')) return normalized;
+  const details =
+    typeof normalized.details === 'object' &&
+    normalized.details !== null &&
+    !Array.isArray(normalized.details)
+      ? normalized.details
+      : {};
+  return missingRevisionsError(missing, details, requirements);
+}
+export function currentState(transaction: DatabaseTransaction) {
   const state = transaction.select().from(applicationState).where(eq(applicationState.id, 1)).get();
   if (!state) throw domainError('INTERNAL_ERROR', 'The database must be migrated before use');
   return state;
 }
+type ParsedCommand = ReturnType<typeof parseCommand>;
+/** The guarded write after parsing and hashing; shared by strict writes and shortcuts. */
+export function commitMutation(
+  transaction: DatabaseTransaction,
+  command: MutationCommand,
+  parsed: ParsedCommand,
+  requestHash: string,
+) {
+  const { context } = command;
+  const { input, projectSlug, guards, operation, requirements } = parsed;
+  const state = currentState(transaction);
+  if (state.databaseEpoch !== input.database_epoch) {
+    throw domainError('DATABASE_EPOCH_CONFLICT', 'The database has been restored or replaced', {
+      current_database_epoch: state.databaseEpoch,
+    });
+  }
+  const replay = findReceipt(transaction, {
+    database_epoch: input.database_epoch,
+    operation_id: input.operation_id,
+    request_hash: requestHash,
+  });
+  if (replay) return replay;
+  enforceMutationGuards(transaction, {
+    context,
+    projectSlug,
+    input,
+    guards,
+    requirements,
+    settingsRevision: state.revision,
+  });
+  const now = context.now();
+  const outcome = command.handler(transaction, now);
+  const auditIds = appendAudit(transaction, {
+    context,
+    operationId: input.operation_id,
+    projectSlug,
+    databaseEpoch: state.databaseEpoch,
+    timestamp: now,
+    events: outcome.events,
+  });
+  transaction
+    .update(applicationState)
+    .set({ readRevision: sql`${applicationState.readRevision} + 1`, updatedAt: now })
+    .where(eq(applicationState.id, 1))
+    .run();
+  const committed = currentState(transaction);
+  if (committed.databaseEpoch !== state.databaseEpoch) {
+    throw domainError('INTERNAL_ERROR', 'Ordinary mutations cannot replace the database epoch');
+  }
+  const result = mutationSuccessEnvelopeSchema.parse({
+    ok: true,
+    data: jsonValueSchema.parse(outcome.data),
+    meta: {
+      database_epoch: committed.databaseEpoch,
+      timezone: committed.timezone,
+      now: formatTimestamp(now),
+      read_revision: committed.readRevision,
+      operation_id: input.operation_id,
+      audit_ids: auditIds,
+    },
+  });
+  storeReceipt(transaction, {
+    request_hash: requestHash,
+    actor: context.actor,
+    project_slug: projectSlug,
+    operation,
+    result,
+    committed_at: now,
+  });
+  return result;
+}
+export function hashCommand(command: MutationCommand, parsed: ParsedCommand) {
+  return fingerprintRequest({
+    operation: parsed.operation,
+    project_slug: parsed.projectSlug,
+    actor: command.context.actor,
+    origin: command.context.origin,
+    input: parsed.input,
+    target: parsed.guards.entity ?? null,
+  });
+}
+/** Exhausted native lock waits are domain conflicts; authored failures stay visible. */
+export function lockFailure(error: unknown): unknown {
+  if (
+    error instanceof Error &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    /^SQLITE_(?:BUSY|LOCKED)(?:_[A-Z0-9]+)*$/u.test(error.code)
+  )
+    return normalizeError(error);
+  return error;
+}
 /** Every state write, immutable event and receipt shares this synchronous transaction. */
 export function executeMutation(command: MutationCommand) {
-  const { context } = command;
-  const { input, projectSlug, guards, operation } = parseCommand(command);
-  const requestHash = fingerprintRequest({
-    operation,
-    project_slug: projectSlug,
-    actor: context.actor,
-    origin: context.origin,
-    input,
-    target: guards.entity ?? null,
-  });
+  const parsed = parseCommand(command);
+  const requestHash = hashCommand(command, parsed);
   try {
-    return context.connection.db.transaction(
-      (transaction) => {
-        const state = currentState(transaction);
-        if (state.databaseEpoch !== input.database_epoch) {
-          throw domainError(
-            'DATABASE_EPOCH_CONFLICT',
-            'The database has been restored or replaced',
-            {
-              current_database_epoch: state.databaseEpoch,
-            },
-          );
-        }
-        const replay = findReceipt(transaction, {
-          database_epoch: input.database_epoch,
-          operation_id: input.operation_id,
-          request_hash: requestHash,
-        });
-        if (replay) return replay;
-        enforceMutationGuards(transaction, {
-          context,
-          projectSlug,
-          input,
-          guards,
-          settingsRevision: state.revision,
-        });
-        const now = context.now();
-        const outcome = command.handler(transaction, now);
-        const auditIds = appendAudit(transaction, {
-          context,
-          operationId: input.operation_id,
-          projectSlug,
-          databaseEpoch: state.databaseEpoch,
-          timestamp: now,
-          events: outcome.events,
-        });
-        transaction
-          .update(applicationState)
-          .set({ readRevision: sql`${applicationState.readRevision} + 1`, updatedAt: now })
-          .where(eq(applicationState.id, 1))
-          .run();
-        const committed = currentState(transaction);
-        if (committed.databaseEpoch !== state.databaseEpoch) {
-          throw domainError(
-            'INTERNAL_ERROR',
-            'Ordinary mutations cannot replace the database epoch',
-          );
-        }
-        const result = mutationSuccessEnvelopeSchema.parse({
-          ok: true,
-          data: jsonValueSchema.parse(outcome.data),
-          meta: {
-            database_epoch: committed.databaseEpoch,
-            timezone: committed.timezone,
-            now: formatTimestamp(now),
-            read_revision: committed.readRevision,
-            operation_id: input.operation_id,
-            audit_ids: auditIds,
-          },
-        });
-        storeReceipt(transaction, {
-          request_hash: requestHash,
-          actor: context.actor,
-          project_slug: projectSlug,
-          operation,
-          result,
-          committed_at: now,
-        });
-        return result;
-      },
+    return command.context.connection.db.transaction(
+      (transaction) => commitMutation(transaction, command, parsed, requestHash),
       { behavior: 'immediate' },
     );
   } catch (error) {
     // Keep authored handler failures visible in direct core tests. Transport boundaries
-    // scrub all unexpected diagnostics; exhausted native lock waits are domain conflicts.
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      typeof error.code === 'string' &&
-      /^SQLITE_(?:BUSY|LOCKED)(?:_[A-Z0-9]+)*$/u.test(error.code)
-    )
-      throw normalizeError(error);
-    throw error;
+    // scrub all unexpected diagnostics.
+    throw lockFailure(error);
   }
 }

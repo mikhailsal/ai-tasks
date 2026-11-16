@@ -1,4 +1,5 @@
 import * as z from 'zod/mini';
+import { advisoryEnvelopeFields } from './advisories.js';
 import {
   jsonValueSchema,
   revisionSchema,
@@ -27,6 +28,7 @@ export const successEnvelopeSchema = z.strictObject({
   ok: z.literal(true),
   data: jsonValueSchema,
   meta: responseMetaSchema,
+  ...advisoryEnvelopeFields,
 });
 export const mutationSuccessEnvelopeSchema = z.extend(successEnvelopeSchema, {
   meta: z.extend(responseMetaSchema, {

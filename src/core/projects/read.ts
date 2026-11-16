@@ -56,6 +56,7 @@ export function projectResource(project: typeof projects.$inferSelect): ProjectR
       config_revision: project.configRevision,
       created_at: formatTimestamp(project.createdAt),
       updated_at: formatTimestamp(project.updatedAt),
+      ...(project.dayStartHour === 0 ? {} : { day_start_hour: project.dayStartHour }),
     });
   } catch {
     throw domainError('INTERNAL_ERROR', 'The stored project resource is invalid');

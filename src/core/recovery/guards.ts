@@ -2,6 +2,7 @@ import { mutationEnvelopeSchema, type MutationEnvelope } from '../../schema/enve
 import { jsonValueSchema, slugSchema, validateJsonBodySize } from '../../schema/values.js';
 import { fingerprintRequest } from '../audit/receipts.js';
 import { enforceMutationGuards } from '../database/guards.js';
+import { mutationRequirements } from '../database/mutation-requirements.js';
 import type { CoreContext } from '../database/types.js';
 import { domainError } from '../errors.js';
 import { parseInput } from '../validation.js';
@@ -67,7 +68,9 @@ export function guardRecoveryMutation(
       context,
       projectSlug,
       input,
-      guards: { settings: true },
+      guards: {},
+      // backup.create and backup.restore share these requirements.
+      requirements: mutationRequirements['backup.create'],
       settingsRevision: state.revision,
     });
   });

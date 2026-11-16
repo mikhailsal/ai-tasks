@@ -3,6 +3,7 @@ import { createContext } from '../core/context.js';
 import { openDatabase } from '../core/database/open.js';
 import { domainError, errorEnvelope } from '../core/errors.js';
 import { readMeta } from '../core/queries/meta.js';
+import { attachAdvisories } from '../core/advisories/attach.js';
 import { successEnvelopeSchema } from '../schema/envelopes.js';
 import { uuidSchema } from '../schema/values.js';
 import { runLocked } from '../runtime/locked-entry.js';
@@ -85,6 +86,16 @@ function attachDrain(drain: ReturnType<typeof createHelperDrain>) {
   };
 }
 
+function advisoryRequest(request: HelperRequest) {
+  const scope: unknown = Reflect.get(request, 'scope');
+  const slug: unknown =
+    scope !== null && typeof scope === 'object' ? Reflect.get(scope, 'project_slug') : null;
+  return {
+    operation: request.operation,
+    projectSlug: typeof slug === 'string' ? slug : null,
+    input: Reflect.get(request, 'input') as unknown,
+  };
+}
 /** Only this child holds SQLite and the shared lifetime lock; the supervisor does neither. */
 export async function runDataHelper(): Promise<void> {
   try {
@@ -106,7 +117,11 @@ export async function runDataHelper(): Promise<void> {
                 ? dispatchRecovery(connection, request, {
                     ...(directory === undefined ? {} : { backupDirectory: directory }),
                   })
-                : dispatch(context, request),
+                : attachAdvisories(
+                    connection.db,
+                    { ...advisoryRequest(request), now: connection.now },
+                    dispatch(context, request),
+                  ),
           });
           const detach = attachDrain(drain);
           try {

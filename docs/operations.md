@@ -11,8 +11,9 @@ replace those strings with values from current responses, not literal request va
 | --------------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |
 | `AI_TASKS_DB_PATH`    | `data/ai-tasks.sqlite` relative to the working directory | Local SQLite file                                                 |
 | `AI_TASKS_BACKUP_DIR` | `backups` beside the database                            | Managed snapshots, manifests, operational receipts/jobs           |
-| `AI_TASKS_PORT`       | `3000`                                                   | Loopback API port                                                 |
-| `AI_TASKS_ORIGIN`     | `http://127.0.0.1:PORT`                                  | Exact allowed public browser origin and expected Host             |
+| `AI_TASKS_HOST`       | `127.0.0.1`                                              | IPv4 address to bind; non-loopback enables local network mode     |
+| `AI_TASKS_PORT`       | `3000`                                                   | API port                                                          |
+| `AI_TASKS_ORIGIN`     | `http://HOST:PORT`                                       | Exact allowed public browser origin and expected Host             |
 | `AI_TASKS_DEV_ORIGIN` | unset                                                    | Additional exact browser origin, only with `NODE_ENV=development` |
 
 Use stable absolute paths in service configuration. Migration and ordinary access verify
@@ -21,7 +22,7 @@ the connection's lifetime lock; API/CLI reads do not auto-migrate. On a fresh da
 `drizzle/`, package metadata, and the installed native dependencies together when deploying.
 The worker entry is `node dist/cli.js worker run --project SLUG --json`, not `worker.js`.
 
-Production binds to `127.0.0.1`; open the exact configured origin. For development, use
+Production binds to `127.0.0.1` by default; open the exact configured origin. For development, use
 `npm run dev` and `http://127.0.0.1:5173`. Its proxy targets API port 3000. The script enables
 that exact development origin; an arbitrary Origin or `localhost` alias is not equivalent.
 The production service worker is built by `npm run build`, not provided by Vite development.
@@ -31,6 +32,32 @@ workers, closes ordinary connections, and then acquires the exclusive lock in an
 helper. The HTTP owner remains database-free during replacement. A standalone `--no-wait`
 restore has its own durable owner; exiting the requesting CLI does not cancel accepted work.
 A force-killed process may require startup recovery. Keep the external recovery records.
+
+## Local network access
+
+To open the interface from a phone or another computer on a trusted private network, choose
+the host's address on that network (`ip -4 -brief address`; ignore Docker, VPN and other
+virtual adapters) and start with it:
+
+```bash
+AI_TASKS_HOST=192.168.1.10 npm start
+```
+
+The server binds only that address, prints the URL to open, and warns that every device on
+the network can read and change all data without signing in. The loopback address is not
+served in this mode; open the printed URL on the host as well. Stop with Ctrl+C or SIGTERM;
+a plain `npm start` returns to loopback-only access. `AI_TASKS_ORIGIN` may be omitted; if set,
+it must equal the canonical `http://HOST:PORT` origin. For `AI_TASKS_PORT=80`, omit
+`:80` from the origin: `http://192.168.1.10`. The printed URL also omits that port.
+Startup fails before listening, with exit 2 and a
+`VALIDATION_ERROR` naming the problem, for `0.0.0.0`, hostnames, IPv6, an address not
+assigned to this computer, or a mismatched origin. Plain HTTP is supported; there is no TLS. Because browsers cache the application shell only
+for secure origins, other devices keep loaded data in an already open tab when the network
+drops, but cannot reload or reopen the application offline in this mode. Android Chrome can
+be told to treat this one address as secure via `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+(per device, at the owner's risk); this is a workaround, not a supported setup.
+Firewall rules and router settings are outside the application. If the host's address
+changes, restart with the new one. Never expose this mode to untrusted networks or the internet.
 
 ## Security boundary
 

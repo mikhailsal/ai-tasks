@@ -191,3 +191,126 @@ All original scenarios/assertions and per-case budgets remain intact. The comman
 checks both actual entry registrations and the shared named scenarios; recovery delegation
 continues to cover all five operations without placeholder backup/job identities. This is
 a scheduling refinement after a timed-out whole run, not a claim that the rerun passed.
+
+## Specification 004: agent diagnostics and onboarding
+
+| Requirement                                                              | Evidence                                                                                                                                          |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-002, FR-003 first-task path, environment block, JSON examples | `README.md` "First task from the CLI"; executed by `scripts/validate-readme.mjs` from `scripts/validate-quickstart.mjs`                           |
+| FR-004 scope choices                                                     | `tests/contracts/diagnostics-cli.test.ts`, `tests/contracts/diagnostics-http.test.ts`                                                             |
+| FR-005, FR-006 allowed values, expected types, union alternatives        | `tests/unit/diagnostics-issues.test.ts`, `tests/contracts/diagnostics-cli.test.ts`                                                                |
+| FR-007 every missing revision value with its source                      | `tests/contracts/diagnostics-cli.test.ts`, `tests/contracts/diagnostics-http.test.ts`                                                             |
+| FR-008, FR-010, FR-011 safe names, suggestions, supported options        | `tests/unit/suggest.test.ts`, `tests/unit/diagnostics-issues.test.ts`, `tests/contracts/diagnostics-cli.test.ts`                                  |
+| FR-012, FR-015, FR-023 blockers in step order                            | `tests/integration/recurring-refusals.test.ts`, `tests/integration/recurrence-retirement.test.ts`, `tests/integration/recurrence-control.test.ts` |
+| FR-013 named, de-duplicated preview issues                               | `src/core/projects/migration-plan.ts`; existing preview suites in `tests/contracts/configuration-dependencies.test.ts`                            |
+| FR-014 missing database                                                  | `tests/contracts/diagnostics-cli.test.ts`                                                                                                         |
+| FR-016, FR-017 agent guide                                               | `docs/agent-guide.md` (recipes executed on a scratch database during authoring)                                                                   |
+| FR-018 change list                                                       | `CHANGELOG.md`                                                                                                                                    |
+| FR-019, FR-020 unchanged codes and statuses, additive details            | existing contract suites unchanged except assertions that now also expect the added keys                                                          |
+| FR-021 bounds                                                            | `tests/integration/recurring-refusals.test.ts` (bounded ids), `tests/unit/diagnostics-issues.test.ts`                                             |
+| SC-002 correction from details alone                                     | `tests/contracts/diagnostics-correction.test.ts`                                                                                                  |
+| FR-022 cold-agent walkthrough                                            | recorded in the pull request                                                                                                                      |
+
+## Specification 005: self-describing commands
+
+| Requirement                                                     | Evidence                                                                                                                                                                    |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-003 fields from the schema                           | `tests/unit/flatten-schema.test.ts`, `tests/contracts/help.test.ts`                                                                                                         |
+| FR-002, FR-010 revision values and sources shared with refusals | `src/core/database/mutation-requirements.ts`; `tests/contracts/help.test.ts` (US4), source comparison in `tests/fixtures/help-checker.ts`                                   |
+| FR-004, SC-001 runnable examples                                | `tests/contracts/help-examples.test.ts` on `tests/fixtures/help-fixtures.ts` states                                                                                         |
+| FR-006, FR-007 one registry, no drift                           | coverage and option probes in `tests/contracts/help.test.ts`; drop and unknown-field probes in `tests/fixtures/help-checker.ts`                                             |
+| SC-002 checks catch faults                                      | `tests/contracts/help-checker.test.ts`                                                                                                                                      |
+| FR-008, FR-009, FR-011 syntax, no database, unknown names       | `tests/contracts/help.test.ts`                                                                                                                                              |
+| FR-012 human help unchanged                                     | snapshot `tests/fixtures/help-human-snapshot.txt` in `tests/contracts/help.test.ts`                                                                                         |
+| SC-003 cold agent, help only                                    | 2026-11-16, Haiku, fresh scratch database: project, ordinary task and list in 11 calls, 0 refusals (runs 1 and 2 had one `meta` scope refusal each; fixed by `scope_flags`) |
+
+## Specification 006: late-recording label
+
+| Requirement                                                    | Evidence                                                                                  |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| FR-001, FR-002 one honest wording in web and CLI               | `tests/unit/occurrence-wording.test.ts`; `tests/e2e/read-views.spec.ts` (workload counts) |
+| FR-003, FR-004, FR-006 nothing hidden, JSON and data unchanged | no change under `src/schema`, `src/core`; existing contract suites green                  |
+| FR-005 documentation                                           | `specs/001-ai-task-manager/contracts/common.md`, `docs/agent-guide.md`, `CHANGELOG.md`    |
+| SC-001 old wording gone                                        | search test in `tests/unit/occurrence-wording.test.ts`                                    |
+
+## Specification 007: reasons and notes on occurrence outcomes
+
+| Requirement                                                              | Evidence                                                                                                                                            |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-003, FR-007 miss now, add a reason, close owed work, refusals | `tests/integration/occurrence-miss.test.ts`                                                                                                         |
+| FR-002, FR-006 note on completion, history keeps both                    | `tests/integration/occurrence-miss.test.ts`                                                                                                         |
+| FR-004 text rules                                                        | `src/schema/recurrence-input.ts` (`outcomeTextSchema`), CHECKs in `drizzle/0004_occurrence_reasons.sql`; `tests/integration/migration-0004.test.ts` |
+| FR-005, US4 visibility                                                   | `tests/contracts/occurrence-miss.test.ts` (CLI, HTTP), `tests/e2e/occurrence-reasons.spec.ts` (430 px, plain text)                                  |
+| FR-008 repeat safety                                                     | receipt replay of `executeMutation` (unchanged), stated in `docs/agent-guide.md`                                                                    |
+| FR-009 owed refusal names the alternative                                | `tests/integration/recurring-refusals.test.ts`                                                                                                      |
+| FR-010, SC-003 compatibility                                             | optional keys only when set; `tests/integration/occurrence-miss.test.ts` (no `completion_note` key without a note)                                  |
+| FR-011, SC-004 retired schedule archives with no completion              | `tests/integration/occurrence-miss.test.ts` (11 Nov case)                                                                                           |
+| Race (T015)                                                              | `tests/contention/occurrence-miss-race.test.ts`                                                                                                     |
+| Upgrade from schema 3                                                    | `tests/integration/migration-0004.test.ts`                                                                                                          |
+
+## Specification 008: occurrence day, recorded values, goal progress
+
+| Requirement                                        | Evidence                                                                                                                                              |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 day rule                                    | `tests/integration/occurrence-day.test.ts` (project update, refusal of 24)                                                                            |
+| FR-002 day of an occurrence, filters               | `tests/integration/occurrence-day.test.ts`, `tests/contracts/occurrence-progress.test.ts` (CLI `--day`)                                               |
+| FR-003 history is stable                           | `tests/integration/occurrence-day.test.ts` (rule change keeps the stored day), `tests/integration/migration-0005.test.ts` (backfill never recomputes) |
+| SC-001 boundary cases incl. 23 and 25 hour days    | `tests/unit/occurrence-day.test.ts` (13 cases)                                                                                                        |
+| FR-004..006 declared and recorded values, refusals | `tests/integration/occurrence-values.test.ts`                                                                                                         |
+| FR-007, SC-002 progress                            | `tests/integration/occurrence-progress.test.ts` (contract example 6 of 7, owed and open, windows)                                                     |
+| FR-008, SC-003 web parity                          | `tests/e2e/occurrence-progress.spec.ts` (430 px, Chromium and WebKit)                                                                                 |
+| FR-009, SC-004 compatibility                       | optional keys only when set; `tests/integration/occurrence-values.test.ts`; human help snapshot gains only the three day options                      |
+| Upgrade from schema 4                              | `tests/integration/migration-0005.test.ts`                                                                                                            |
+| Progress cost                                      | `scripts/benchmark-query.ts` (`occurrence_progress`, 366-day window)                                                                                  |
+
+## Specification 009: write shortcuts
+
+| Requirement                                                      | Evidence                                                                                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-003, FR-004 complete by icon or ID and day, no tokens | `tests/integration/shortcuts-complete.test.ts`, `tests/contracts/shortcuts-cli.test.ts`                                                                             |
+| FR-002 move by target status                                     | `tests/integration/shortcuts-move.test.ts`, `tests/contracts/shortcuts-cli.test.ts`                                                                                 |
+| FR-005 nearest days and candidates                               | `tests/integration/shortcuts-complete.test.ts`, `tests/contracts/shortcuts-cli.test.ts` (exit 3)                                                                    |
+| FR-006 allowed statuses, FR-007 `--from`                         | `tests/integration/shortcuts-move.test.ts`                                                                                                                          |
+| FR-008 repeat safety, two racing processes                       | `tests/integration/shortcuts-complete.test.ts`, `tests/integration/shortcuts-move.test.ts`, `tests/contracts/shortcuts-cli.test.ts` (race through the compiled CLI) |
+| FR-009, SC-003 same audit trail                                  | `tests/integration/shortcuts-parity.test.ts`, `tests/integration/shortcuts-move.test.ts`                                                                            |
+| FR-010 strict form unchanged                                     | `tests/integration/shortcuts-parity.test.ts` (replay and `IDEMPOTENCY_CONFLICT`), full functional suite                                                             |
+| FR-011 follow-up data                                            | strict envelope returned; `tests/integration/shortcuts-complete.test.ts`                                                                                            |
+| FR-012 compatibility                                             | help snapshot gains only the new options and `task move`; no existing input changed                                                                                 |
+
+## Specification 010: advisories
+
+| Requirement                                      | Evidence                                                                                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001, FR-002 content, never fatal, no writes   | `tests/unit/advisories.test.ts`, `tests/integration/readiness-advisories.test.ts` (total_changes unchanged)                       |
+| FR-003, SC-002 catalogue equals docs             | `tests/unit/advisories.test.ts`                                                                                                   |
+| FR-004 order, bound, omitted, aggregation        | `tests/unit/advisories.test.ts`                                                                                                   |
+| FR-005 persistent conditions                     | `tests/integration/readiness-advisories.test.ts`                                                                                  |
+| FR-006, SC-004 web                               | `tests/e2e/advisories.spec.ts` (task, list, 430 px, Chromium and WebKit)                                                          |
+| FR-007 human mode on stderr                      | `tests/contracts/readiness-advisories.test.ts`                                                                                    |
+| FR-008 fixed text, no storage errors             | `tests/unit/advisories.test.ts`                                                                                                   |
+| FR-009, US4 absent and byte-identical, announced | `tests/contracts/readiness-advisories.test.ts` (CLI and HTTP keys), full contract suites, `CHANGELOG.md`, `docs/compatibility.md` |
+
+## Specification 012: recurring readiness
+
+| Requirement                                                         | Evidence                                                                                         |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| FR-001, FR-003 draft advisory on create and reads, gone when active | `tests/integration/readiness-advisories.test.ts`, `tests/contracts/readiness-advisories.test.ts` |
+| FR-002 paused and waiting tasks excluded                            | `tests/integration/readiness-advisories.test.ts`                                                 |
+| FR-004 web                                                          | `tests/e2e/advisories.spec.ts`                                                                   |
+| FR-005 derived local time                                           | `tests/unit/derive-local-time.test.ts`, `tests/integration/readiness-advisories.test.ts`         |
+| FR-006 mismatch until decided                                       | `tests/integration/readiness-advisories.test.ts`                                                 |
+| FR-007, FR-008 nothing newly rejected                               | existing recurrence suites unchanged and green                                                   |
+
+## Specification 011: worker liveness
+
+| Requirement                                                     | Evidence                                                                                                                                                                                |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 pass record, throttle, last write wins                   | `tests/integration/worker-status.test.ts`, `tests/integration/worker-process.test.ts`                                                                                                   |
+| FR-002, US1 status in meta and project reads                    | `tests/integration/worker-process.test.ts` (compiled worker: never, healthy, stale, healthy), `tests/contracts/worker-status-cli.test.ts`, `tests/contracts/worker-status-http.test.ts` |
+| FR-003, SC-001 tolerance 300 s                                  | `tests/integration/worker-status.test.ts`, `tests/integration/worker-process.test.ts`                                                                                                   |
+| FR-004, US2, SC-002 advisory only with an active recurring task | `tests/integration/worker-status.test.ts` (8 Nov case), `tests/contracts/worker-status-cli.test.ts`                                                                                     |
+| FR-005, US3, SC-003 web                                         | `tests/e2e/worker-notice.spec.ts`                                                                                                                                                       |
+| FR-006 remedy                                                   | `tests/contracts/worker-status-cli.test.ts`                                                                                                                                             |
+| FR-007 reads write nothing                                      | `tests/integration/worker-status.test.ts` (total_changes)                                                                                                                               |
+| FR-008 compatibility                                            | `tests/integration/migration-0006.test.ts`, existing suites, `CHANGELOG.md`                                                                                                             |
+| SC-004 100 passes with clock steps                              | `tests/integration/worker-status.test.ts`                                                                                                                                               |

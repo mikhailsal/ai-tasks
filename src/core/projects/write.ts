@@ -12,12 +12,17 @@ export function projectMutationResult(options: {
 }) {
   const before = options.before === null ? null : projectResource(options.before);
   const after = projectResource(options.after);
-  const changes = Object.entries(after)
-    .filter(([key, value]) => before === null || Reflect.get(before, key) !== value)
-    .map(([field, value]) => ({
+  // Optional fields (spec 008 day_start_hour) are absent when default: absent reads as null.
+  const fields = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after)])];
+  const read = (resource: object | null, field: string): unknown =>
+    resource === null ? null : ((Reflect.get(resource, field) as unknown) ?? null);
+  const changes = fields
+    .filter((field) => before === null || read(before, field) !== read(after, field))
+    .filter((field) => before !== null || Object.hasOwn(after, field))
+    .map((field) => ({
       field,
-      before: jsonValueSchema.parse(before === null ? null : Reflect.get(before, field)),
-      after: jsonValueSchema.parse(value),
+      before: jsonValueSchema.parse(read(before, field)),
+      after: jsonValueSchema.parse(read(after, field)),
     }));
   if (before === null)
     changes.push({

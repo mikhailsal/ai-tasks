@@ -24,7 +24,9 @@ npm run build
 npm start
 ```
 
-Open **http://127.0.0.1:3000**. Migration is explicit; queries and server startup do not
+Open **http://127.0.0.1:3000**. To use a phone on the trusted home network, start with
+`AI_TASKS_HOST=<this computer's LAN IPv4> npm start` and open the printed URL; see
+[local network access](docs/operations.md#local-network-access). Migration is explicit; queries and server startup do not
 initialize or migrate a new database. Keep the same environment variables for the server
 and CLI. `npm run dev` starts the API watcher and Vite at **http://127.0.0.1:5173**, with
 `/api` proxied to the API on port 3000. Test offline shell behavior against a production
@@ -34,12 +36,45 @@ The API supervisor starts recurring workers for active projects. Workers process
 at startup, continue bounded catch-up batches, and check again every 30 seconds. Reads do
 not tick recurrence or silently change task state.
 
+## First task from the CLI
+
+This path goes from a fresh checkout to a created and listed task. Run `npm ci` and
+`npm run build` first. Prepare the environment once per shell:
+
+```bash
+export AI_TASKS_DB_PATH="$(mktemp -d)/ai-tasks.sqlite"
+export AI_TASKS_BACKUP_DIR="$(dirname "$AI_TASKS_DB_PATH")/backups"
+```
+
+When `AI_TASKS_DB_PATH` is not set, the CLI and server use `data/ai-tasks.sqlite` in the
+current working directory. A command against a database that does not exist yet fails with
+`INTERNAL_ERROR` and a `run_migration` hint; it never creates the file.
+
+Then five commands, in the same shell (`EPOCH` is a shell variable). `npm run db:migrate`
+rebuilds the server bundle before migrating, so stop a running server first:
+
+```bash
+npm run db:migrate
+EPOCH=$(node dist/cli.js meta --all-projects --json | node -pe 'JSON.parse(require("fs").readFileSync(0)).meta.database_epoch')
+echo "{\"operation_id\":\"$(node -p 'crypto.randomUUID()')\",\"database_epoch\":\"$EPOCH\",\"slug\":\"demo\",\"name\":\"Demo\",\"emoji\":\"🧭\"}" | node dist/cli.js project create --project demo --input - --json
+echo "{\"operation_id\":\"$(node -p 'crypto.randomUUID()')\",\"database_epoch\":\"$EPOCH\",\"expected_config_revision\":1,\"kind\":\"ordinary\",\"title\":\"First task\"}" | node dist/cli.js task create --project demo --input - --json
+node dist/cli.js task list --project demo --json
+```
+
+A new project starts at configuration revision 1; later changes read it with `config get`.
+Every example uses `--json`. Without it, a success prints only `data` in a readable form and
+omits `meta` (database epoch, revisions of the response); refusals are JSON on stderr in
+both modes. A refusal's `error.details` names what to fix: allowed values, every missing
+revision value and where to read it, nearest command or option names, and blockers in the
+order to resolve them. The [agent guide](docs/agent-guide.md) has recipes for common jobs.
+
 ## CLI and contracts
 
 Use the compiled entry directly; a global installation is unnecessary:
 
 ```bash
 node dist/cli.js help --json
+node dist/cli.js help task create --json
 node dist/cli.js meta --all-projects --json
 node dist/cli.js project list --all-projects --json
 node dist/cli.js task list --project demo --json
@@ -57,6 +92,10 @@ supported by its command. Writes require `--project`; backup list/validate/statu
 **flat JSON object** containing operation/epoch/revision tokens and command fields.
 HTTP mutations use `{operation_id,database_epoch,expected_...?,payload:{...}}` and bind
 project scope from the route. Do not pass the HTTP `payload` wrapper to the CLI.
+
+Two everyday writes have one-call shortcuts that need no tokens (spec 009):
+`occurrence done <task> --day YYYY-MM-DD` and `task move <task> --to STATUS`. `<task>` is
+an ID or the task's icon. They write exactly what the strict commands write.
 
 Use `--input file.json` or `--input -` with piped UTF-8 JSON, at most 1 MiB. Duplicate
 flag/body fields are rejected even when equal. Every new mutation uses a fresh UUID;
@@ -79,7 +118,8 @@ storage. SQLite uses WAL with `synchronous=NORMAL`: this is not a promise of zer
 transaction loss after sudden power or OS failure. Use managed manual backups; copying only
 an open `.sqlite` file is not a consistent backup.
 
-The default listener is loopback-only. Exact Host/Origin, Fetch Metadata, JSON, and mutation
+The default listener is loopback-only. Local network mode is explicit and lets every device
+on that network read and change all data. Exact Host/Origin, Fetch Metadata, JSON, and mutation
 header checks reduce cross-origin browser attacks; **they are not authentication**. Local
 programs can make requests directly. Do not expose the service to untrusted users or turn
 it into a public endpoint by changing an origin setting.
@@ -92,6 +132,18 @@ and uncertain operation proposals are separate from cached server snapshots. Rec
 restore preserves original draft text/base and requires explicit review before a changed save.
 
 ## Checks
+
+Changes reach `main` only through pull requests that pass CI and are merged by a human
+maintainer. After cloning, install the committed pre-push hook once:
+
+```bash
+npm run hooks:install
+```
+
+Install ShellCheck before pushing (Debian/Ubuntu: `sudo apt install shellcheck`). The
+installer refuses to overwrite an existing hook configuration or active default hooks;
+migrate those hooks before installing. The hook refuses direct pushes to `main` and runs
+the runtime check, typecheck, lint, formatting and ShellCheck. Tests, build and bundle accounting run in CI; run them locally as below.
 
 ```bash
 npm run typecheck

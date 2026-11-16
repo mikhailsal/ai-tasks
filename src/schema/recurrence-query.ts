@@ -1,5 +1,10 @@
 import * as z from 'zod/mini';
 import { successEnvelopeSchema } from './envelopes.js';
+import {
+  dayStringSchema,
+  recordedValuesSchema,
+  valueDeclarationsSchema,
+} from './occurrence-values.js';
 import { confirmationWindowSchema, missPolicySchema, scheduleSchema } from './recurrence-input.js';
 import {
   configKeySchema,
@@ -49,11 +54,20 @@ export const occurrenceResourceSchema = z.strictObject({
   cancelled_at: z.nullable(timestampSchema),
   cancel_reason: z.nullable(z.string()),
   created_at: timestampSchema,
+  miss_reason: z.optional(z.string()),
+  miss_reason_recorded_at: z.optional(timestampSchema),
+  completion_note: z.optional(z.string()),
+  occurrence_day: z.nullable(dayStringSchema),
+  recorded_values: z.optional(recordedValuesSchema),
 });
 export const occurrenceListInputSchema = z.strictObject({
   state: z.optional(occurrenceStateSchema),
   limit: z._default(z.int().check(z.minimum(1)).check(z.maximum(200)), 50),
   cursor: z.optional(z.string().check(z.minLength(1)).check(z.maxLength(4096))),
+  // Spec 008: one day, or an inclusive window of days.
+  day: z.optional(dayStringSchema),
+  from_day: z.optional(dayStringSchema),
+  to_day: z.optional(dayStringSchema),
 });
 const countSchema = z.int().check(z.nonnegative());
 export const occurrenceCountsSchema = z.strictObject({
@@ -83,6 +97,7 @@ export const recurrenceResourceSchema = z.strictObject({
     waiting_predecessor_id: z.nullable(uuidSchema),
   }),
   occurrences: occurrenceCountsSchema,
+  values: z.exactOptional(valueDeclarationsSchema),
 });
 export const recurrenceEnvelopeSchema = z.extend(successEnvelopeSchema, {
   data: recurrenceResourceSchema,

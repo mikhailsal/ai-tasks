@@ -39,6 +39,8 @@ jobs:
             "$RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check -
           tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint"
+      - name: Check committed Git hooks
+        run: shellcheck .githooks/pre-push
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run format:check

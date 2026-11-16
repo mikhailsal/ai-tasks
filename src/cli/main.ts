@@ -7,6 +7,7 @@ import { Command, CommanderError } from 'commander';
 import * as z from 'zod/mini';
 import { domainError } from '../core/errors.js';
 import { writeFailure, writeJson } from './io.js';
+import { commanderFailure } from './parse-errors.js';
 import { addCommonOptions, commandOptions, requireOptions } from './options.js';
 import { registerProjectCommands } from './commands/projects.js';
 import { registerTaskCommands } from './commands/tasks.js';
@@ -22,6 +23,8 @@ import { registerOccurrenceCommands } from './commands/occurrences.js';
 import { registerSettingsCommands } from './commands/settings.js';
 import { registerViewCommands } from './commands/views.js';
 import { registerBackupCommands } from './commands/backups.js';
+import { registerHelpCommand } from './commands/help.js';
+import { descriptorFor } from './registry/index.js';
 function packageVersion(): string {
   const path = findPackageJSON(import.meta.url);
   if (!path) throw domainError('INTERNAL_ERROR', 'CLI package metadata is unavailable');
@@ -43,22 +46,13 @@ export function createProgram(): Command {
   program.action(() => {
     throw domainError('VALIDATION_ERROR', 'Choose an application command');
   });
-  program
-    .command('help')
-    .description('Show command help')
-    .action((_options: unknown, command: Command) => {
-      const options = commandOptions(command);
-      requireOptions(options, ['json']);
-      const help = program.helpInformation();
-      if (options.json) writeJson({ ok: true, data: { help } });
-      else process.stdout.write(help);
-    });
+  registerHelpCommand(program);
   program
     .command('version')
     .description('Show application version')
     .action((_options: unknown, command: Command) => {
       const options = commandOptions(command);
-      requireOptions(options, ['json']);
+      requireOptions(options, descriptorFor(command).options);
       if (options.json) writeJson({ ok: true, data: { version: program.version() } });
       else process.stdout.write(`${program.version()}\n`);
     });
@@ -79,12 +73,18 @@ export function createProgram(): Command {
   return program;
 }
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
+  let program: Command | undefined;
   try {
-    await createProgram().parseAsync(argv, { from: 'user' });
+    program = createProgram();
+    await program.parseAsync(argv, { from: 'user' });
   } catch (error) {
     if (error instanceof CommanderError) {
       if (error.exitCode === 0) return;
-      writeFailure(domainError('VALIDATION_ERROR', 'Invalid command arguments'));
+      writeFailure(
+        program
+          ? commanderFailure(error, program, argv)
+          : domainError('VALIDATION_ERROR', 'Invalid command arguments'),
+      );
     } else writeFailure(error);
   }
 }

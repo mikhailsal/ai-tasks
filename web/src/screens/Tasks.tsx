@@ -5,6 +5,7 @@ import { AppLink } from '../app/router.js';
 import { AddTaskButton } from '../components/AddTaskButton.js';
 import { Button } from '../components/Button.js';
 import { TaskCard } from '../components/TaskCard.js';
+import { AdvisoryNotice, itemAdvisories } from '../components/AdvisoryNotice.js';
 import { useTaskGroups } from '../data/task-groups.js';
 import { errorMessage } from '../data/resources.js';
 
@@ -49,6 +50,8 @@ export function Tasks({ metadata }: { metadata: MetaData }) {
     query,
     groups,
     metadata: snapshot,
+    lastRefresh,
+    advisories,
     restart,
   } = useTaskGroups('priorities', parameters.toString());
   const online = useMutationAvailability(metadata.database_epoch, selected ?? undefined);
@@ -90,6 +93,13 @@ export function Tasks({ metadata }: { metadata: MetaData }) {
         empty={query.isSuccess && items.length === 0}
         restart={restart}
       />
+      {snapshot && (
+        <AdvisoryNotice
+          advisories={itemAdvisories(advisories)}
+          checkedAt={lastRefresh}
+          timezone={snapshot.timezone}
+        />
+      )}
       <ul className="task-list">
         {snapshot &&
           items.map(({ task, group }) => (
@@ -100,6 +110,7 @@ export function Tasks({ metadata }: { metadata: MetaData }) {
               timezone={snapshot.timezone}
               asOf={snapshot.as_of}
               compact
+              advisories={advisories}
             />
           ))}
       </ul>

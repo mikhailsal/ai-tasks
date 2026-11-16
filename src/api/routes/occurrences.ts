@@ -16,7 +16,16 @@ export function registerOccurrenceRoutes(app: FastifyInstance, helper: DataHelpe
       operation: 'occurrence.list',
       scope: { project_slug: params.project_slug },
       task_id: uuidSchema.parse('task_id' in params ? params.task_id : undefined),
-      input: queryInput(request.query, ['state', 'limit', 'cursor']),
+      input: queryInput(request.query, ['state', 'limit', 'cursor', 'day', 'from_day', 'to_day']),
+    });
+  });
+  app.get(`${base}/progress`, async (request) => {
+    const params = routeParams(request.params, true);
+    return helper.request({
+      operation: 'occurrence.progress',
+      scope: { project_slug: params.project_slug },
+      task_id: uuidSchema.parse('task_id' in params ? params.task_id : undefined),
+      input: queryInput(request.query, ['from_day', 'to_day']),
     });
   });
   app.get(`${base}/:occurrence_id`, async (request) => {
@@ -39,6 +48,12 @@ export function registerOccurrenceRoutes(app: FastifyInstance, helper: DataHelpe
     method: 'POST',
     url: `${base}/cancel`,
     operation: 'occurrence.cancel',
+    task: true,
+  });
+  registerMutationRoute(app, helper, {
+    method: 'POST',
+    url: `${base}/miss`,
+    operation: 'occurrence.miss',
     task: true,
   });
 }

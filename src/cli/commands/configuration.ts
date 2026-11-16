@@ -3,7 +3,6 @@ import { scopedInput } from '../io.js';
 import { readScope } from '../options.js';
 import {
   readCommand,
-  readOptions,
   requireEmptyInput,
   requireSubcommand,
   runProjectRead,
@@ -41,7 +40,7 @@ export function registerConfigurationCommands(program: Command): void {
     .command('presets')
     .description('Read built-in priority and workflow presets')
     .action(async (_options: unknown, command: Command) => {
-      const { options, body } = await readCommand(command, readOptions);
+      const { options, body } = await readCommand(command);
       const scope = readScope(options);
       requireEmptyInput(scopedInput(options, body));
       const [{ readConfigPresets }, context] = await Promise.all([

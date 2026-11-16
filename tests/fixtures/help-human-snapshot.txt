@@ -1,0 +1,100 @@
+### help
+Usage: ai-tasks [options] [command]
+
+Local task state engine
+
+Options:
+  --json                                  Print one JSON response
+  --include-terminal                      Include terminal tasks
+  --all-projects                          Explicit aggregate read scope
+  --project <slug>                        Explicit project scope
+  --operation-id <uuid>                   Mutation operation ID
+  --operation <uuid>                      Audit operation UUID filter
+  --entity-id <uuid>                      Audit entity UUID filter
+  --database-epoch <uuid>                 Current database epoch
+  --expected-revision <integer>           Expected target revision
+  --expected-config-revision <integer>    Expected project config revision
+  --expected-settings-revision <integer>  Expected global settings revision
+  --input <file>                          UTF-8 JSON input file, or - for stdin
+  --limit <integer>                       Page size from 1 to 200
+  --cursor <opaque>                       Continuation cursor
+  --q <text>                              Literal text search
+  --status <key>                          Status filter
+  --state <state>                         Occurrence outcome state filter
+  --category <key>                        Category filter
+  --kind <kind>                           Task kind filter
+  --emoji <emoji>                         Emoji filter
+  --archive <mode>                        Archive mode: exclude, include, or only
+  --deadline-preset <preset>              Deadline: overdue, today, from_tomorrow, next_3_days, undated
+  --deadline-day <date>                   Exact local deadline day in application timezone: YYYY-MM-DD
+  --day <date>                            Occurrence day under the project day rule: YYYY-MM-DD
+  --from-day <date>                       First occurrence day of a window, inclusive: YYYY-MM-DD
+  --to-day <date>                         Last occurrence day of a window, inclusive: YYYY-MM-DD
+  --occurrence <uuid>                     Occurrence ID, when a day has several occurrences
+  --at <timestamp>                        Actual completion time: ISO 8601 with offset
+  --note <text>                           Completion note: plain text, at most 500 characters
+  --to <status>                           Target status ID
+  --from <status>                         Expected current status ID; refused without change if it differs
+  --confirmation <json>                   Transition confirmation as JSON, when the workflow requires it
+  -V, --version                           output the version number
+  -h, --help                              display help for command
+
+Commands:
+  help                                    Show command help
+  version                                 Show application version
+  meta                                    Read global metadata without mutations
+  serve                                   Start the API and web interface (loopback unless AI_TASKS_HOST is set)
+  project                                 Manage projects
+  task                                    Manage ordinary and recurring tasks
+  config                                  Read, preview, and migrate project configuration
+  description                             Preview saved-description Markdown
+  dependency                              Manage explicitly scoped ordinary-task prerequisites
+  audit                                   Read immutable history in an explicit scope
+  worker
+  recurrence                              Read and manage explicitly scoped recurring-task schedules
+  occurrence                              Read and resolve occurrences belonging to an explicit recurring parent
+  settings                                Read global settings or update them with explicit project attribution
+  agenda                                  Read project-grouped local calendar buckets at one captured instant
+  priorities                              Read priorities within each project and its configured model
+  stats                                   Read separate task and occurrence counts; JSON from/to bounds are half-open
+  backup                                  Manage verified snapshots and recovery jobs
+### task --help
+Usage: ai-tasks task [options] [command]
+
+Manage ordinary and recurring tasks
+
+Options:
+  -h, --help            display help for command
+
+Commands:
+  board                 Read one project board column in shared manual order
+  list                  List tasks in an explicit scope
+  position <task-id>    Move a task to an explicitly guarded board position
+  get <task-id>         Read a task and its saved description
+  create                Create an ordinary or recurring task
+  move <task>           Move a task to a status, without reading revisions first
+  update <task-id>      update an ordinary or recurring task
+  transition <task-id>  transition an ordinary or recurring task
+  archive <task-id>     archive an ordinary or recurring task
+  restore <task-id>     restore an ordinary or recurring task
+### task create --help
+Usage: ai-tasks task create [options]
+
+Create an ordinary or recurring task
+
+Options:
+  -h, --help  display help for command
+### occurrence complete --help
+Usage: ai-tasks occurrence complete [options] <task-id>
+
+complete selected occurrence revisions atomically
+
+Options:
+  -h, --help  display help for command
+### backup status --help
+Usage: ai-tasks backup status [options] [job-id]
+
+Read external job status without opening SQLite
+
+Options:
+  -h, --help  display help for command

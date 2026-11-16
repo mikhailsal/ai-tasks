@@ -1,15 +1,12 @@
 import type { Command } from 'commander';
 import type { z } from 'zod/mini';
-import { queryInput, readCommand, readOptions, writeSuccess } from '../command-helpers.js';
+import { queryInput, readCommand, writeSuccess } from '../command-helpers.js';
 import type { createReadContext } from '../context.js';
-import type { CliOptions } from '../options.js';
-const filters = ['q', 'status', 'category', 'kind', 'emoji', 'archive', 'includeTerminal'] as const;
 function registerView<Schema extends z.ZodMiniType>(
   program: Command,
   options: {
     name: string;
     description: string;
-    allowed: readonly (keyof CliOptions)[];
     load: () => Promise<{
       schema: Schema;
       read: (context: ReturnType<typeof createReadContext>, input: z.output<Schema>) => unknown;
@@ -20,7 +17,7 @@ function registerView<Schema extends z.ZodMiniType>(
     .command(options.name)
     .description(options.description)
     .action(async (_options: unknown, command: Command) => {
-      const { options: flags, body } = await readCommand(command, options.allowed);
+      const { options: flags, body } = await readCommand(command);
       const [{ parseInput }, view, context] = await Promise.all([
         import('../../core/validation.js'),
         options.load(),
@@ -34,18 +31,9 @@ function registerView<Schema extends z.ZodMiniType>(
     });
 }
 export function registerViewCommands(program: Command): void {
-  const pagedOptions = [
-    ...readOptions,
-    ...filters,
-    'limit',
-    'cursor',
-    'deadlinePreset',
-    'deadlineDay',
-  ] as const;
   registerView(program, {
     name: 'agenda',
     description: 'Read project-grouped local calendar buckets at one captured instant',
-    allowed: pagedOptions,
     load: async () => {
       const [{ agendaInputSchema }, { listAgenda }] = await Promise.all([
         import('../../schema/read-views.js'),
@@ -57,7 +45,6 @@ export function registerViewCommands(program: Command): void {
   registerView(program, {
     name: 'priorities',
     description: 'Read priorities within each project and its configured model',
-    allowed: pagedOptions,
     load: async () => {
       const [{ prioritiesInputSchema }, { listPriorities }] = await Promise.all([
         import('../../schema/read-views.js'),
@@ -69,7 +56,6 @@ export function registerViewCommands(program: Command): void {
   registerView(program, {
     name: 'stats',
     description: 'Read separate task and occurrence counts; JSON from/to bounds are half-open',
-    allowed: [...readOptions, ...filters],
     load: async () => {
       const [{ statisticsInputSchema }, { getStatistics }] = await Promise.all([
         import('../../schema/read-views.js'),

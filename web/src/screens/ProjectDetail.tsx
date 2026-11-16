@@ -11,6 +11,7 @@ import { presetLabels } from './project-fields.js';
 import { ProjectDescriptionPreview } from './ProjectDescriptionPreview.js';
 import { boardReturnHref } from '../data/board-links.js';
 import { AppLink, navigate } from '../app/router.js';
+import { WorkerNotice } from '../components/WorkerStatus.js';
 export function ProjectDetail({
   source,
   metadata,
@@ -53,6 +54,11 @@ export function ProjectDetail({
         Slug проекта: <span>{source.data.slug}</span>
       </p>
       <p>Приоритет проекта: {source.data.priority}</p>
+      <WorkerNotice
+        worker={source.data.worker}
+        slug={source.data.slug}
+        timezone={metadata.timezone}
+      />
       <CopyTextButton
         text={source.data.emoji}
         label="Скопировать эмодзи проекта"

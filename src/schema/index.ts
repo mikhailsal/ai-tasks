@@ -12,3 +12,4 @@ export * from './pagination.js';
 export * from './audit.js';
 export * from './board.js';
 export * from './board-storage.js';
+export * from './worker.js';

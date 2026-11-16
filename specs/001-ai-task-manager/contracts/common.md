@@ -7,6 +7,10 @@ over the same validated core operations. [CLI](cli.md), [HTTP](http.md), and
 
 ## Values and envelopes
 
+A success envelope is `{ok:true,data,meta}`. It may also carry `advisories` (at most 10) and
+`advisories_omitted`, only when an advisory applies (spec 010, catalogue in
+`docs/advisories.md`); error envelopes never do.
+
 JSON keys use `snake_case`; unknown input keys are rejected. Omission in an update means
 unchanged; `null` clears only an explicitly nullable field. Technical resource IDs, `operation_id` and `database_epoch` are UUIDs; configuration-local status/level IDs are stable ASCII keys, not resource UUIDs. Project slugs are immutable ASCII
 `[a-z0-9]+(?:-[a-z0-9]+)*`, at most 64 characters. Task kind is `ordinary` or `recurring`;
@@ -59,7 +63,8 @@ revision but no task revision. Schedule-dependent operations (recurring create/c
 revision; task edits, transitions, dependency changes, recurrence changes, and occurrence
 batches use parent task revision. Occurrence batches also provide every selected occurrence's
 revision. Each accepted change increments the affected entity's revision. Config migrations
-include the revisions of every affected task. Global settings writes use
+include the revisions of every affected task and send the current configuration revision twice:
+as `expected_revision` and as `expected_config_revision`. Global settings writes use
 `expected_settings_revision` instead of a separate `expected_revision`, plus the attribution
 project's `expected_config_revision`, and name that project explicitly; restore has the
 special preconditions below.
@@ -109,7 +114,7 @@ key. Read-only derived fields cannot be supplied as edits.
 | TaskArchive | empty payload for ordinary; `confirmation?` for a configured recurring archive edge |
 | TaskRestore | `confirmation?`, `replacement_emoji?`, `emoji_collision?:"reject"|"use_default"` |
 | Dependency | `task_id`, `prerequisite_task_id`, `prerequisite_project_slug`, `satisfied:boolean`; mutation body: `prerequisite_task_id`, `prerequisite_project_slug` |
-| Occurrence | `id`, `task_id`, `project_slug`, `deadline`, `state`, `revision`, `description_snapshot`, `rendered_html_snapshot`, `schedule_snapshot`, `miss_policy`, `confirmation_window_ms`, `actual_completed_at:Timestamp|null`, `completion_recorded_at:Timestamp|null`, `missed_at:Timestamp|null`, `cancel_reason:string|null`, `created_at` |
+| Occurrence | `id`, `task_id`, `project_slug`, `deadline`, `state`, `revision`, `description_snapshot`, `rendered_html_snapshot`, `schedule_snapshot`, `miss_policy`, `confirmation_window_ms`, `actual_completed_at:Timestamp|null`, `completion_recorded_at:Timestamp|null`, `missed_at:Timestamp|null`, `cancel_reason:string|null`, `created_at`; optional `miss_reason`, `miss_reason_recorded_at:Timestamp`, `completion_note`, present only when set (spec 007) |
 | Audit | `id`, `operation_id`, `project_slug`, `actor`, `origin`, `timestamp`, `entity_type`, `entity_id`, `action`, `changes:[{field,before,after}]`, `confirmation:null|{asserted,user_text}`, `config_revision`, `database_epoch` |
 | Settings | `timezone` (IANA zone), `revision`, `database_epoch` |
 | Backup | `id`, `created_at`, `source_database_epoch`, `schema_version`, `project_slugs`, `size_bytes`, `checksum` |
@@ -140,7 +145,8 @@ task values. Migration covers archived tasks too as an explicit configuration-ma
 emoji reservations, recurrence retirement rules, and values atomically; only ordinary
 workflow edges and their confirmation requirements are bypassed. History retains old values
 and their config meaning. Unknown, duplicate, missing, or invalid mappings reject the whole
-operation. Dependency satisfaction is checked against the complete projected state for each
+operation; a mapping for a status or priority that no task uses is unknown for this purpose, and
+preview names it with its position and stored key and points to the required mappings. Dependency satisfaction is checked against the complete projected state for each
 ordinary task whose status ID or category changes and whose resulting category is in_progress,
 review, or completed. A label/color/edge-only change or priority-only remapping does not count as
 a status transition. Unchanged dependents, including those in other projects, may remain in an
@@ -173,6 +179,9 @@ The window and policy are required, with no implicit defaults; the window is inc
 - `{mode:"calendar",pattern:"days"|"weeks",every:positive_integer,local_time:"HH:mm:ss.SSS"}`;
 - `{mode:"calendar",pattern:"weekdays",weekdays:[1..7],local_time:"HH:mm:ss.SSS"}` (ISO Monday = 1, distinct nonempty selection);
 - `{mode:"calendar",pattern:"months",every:positive_integer,day_of_month:1..31,local_time:"HH:mm:ss.SSS"}`;
+- (spec 012) on task create and recurrence configure input a calendar `local_time` may be omitted:
+  it is derived from `first_deadline` in the application time zone; stored and returned schedules
+  always carry it;
 - `{mode:"after_completion",unit:"hours"|"days",every:positive_integer}`.
 
 Every interval `every` is an integer in `[1,3650]`. The explicit first deadline, which may be
@@ -191,13 +200,33 @@ parent; changing generations does not create duplicate obligations at an existin
 Occurrences begin `pending`; a mark recorded at or before `deadline + window` becomes
 `completed`. After that instant it becomes `debt` or `missed` according to its captured
 policy, even if expiry processing has not yet run. Completing `debt` or `missed` becomes
-`completed_late`, preserving the miss record and audit. Actual completion defaults to server
+`completed_late`, preserving the miss record and audit. `completed_late` means only that the
+completion was recorded after the confirmation window; `actual_completed_at` is stored
+separately and the state says nothing about when the work was done. The state name is
+unchanged. Actual completion defaults to server
 now; a supplied instant cannot be in the future. Completion-relative actual times must not
 precede the previous actual completion in the same schedule generation. Explicit batch completion accepts
 `{occurrences:[{id,expected_revision,actual_completed_at?}]}` and changes only those IDs.
 All selected rows must belong to the named parent/project and be completable; any conflict
 rolls back the entire batch. Double completion with a new operation ID fails validation;
 an exact idempotent retry returns the original result.
+
+Occurrence day and goal progress (spec 008): each occurrence stores `occurrence_day`, the local
+date of its deadline in its generation's zone under the project's `day_start_hour` (a deadline
+before that hour belongs to the previous day; exactly at it, to the day it starts). It is
+written once at creation and never recomputed. Recorded values are stored as
+`{name:{kind,value}}` against the declarations current at completion. `occurrence progress`
+counts over an inclusive window of days: `done` = completed + completed_late, `decided` =
+done + missed + debt, `open` = pending, cancelled excluded.
+
+Recording a miss (spec 007): `occurrence miss` turns a `pending` row whose window is still open
+into `missed` at once (`missed_at` = now), adds a reason to a `missed` row that has none, or
+closes a `debt` row as `missed` with a required reason, keeping its original `missed_at`. A
+miss recorded on a carry-forward row also requires a reason, because it declines the make-up
+work. Expiry runs first, so a stale `pending` row is judged in its real state. A `missed` row
+never becomes `debt` again and can still be completed later (`completed_late`, reason kept).
+Owed work still cannot be cancelled. Reasons and completion notes are plain text, non-empty
+after trimming, at most 500 characters, and are never edited.
 
 Cancellation accepts `{occurrences:[{id,expected_revision}],reason:string}` only for future
 pending occurrences (`deadline > now`) of a paused parent; reason is required. Pause first

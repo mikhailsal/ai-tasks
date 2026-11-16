@@ -4,12 +4,33 @@ import * as z from 'zod/mini';
 import { createContext, createReadContext } from '../core/context.js';
 import { openDatabase } from '../core/database/open.js';
 import type { DatabaseConnection } from '../core/database/types.js';
+import { hint } from '../core/diagnostics/hints.js';
 import { domainError } from '../core/errors.js';
 import { errorEnvelopeSchema } from '../schema/envelopes.js';
 import { metaEnvelopeSchema } from '../schema/meta.js';
 import { slugSchema } from '../schema/values.js';
 import { runLocked } from '../runtime/locked-entry.js';
+import { adviseFor } from '../core/advisories/attach.js';
+import { rememberAdvisories, rememberedRequest } from './advisory-request.js';
 export { createReadContext };
+const DEFAULT_DATABASE_PATH = 'data/ai-tasks.sqlite';
+/** Names how the location is chosen without echoing the configured path (FR-014). */
+function missingDatabase() {
+  const step = hint(
+    'run_migration',
+    'Set AI_TASKS_DB_PATH or use the default, then run npm run db:migrate',
+    { command: 'npm run db:migrate' },
+  );
+  return domainError(
+    'INTERNAL_ERROR',
+    `Database not found. Set AI_TASKS_DB_PATH (default ${DEFAULT_DATABASE_PATH} in the working directory) and run npm run db:migrate`,
+    {
+      location: process.env.AI_TASKS_DB_PATH === undefined ? 'default' : 'AI_TASKS_DB_PATH',
+      default_path: DEFAULT_DATABASE_PATH,
+      hints: [step],
+    },
+  );
+}
 export function createCliMutationContext(connection: DatabaseConnection, projectSlug: string) {
   const slug = slugSchema.parse(projectSlug);
   return createContext({ connection, actor: `ai-cli:${slug}` });
@@ -17,16 +38,21 @@ export function createCliMutationContext(connection: DatabaseConnection, project
 export async function withCliDatabase<Output>(
   run: (connection: DatabaseConnection) => Output | Promise<Output>,
 ): Promise<Output> {
-  const path = process.env.AI_TASKS_DB_PATH ?? 'data/ai-tasks.sqlite';
+  const path = process.env.AI_TASKS_DB_PATH ?? DEFAULT_DATABASE_PATH;
   try {
     if (!statSync(path).isFile()) throw new Error('Invalid database file');
   } catch {
-    throw domainError('INTERNAL_ERROR', 'Database is unavailable; run the migration command first');
+    throw missingDatabase();
   }
   return runLocked({ databasePath: path, mode: 'shared' }, async (lock) => {
     const connection = openDatabase({ path, lock });
     try {
-      return await run(connection);
+      const result = await run(connection);
+      const request = rememberedRequest();
+      // Spec 010: advisories come from current state while the connection is still open.
+      if (request !== undefined)
+        rememberAdvisories(adviseFor(connection.db, { ...request, now: connection.now }, result));
+      return result;
     } finally {
       connection.close();
     }

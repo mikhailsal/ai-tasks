@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, isNull, max } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, max } from 'drizzle-orm';
 import { applicationState, type tasks } from '../../schema/entities.js';
 import {
   occurrences,
@@ -11,13 +11,17 @@ import {
   recurrenceInputSchema,
   scheduleSchema,
   type RecurrenceInput,
+  type Schedule,
 } from '../../schema/recurrence-input.js';
 import { timezoneSchema } from '../../schema/values.js';
 import type { DatabaseTransaction } from '../database/types.js';
+import { collectBlockers, describeBlockers } from '../diagnostics/blockers.js';
 import { domainError } from '../errors.js';
 import { requireTask } from '../tasks/read.js';
 import { parseTimestamp, readClock } from '../time.js';
 import { parseInput } from '../validation.js';
+import { writeDeclarations } from './values.js';
+import { localTimeOf } from './derive-local-time.js';
 
 export type RecurringTask = typeof tasks.$inferSelect;
 export type ScheduleGeneration = typeof scheduleGenerations.$inferSelect;
@@ -70,6 +74,15 @@ export function recurrenceSettings(transaction: DatabaseTransaction) {
   return state;
 }
 
+/** Pending and debt rows of one parent, oldest deadline first (spec 004 blockers). */
+export function openOccurrences(transaction: DatabaseTransaction, taskId: string) {
+  return transaction
+    .select({ id: occurrences.id, state: occurrences.state, deadline: occurrences.deadline })
+    .from(occurrences)
+    .where(and(eq(occurrences.taskId, taskId), inArray(occurrences.state, ['pending', 'debt'])))
+    .orderBy(asc(occurrences.deadline), asc(occurrences.id))
+    .all();
+}
 export function hasOpenOccurrences(transaction: DatabaseTransaction, taskId: string): boolean {
   return (
     transaction
@@ -106,11 +119,16 @@ function assertGenerationChange(
   if (
     current.schedule.mode !== options.input.schedule.mode &&
     hasOpenOccurrences(transaction, options.task.id)
-  )
+  ) {
+    const blockers = collectBlockers(openOccurrences(transaction, options.task.id), {
+      now: options.now,
+    });
     throw domainError(
       'VALIDATION_ERROR',
-      'A timing-mode change requires no pending or debt occurrences',
+      `A timing-mode change needs no open occurrences: ${describeBlockers(blockers)}`,
+      { blockers },
     );
+  }
   if (options.entry !== 'timezone') {
     const collision = transaction
       .select({ id: occurrences.id })
@@ -126,6 +144,14 @@ function assertGenerationChange(
   }
 }
 
+/** Spec 012 R2: an omitted calendar `local_time` is the first deadline's local time. */
+function completeSchedule(input: RecurrenceInput, timezone: string): Schedule {
+  const schedule = input.schedule;
+  if (schedule.mode !== 'calendar' || schedule.local_time !== undefined)
+    return parseInput(scheduleSchema, schedule);
+  const local_time = localTimeOf(parseTimestamp(input.first_deadline), timezone);
+  return parseInput(scheduleSchema, { ...schedule, local_time });
+}
 /** Callers reconcile old owed anchors before publishing a replacement generation. */
 export function publishGeneration(
   transaction: DatabaseTransaction,
@@ -138,8 +164,9 @@ export function publishGeneration(
 ) {
   if (options.task.kind !== 'recurring')
     throw domainError('VALIDATION_ERROR', 'Only recurring parents have schedule generations');
-  const input = parseInput(recurrenceInputSchema, options.input);
+  const parsed = parseInput(recurrenceInputSchema, options.input);
   const timezone = parseInput(timezoneSchema, options.timezone);
+  const input = { ...parsed, schedule: completeSchedule(parsed, timezone) };
   const now = readClock(() => options.now);
   assertGenerationChange(transaction, { ...options, input, now });
   const prior = transaction
@@ -192,6 +219,8 @@ export function publishGeneration(
       set: state,
     })
     .run();
+  // Declarations live beside the generation, not in it (spec 008 R4); absent keeps them.
+  if (input.values !== undefined) writeDeclarations(transaction, options.task.id, input.values);
   return generation;
 }
 

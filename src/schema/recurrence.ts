@@ -103,6 +103,11 @@ export const occurrences = sqliteTable(
     missedAt: integer('missed_at'),
     cancelledAt: integer('cancelled_at'),
     cancelReason: text('cancel_reason'),
+    missReason: text('miss_reason'),
+    missReasonRecordedAt: integer('miss_reason_recorded_at'),
+    completionNote: text('completion_note'),
+    occurrenceDay: text('occurrence_day'),
+    recordedValues: text('recorded_values', { mode: 'json' }).$type<JsonValue>(),
     createdAt: integer('created_at').notNull(),
   },
   (table) => [
@@ -160,6 +165,14 @@ export const occurrences = sqliteTable(
       'occurrence_cancel_fields',
       sql`(${table.state} = 'cancelled' AND ${table.cancelledAt} IS NOT NULL AND ${table.cancelReason} IS NOT NULL AND length(trim(${table.cancelReason})) > 0) OR (${table.state} != 'cancelled' AND ${table.cancelledAt} IS NULL AND ${table.cancelReason} IS NULL)`,
     ),
+    check(
+      'occurrence_miss_reason_fields',
+      sql`(${table.missReason} IS NULL AND ${table.missReasonRecordedAt} IS NULL) OR (${table.state} IN ('missed','completed_late') AND length(trim(${table.missReason})) > 0 AND length(${table.missReason}) <= 500 AND ${integerConstraint(table.missReasonRecordedAt)})`,
+    ),
+    check(
+      'occurrence_completion_note_fields',
+      sql`${table.completionNote} IS NULL OR (${table.state} IN ('completed','completed_late') AND length(trim(${table.completionNote})) > 0 AND length(${table.completionNote}) <= 500)`,
+    ),
     index('occurrences_task_state_deadline_idx').on(
       table.taskId,
       table.state,
@@ -168,6 +181,15 @@ export const occurrences = sqliteTable(
     ),
     index('occurrences_state_deadline_idx').on(table.state, table.deadline, table.id),
     index('occurrences_expiry_idx').on(table.state, table.expiresAt, table.id),
+    index('occurrences_task_day_idx').on(table.taskId, table.occurrenceDay),
+    check(
+      'occurrence_day_format',
+      sql`${table.occurrenceDay} IS NULL OR ${table.occurrenceDay} GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'`,
+    ),
+    check(
+      'occurrence_recorded_values_fields',
+      sql`${table.recordedValues} IS NULL OR (${table.state} IN ('completed','completed_late') AND json_valid(${table.recordedValues}) AND json_type(${table.recordedValues}) = 'object')`,
+    ),
   ],
 );
 
@@ -181,6 +203,7 @@ export const recurrenceState = sqliteTable(
     waitingPredecessorId: text('waiting_predecessor_id'),
     nextCandidateAt: integer('next_candidate_at'),
     revision: integer('revision').notNull().default(1),
+    valueDeclarations: text('value_declarations', { mode: 'json' }).$type<JsonValue>(),
   },
   (table) => [
     primaryKey({ columns: [table.projectSlug, table.taskId] }),
@@ -202,6 +225,10 @@ export const recurrenceState = sqliteTable(
     }),
     check('recurrence_state_task_uuid', uuidConstraint(table.taskId)),
     check('recurrence_state_generation_uuid', uuidConstraint(table.currentGenerationId)),
+    check(
+      'recurrence_state_value_declarations',
+      sql`${table.valueDeclarations} IS NULL OR (json_valid(${table.valueDeclarations}) AND json_type(${table.valueDeclarations}) = 'array' AND json_array_length(${table.valueDeclarations}) <= 8)`,
+    ),
     check(
       'recurrence_state_predecessor_uuid',
       sql`${table.waitingPredecessorId} IS NULL OR ${uuidConstraint(table.waitingPredecessorId)}`,

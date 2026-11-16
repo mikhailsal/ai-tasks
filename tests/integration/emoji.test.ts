@@ -106,6 +106,7 @@ function assignTask(options: {
     context: createContext({ connection: fixture.connection, actor: 'human-web' }),
     projectSlug,
     operation: previous ? 'test.task.edit_emoji' : 'test.task.create',
+    requirements: {},
     input: {
       operation_id: randomUUID(),
       database_epoch: fixture.epoch,

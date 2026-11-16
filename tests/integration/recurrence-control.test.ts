@@ -288,7 +288,21 @@ it('timing-mode switches cannot discard open occurrences', () => {
         }),
       ),
     ),
-  ).toThrow(expect.objectContaining({ code: 'VALIDATION_ERROR' }));
+  ).toThrow(
+    expect.objectContaining({
+      code: 'VALIDATION_ERROR',
+      message: 'A timing-mode change needs no open occurrences: 1 future pending',
+      details: {
+        blockers: [
+          expect.objectContaining({
+            reason: 'future_pending',
+            count: 1,
+            step: expect.objectContaining({ action: 'cancel_future' }),
+          }),
+        ],
+      },
+    }),
+  );
   expect(generationSnapshot(fixture)).toEqual(before);
 });
 

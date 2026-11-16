@@ -75,7 +75,7 @@ export function finishOccurrenceCommand(
     rows: OccurrenceRow[];
     events: AuditEvent[];
     now: number;
-    action: 'occurrence.complete' | 'occurrence.cancel';
+    action: 'occurrence.complete' | 'occurrence.cancel' | 'occurrence.miss';
     advanceParent?: boolean;
   },
 ) {

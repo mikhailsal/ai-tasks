@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { applicationState } from '../../schema/entities.js';
+import { backfillOccurrenceDays } from './backfill-days.js';
 import type { openDatabase } from './open.js';
 
 function migrationsDirectory(): string {
@@ -17,6 +18,7 @@ function migrationsDirectory(): string {
 
 export function migrateDatabase(connection: ReturnType<typeof openDatabase>): void {
   migrate(connection.db, { migrationsFolder: migrationsDirectory() });
+  backfillOccurrenceDays(connection);
   connection.db.transaction(
     (transaction) => {
       if (transaction.select().from(applicationState).get()) return;

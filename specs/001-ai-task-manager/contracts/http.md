@@ -63,7 +63,7 @@ POSTs and operational actions, still requires the browser request boundary.
 | GET | `/projects` | Explicit scope/filter query → Project list |
 | POST M | `/projects/:project_slug` | ProjectCreate → Project, `201` |
 | GET | `P` | Project |
-| PATCH M | `P` | ProjectPatch → Project |
+| PATCH M | `P` | ProjectPatch (optional `day_start_hour`, spec 008) → Project |
 | POST M | `P/archive` | `{affected_tasks:[{task_id,expected_revision}]}` → Project |
 | POST M | `P/restore` | `{affected_tasks:[{task_id,expected_revision}]}` → Project |
 | GET | `/config/presets` | Explicit read scope → default priority/workflow presets |
@@ -85,10 +85,12 @@ POSTs and operational actions, still requires the browser request boundary.
 | PUT M | `T/recurrence` | RecurrenceInput → settings and updated parent revision |
 | POST M | `T/recurrence/control` | `{to_status_id,confirmation?,first_deadline?}` → lifecycle result |
 | POST M | `P/recurrence/tick` | `{tasks:[{task_id,expected_revision}]}` → generated/expired IDs, affected revisions |
-| GET | `T/occurrences` | `state` filter/pagination → Occurrence list |
+| GET | `T/occurrences` | `state`, `day` or `from_day`/`to_day` filters, pagination → Occurrence list |
+| GET | `T/occurrences/progress` | `from_day`, `to_day` → goal progress (spec 008) |
 | GET | `T/occurrences/:occurrence_id` | Occurrence detail with immutable snapshots |
-| POST M | `T/occurrences/complete` | `{occurrences:[{id,expected_revision,actual_completed_at?}]}` → selected rows and parent revision |
+| POST M | `T/occurrences/complete` | `{occurrences:[{id,expected_revision,actual_completed_at?,note?,values?}]}` → selected rows and parent revision |
 | POST M | `T/occurrences/cancel` | `{occurrences:[{id,expected_revision}],reason}` → selected rows and parent revision |
+| POST M | `T/occurrences/miss` | `{occurrences:[{id,expected_revision}],reason?}` → missed rows and parent revision (spec 007) |
 | GET | `/agenda` | Explicit scope/common filters → project-first agenda groups |
 | GET | `/priorities` | Explicit scope/common filters → project/priority groups |
 | GET | `/stats` | Explicit scope/common filters → separate task/occurrence counters |

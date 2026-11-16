@@ -21,7 +21,6 @@ export function createProject(context: CoreContext, projectSlug: string, input: 
     projectSlug,
     operation: 'project.create',
     input,
-    guards: { projectRequired: false, config: false },
     handler(transaction, now) {
       const data = parseInput(projectCreateSchema, input.payload);
       if (data.slug !== projectSlug)
@@ -104,6 +103,7 @@ export function updateProject(context: CoreContext, projectSlug: string, input: 
           name: patch.name ?? before.name,
           description: patch.description ?? before.description,
           priority: patch.priority ?? before.priority,
+          dayStartHour: patch.day_start_hour ?? before.dayStartHour,
           emoji: marker.emoji,
           emojiKey: marker.key,
           revision: before.revision + 1,

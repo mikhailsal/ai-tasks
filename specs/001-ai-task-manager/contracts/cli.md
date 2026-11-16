@@ -11,7 +11,10 @@ Commander argument parsing, writes one structured error envelope and newline to 
 writes no success stdout, and exits according to the common error table. Human success
 output is concise text; failure JSON is stable in both modes. No prompts, pagers, spinners,
 ANSI colors in JSON, or diagnostic stdout. `--help` and `--version` are informational;
-`help --json` and `version --json` provide machine-readable equivalents.
+`help --json` and `version --json` provide machine-readable equivalents. `help <command words>
+--json` describes one command (fields, revision values with their sources, a runnable example)
+or lists a family; `help --json` adds a `commands` index. See
+[specification 005](../../005-self-describing-commands/contracts/help.md).
 These informational commands work without opening a database and return
 `{ok:true,data:{...}}` without database metadata. Domain and operational application
 commands retain the full shared response envelopes.
@@ -26,7 +29,7 @@ Common options:
 | `--operation-id <uuid>` | Required for every mutation, chosen once and reused for exact retry |
 | `--database-epoch <uuid>` | Required mutation epoch from a successful read |
 | `--expected-revision <integer>` | Existing target revision |
-| `--expected-config-revision <integer>` | Current project config revision for project-owned writes |
+| `--expected-config-revision <integer>` | Current project config revision for project-owned writes; `config migrate` also sends it as `expected_revision` |
 | `--expected-settings-revision <integer>` | Required for schedule-dependent writes to detect timezone changes |
 | `--input <file>` or `--input -` | UTF-8 JSON payload from file or stdin; mutually exclusive sources |
 | `--limit <1..200>`, `--cursor <opaque>` | Pagination for list/read views |
@@ -60,13 +63,13 @@ envelopes. There are no implicit mutations during reads.
 
 | Command | Type | Input and result |
 |---|---|---|
-| `meta` | R | `--all-projects`; epoch, timezone, settings revision, contract/schema version, maintenance status |
-| `serve` | O | `--all-projects`; start loopback API/UI supervisor and scoped recurrence workers; no arbitrary listen-host option |
+| `meta` | R | `--all-projects`; epoch, timezone, settings revision, contract/schema version, maintenance status, `workers` (spec 011) |
+| `serve` | O | `--all-projects`; start API/UI supervisor and scoped recurrence workers; loopback unless `AI_TASKS_HOST` names one validated local network address ([003 contract](../../003-lan-access/contracts/serve-network.md)); no listen-host flag |
 | `worker run` | O | `--project`; dedicated recurrence worker with startup/30-second ticks, internal fresh revision/epoch reads and deterministic tick IDs |
 | `project list` | R | Required scope selection; filters/pagination → project list |
 | `project get` | R | `--project` → Project |
 | `project create` | M | `--project <new-slug>`, ProjectCreate (slug must match); no old revision → Project with default or supplied config |
-| `project update` | M | ProjectPatch → Project |
+| `project update` | M | ProjectPatch (optional `day_start_hour` 0..23, spec 008) → Project |
 | `project archive` | M | `{affected_tasks:[{task_id,expected_revision}]}` → Project; reconcile owed anchors and validate every child lifecycle/revision |
 | `project restore` | M | `{affected_tasks:[{task_id,expected_revision}]}` → Project; formerly active recurring children become paused, other children retain state |
 | `config presets` | R | Explicit read scope → built-in ordinary/recurring workflows and priority presets |
@@ -85,13 +88,17 @@ envelopes. There are no implicit mutations during reads.
 | `dependency add <task-id>` | M | Dependency mutation payload; expected parent task revision → updated task and links |
 | `dependency remove <task-id>` | M | Same endpoint identifiers/revision → updated task and links |
 | `recurrence get <task-id>` | R | `--project` → settings, lifecycle category, derived deadline, pending/debt counts |
-| `recurrence configure <task-id>` | M | RecurrenceInput, expected parent revision → revised future schedule |
+| `recurrence configure <task-id>` | M | RecurrenceInput (optional `values:[{name,kind}]`, `[]` clears, spec 008), expected parent revision → revised future schedule |
 | `recurrence control <task-id>` | M | `{to_status_id,confirmation?,first_deadline?}` → parent/recurrence; lifecycle category supplies activate/pause/resume behavior |
 | `recurrence tick` | M | `--project`, `{tasks:[{task_id,expected_revision}],expected_config_revision}` → generated/expired occurrence IDs and updated revisions; server clock only |
-| `occurrence list <task-id>` | R | `--project`, `--state` optional, pagination → occurrence list |
+| `occurrence list <task-id>` | R | `--project`, `--state` optional, `--day` or `--from-day`/`--to-day` optional (spec 008), pagination → occurrence list |
+| `occurrence progress <task-id>` | R | `--project`, `--from-day`, `--to-day` (inclusive, at most 366 days) → `{task_id,from_day,to_day,done,decided,open,breakdown}` (spec 008) |
+| `occurrence done <task>` | M | `--project`, `--day` or `--occurrence`, `--at`, `--note`; no input body or tokens; `<task>` is an ID or reserved icon (spec 009) |
+| `task move <task>` | M | `--project`, `--to`, `--from`, `--confirmation`; no input body or tokens (spec 009) |
 | `occurrence get <task-id> <occurrence-id>` | R | `--project` → occurrence with description/settings snapshot |
-| `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times; expected parent revision → selected occurrences and parent revision |
+| `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times, `note` and `values` (spec 008); expected parent revision → selected occurrences and parent revision |
 | `occurrence cancel <task-id>` | M | Explicit occurrence IDs/revisions plus reason; expected parent revision → cancelled rows and parent revision |
+| `occurrence miss <task-id>` | M | Explicit occurrence IDs/revisions plus optional reason (required for owed and carry-forward rows); expected parent, config and settings revisions → missed rows and parent revision (spec 007) |
 | `agenda` | R | Scope/filters/pagination → project/agenda groups containing Task summaries |
 | `priorities` | R | Scope/filters/pagination → project/priority groups containing Task summaries |
 | `stats` | R | Scope/filters → separate task and occurrence counters |

@@ -73,6 +73,12 @@ const commands = [
     input: queryInput,
   }),
   z.strictObject({
+    operation: z.literal('occurrence.progress'),
+    scope: projectScope,
+    task_id: uuidSchema,
+    input: queryInput,
+  }),
+  z.strictObject({
     operation: z.literal('occurrence.get'),
     scope: projectScope,
     task_id: uuidSchema,
@@ -80,6 +86,7 @@ const commands = [
   }),
   z.strictObject({ operation: z.literal('occurrence.complete'), ...taskMutation }),
   z.strictObject({ operation: z.literal('occurrence.cancel'), ...taskMutation }),
+  z.strictObject({ operation: z.literal('occurrence.miss'), ...taskMutation }),
   z.strictObject({
     operation: z.literal('backup.create'),
     ...mutation,
