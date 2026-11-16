@@ -50,7 +50,8 @@ When `AI_TASKS_DB_PATH` is not set, the CLI and server use `data/ai-tasks.sqlite
 current working directory. A command against a database that does not exist yet fails with
 `INTERNAL_ERROR` and a `run_migration` hint; it never creates the file.
 
-Then five commands:
+Then five commands, in the same shell (`EPOCH` is a shell variable). `npm run db:migrate`
+rebuilds the server bundle before migrating, so stop a running server first:
 
 ```bash
 npm run db:migrate

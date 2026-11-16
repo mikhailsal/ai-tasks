@@ -7,7 +7,7 @@ import { join } from 'node:path';
 /** Runs the README first-task block as written on its own scratch database (spec 004 FR-001). */
 export async function validateReadmeFirstTask() {
   const readme = await readFile('README.md', 'utf8');
-  const section = readme.split('Then five commands:')[1] ?? '';
+  const section = readme.split('Then five commands')[1] ?? '';
   const block = /```bash\n([\s\S]*?)```/u.exec(section)?.[1];
   assert.ok(block, 'README first-task block is missing');
   const commands = block.split('\n').filter((line) => line.trim() !== '');
