@@ -5,6 +5,13 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Wording: completions recorded after the window (spec 006)
+
+- The web label and the human `stats` summary for `completed_late` now read «Записано после
+  окна» and «записаны после окна N». The state means the completion was recorded after the
+  confirmation window; it says nothing about when the work was done. JSON output, the state
+  value and stored data are unchanged.
+
 ### Agent-visible changes: self-describing commands (spec 005)
 
 - `help <command words> --json` describes one command: purpose, kind, scope, positional

@@ -223,3 +223,12 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 | FR-008, FR-009, FR-011 syntax, no database, unknown names       | `tests/contracts/help.test.ts`                                                                                                                                              |
 | FR-012 human help unchanged                                     | snapshot `tests/fixtures/help-human-snapshot.txt` in `tests/contracts/help.test.ts`                                                                                         |
 | SC-003 cold agent, help only                                    | 2026-11-16, Haiku, fresh scratch database: project, ordinary task and list in 11 calls, 0 refusals (runs 1 and 2 had one `meta` scope refusal each; fixed by `scope_flags`) |
+
+## Specification 006: late-recording label
+
+| Requirement                                                    | Evidence                                                                                  |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| FR-001, FR-002 one honest wording in web and CLI               | `tests/unit/occurrence-wording.test.ts`; `tests/e2e/read-views.spec.ts` (workload counts) |
+| FR-003, FR-004, FR-006 nothing hidden, JSON and data unchanged | no change under `src/schema`, `src/core`; existing contract suites green                  |
+| FR-005 documentation                                           | `specs/001-ai-task-manager/contracts/common.md`, `docs/agent-guide.md`, `CHANGELOG.md`    |
+| SC-001 old wording gone                                        | search test in `tests/unit/occurrence-wording.test.ts`                                    |

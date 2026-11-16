@@ -193,7 +193,10 @@ parent; changing generations does not create duplicate obligations at an existin
 Occurrences begin `pending`; a mark recorded at or before `deadline + window` becomes
 `completed`. After that instant it becomes `debt` or `missed` according to its captured
 policy, even if expiry processing has not yet run. Completing `debt` or `missed` becomes
-`completed_late`, preserving the miss record and audit. Actual completion defaults to server
+`completed_late`, preserving the miss record and audit. `completed_late` means only that the
+completion was recorded after the confirmation window; `actual_completed_at` is stored
+separately and the state says nothing about when the work was done. The state name is
+unchanged. Actual completion defaults to server
 now; a supplied instant cannot be in the future. Completion-relative actual times must not
 precede the previous actual completion in the same schedule generation. Explicit batch completion accepts
 `{occurrences:[{id,expected_revision,actual_completed_at?}]}` and changes only those IDs.

@@ -58,7 +58,7 @@ export const occurrenceLabels: Record<OccurrenceResource['state'], string> = {
   debt: 'Долг',
   missed: 'Пропущено',
   completed: 'Выполнено',
-  completed_late: 'Выполнено поздно',
+  completed_late: 'Записано после окна',
   cancelled: 'Отменено',
 };
 export function occurrenceScheduleLabel(

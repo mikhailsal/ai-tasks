@@ -294,7 +294,8 @@ future pending one is refused with `blockers[]`.
 
 List the owed rows (state `debt`), then complete them by id. Add `actual_completed_at` per
 row to record when the work really happened. It cannot be in the future. A row completed
-after its window becomes `completed_late`: the report came after the window, and both the
+after its window becomes `completed_late`. The state means only that the completion was
+recorded after the window; it says nothing about when the work was done. Both the
 miss and the completion time are kept.
 
 ```bash

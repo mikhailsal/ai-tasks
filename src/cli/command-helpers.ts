@@ -140,7 +140,7 @@ function humanCounters(value: Record<string, JsonValue>): string[] {
   return [
     `Задачи: ${tasks.total}; обычные ${kinds.ordinary ?? 0}; повторяющиеся ${kinds.recurring ?? 0}`,
     `Обычные: не завершены ${ordinary.unfinished}; просрочены ${ordinary.overdue}; завершены ${ordinary.completed}`,
-    `Повторения: ожидают ${occurrences.pending}; долги ${occurrences.debt}; пропуски ${occurrences.missed}; завершены ${occurrences.completed}; поздние ${occurrences.completed_late}; отменены ${occurrences.cancelled}; всего ${occurrences.total}`,
+    `Повторения: ожидают ${occurrences.pending}; долги ${occurrences.debt}; пропуски ${occurrences.missed}; завершены ${occurrences.completed}; записаны после окна ${occurrences.completed_late}; отменены ${occurrences.cancelled}; всего ${occurrences.total}`,
   ];
 }
 function humanGroups(data: Record<string, JsonValue>): string | undefined {
