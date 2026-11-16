@@ -9,8 +9,8 @@ Extends the `help` row of [cli.md](../../001-ai-task-manager/contracts/cli.md). 
 
 | Request | Success `data` | Notes |
 |---|---|---|
-| `help --json` | `{help, commands}` | `help` is today's usage text, unchanged; `commands` is the grouped index. |
-| `help <family> --json` | `{command, members}` | Family members with purposes. |
+| `help --json` | `{help, commands}` | `help` is today's usage text, unchanged; `commands` is the grouped index; each entry has `command`, `purpose` and `scope` (`project`, `all_projects`, `either`, `none`). |
+| `help <family> --json` | `{command, members}` | Family members with purposes and scope. |
 | `help <command words> --json` | CommandDescription | One leaf command. |
 | `help` / `<command> --help` (human) | text | Byte-identical to today. |
 | `help <unknown> --json` | refusal | `VALIDATION_ERROR`, exit 2, `details.names` (safe form) and `details.suggestions` as in 004; never another command's help. |

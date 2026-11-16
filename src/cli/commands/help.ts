@@ -46,7 +46,11 @@ async function jsonHelp(program: Command, words: readonly string[]) {
   if (members.length > 0)
     return {
       command: family,
-      members: members.map((entry) => ({ command: entry.path.join(' '), purpose: entry.purpose })),
+      members: members.map((entry) => ({
+        command: entry.path.join(' '),
+        purpose: entry.purpose,
+        scope: entry.scope,
+      })),
     };
   const { name, known } = knownNames(words);
   throw unknownName('command', name, known);

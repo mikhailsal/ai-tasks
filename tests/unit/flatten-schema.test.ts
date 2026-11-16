@@ -54,3 +54,12 @@ it('nullable, enum, nested and omitted fields', () => {
     { name: 'when', type: 'timestamp', required: true, nullable: true },
   ]);
 });
+
+it('merges a union of value lists into one field with every allowed value', () => {
+  const fields = flattenSchema(
+    z.strictObject({ category: z.optional(z.union([z.enum(['a', 'b']), z.enum(['b', 'c'])])) }),
+  );
+  expect(fields).toEqual([
+    { name: 'category', type: 'string', required: false, allowed: ['a', 'b', 'c'] },
+  ]);
+});

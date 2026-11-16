@@ -56,12 +56,12 @@ export function descriptorFor(command: Command): CommandDescriptor {
 
 /** Whole-interface index grouped by the first path word. */
 export function commandIndex() {
-  const groups = new Map<string, { command: string; purpose: string }[]>();
+  const groups = new Map<string, { command: string; purpose: string; scope: string }[]>();
   for (const descriptor of registry) {
     const family = descriptor.path[0] ?? '';
     groups.set(family, [
       ...(groups.get(family) ?? []),
-      { command: descriptor.path.join(' '), purpose: descriptor.purpose },
+      { command: descriptor.path.join(' '), purpose: descriptor.purpose, scope: descriptor.scope },
     ]);
   }
   return [...groups].map(([family, commands]) => ({ family, commands }));

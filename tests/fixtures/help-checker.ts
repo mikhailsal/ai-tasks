@@ -72,7 +72,7 @@ async function fieldProblems(
 ) {
   if (!descriptor.input || !request.input) return [];
   const problems: string[] = [];
-  const top = (await flattenSchema(await descriptor.input()))
+  const top = flattenSchema(await descriptor.input())
     .filter((field) => field.required && !/[.[]/u.test(field.name))
     .map((field) => field.name);
   for (const field of top) {

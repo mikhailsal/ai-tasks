@@ -114,6 +114,16 @@ function unionField(name: string, required: boolean, branches: Json[]): InputFie
   };
 }
 
+/** A union of value lists (`a | b` enums) is one value field; other unions keep branches. */
+function unionOf(name: string, required: boolean, branches: Json[]): InputField {
+  const values = branches.map(allowedValues);
+  if (values.every((entry) => entry !== undefined)) {
+    const allowed = [...new Set(values.flat())];
+    return { name, type: scalarType(branches[0] ?? {}), required, allowed };
+  }
+  return unionField(name, required, branches);
+}
+
 function arrayFields(name: string, required: boolean, schema: Json): InputField[] {
   const bounds = {
     ...(typeof schema.minItems === 'number' ? { min: schema.minItems } : {}),
@@ -135,7 +145,7 @@ function fieldsOf(name: string, required: boolean, raw: Json): InputField[] {
   const { schema, nullable } = unwrapNullable(raw);
   const mark = nullable ? { nullable: true as const } : {};
   const branches = list(schema.oneOf ?? schema.anyOf);
-  if (branches.length > 0) return [{ ...unionField(name, required, branches), ...mark }];
+  if (branches.length > 0) return [{ ...unionOf(name, required, branches), ...mark }];
   if (schema.type === 'array') return arrayFields(name, required, schema);
   if (isJson(schema.properties))
     return objectFields(schema, `${name}.`).map((field) => ({
