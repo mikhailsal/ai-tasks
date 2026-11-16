@@ -28,6 +28,9 @@ export const cliOptionsSchema = z.strictObject({
   includeTerminal: z.optional(z.boolean()),
   deadlinePreset: z.optional(z.string()),
   deadlineDay: z.optional(z.string()),
+  day: z.optional(z.string()),
+  fromDay: z.optional(z.string()),
+  toDay: z.optional(z.string()),
 });
 export type CliOptions = z.infer<typeof cliOptionsSchema>;
 const valueOptions = [
@@ -51,6 +54,9 @@ const valueOptions = [
   ['--archive <mode>', 'Archive mode: exclude, include, or only'],
   ['--deadline-preset <preset>', 'Deadline: overdue, today, from_tomorrow, next_3_days, undated'],
   ['--deadline-day <date>', 'Exact local deadline day in application timezone: YYYY-MM-DD'],
+  ['--day <date>', 'Occurrence day under the project day rule: YYYY-MM-DD'],
+  ['--from-day <date>', 'First occurrence day of a window, inclusive: YYYY-MM-DD'],
+  ['--to-day <date>', 'Last occurrence day of a window, inclusive: YYYY-MM-DD'],
 ] as const;
 export function addCommonOptions(command: Command): Command {
   command

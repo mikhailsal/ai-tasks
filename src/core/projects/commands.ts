@@ -103,6 +103,7 @@ export function updateProject(context: CoreContext, projectSlug: string, input: 
           name: patch.name ?? before.name,
           description: patch.description ?? before.description,
           priority: patch.priority ?? before.priority,
+          dayStartHour: patch.day_start_hour ?? before.dayStartHour,
           emoji: marker.emoji,
           emojiKey: marker.key,
           revision: before.revision + 1,

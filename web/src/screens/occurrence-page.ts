@@ -57,25 +57,31 @@ function unavailable(
     options.recurrence.category === 'archived',
   ].some(Boolean);
 }
-export function useOccurrencePage(options: OccurrencesProps) {
-  const { projectSlug, taskId, recurrence, metadata } = options;
-  const path = `/projects/${encodeURIComponent(projectSlug)}/tasks/${taskId}/occurrences`;
-  const key = `occurrences:${projectSlug}:${taskId}`;
-  const [state, setState] = useState('');
-  const [cursor, setCursor] = useState<string>();
-  const online = useMutationAvailability(metadata.database_epoch, projectSlug);
-  const query = useQuery({
-    queryKey: [
-      'occurrences',
-      metadata.database_epoch,
-      taskId,
-      recurrence.task_revision,
-      state,
-      cursor,
-    ],
+/** Spec 008: one chosen date filters one day; two filter an inclusive window. */
+function dayParams(days: { from: string; to: string }): Record<string, string> {
+  if (days.from && days.to)
+    return days.from <= days.to
+      ? { from_day: days.from, to_day: days.to }
+      : { from_day: days.to, to_day: days.from };
+  const one = days.from || days.to;
+  return one ? { day: one } : {};
+}
+function useOccurrenceList(
+  path: string,
+  [epoch, taskId, revision, filters]: [
+    string,
+    string,
+    number,
+    { state: string; days: { from: string; to: string }; cursor: string | undefined },
+  ],
+) {
+  const { state, days, cursor } = filters;
+  return useQuery({
+    queryKey: ['occurrences', epoch, taskId, revision, state, days.from, days.to, cursor],
     queryFn: ({ signal }) => {
       const params = new URLSearchParams({
         ...(state ? { state } : {}),
+        ...dayParams(days),
         ...(cursor ? { cursor } : {}),
       });
       return getApi(`${path}?${params}`, occurrencePageEnvelopeSchema, signal);
@@ -83,6 +89,21 @@ export function useOccurrencePage(options: OccurrencesProps) {
     retry: false,
     refetchOnWindowFocus: false,
   });
+}
+export function useOccurrencePage(options: OccurrencesProps) {
+  const { projectSlug, taskId, recurrence, metadata } = options;
+  const path = `/projects/${encodeURIComponent(projectSlug)}/tasks/${taskId}/occurrences`;
+  const key = `occurrences:${projectSlug}:${taskId}`;
+  const [state, setState] = useState('');
+  const [days, setDays] = useState({ from: '', to: '' });
+  const [cursor, setCursor] = useState<string>();
+  const online = useMutationAvailability(metadata.database_epoch, projectSlug);
+  const query = useOccurrenceList(path, [
+    metadata.database_epoch,
+    taskId,
+    recurrence.task_revision,
+    { state, days, cursor },
+  ]);
   const editor = useSettingsDraft(
     key,
     {
@@ -133,6 +154,10 @@ export function useOccurrencePage(options: OccurrencesProps) {
     setState(value);
     setCursor(undefined);
   }
+  function filterDays(value: { from: string; to: string }) {
+    setDays(value);
+    setCursor(undefined);
+  }
   const canCancel =
     cancellationAllowed(
       editor.draft.fields.selected,
@@ -152,6 +177,9 @@ export function useOccurrencePage(options: OccurrencesProps) {
     updateSelected,
     firstPage,
     filter,
+    days,
+    filterDays,
+    path,
     canCancel,
     disabled: unavailable(options, editor, commands, online),
   };

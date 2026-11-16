@@ -58,7 +58,7 @@ describe('complete normative command/route inventory (later rows are data, never
       (match) => `${match[2]} ${match[1]}`,
     );
     const inventoried = commandMatrix.map((row) => `${row.kind} ${row.command}`);
-    expect(specified).toHaveLength(44);
+    expect(specified).toHaveLength(45);
     expect(new Set(inventoried).size).toBe(inventoried.length);
     expect(inventoried.sort()).toEqual(specified.sort());
     for (const utility of informationalCommands) expect(cliContract).toContain(utility.join(' '));
@@ -83,7 +83,7 @@ describe('complete normative command/route inventory (later rows are data, never
     const inventoried = commandMatrix.flatMap((row) =>
       row.http.map((route) => `${route.method} ${route.pattern}`),
     );
-    expect(specified).toHaveLength(43);
+    expect(specified).toHaveLength(44);
     expect(new Set(inventoried).size).toBe(inventoried.length);
     expect(inventoried.sort()).toEqual(specified.sort());
   });
@@ -107,7 +107,7 @@ describe('complete normative command/route inventory (later rows are data, never
         expect(existsSync(resolve(root, row.evidence ?? ''))).toBe(true);
       }
     }
-    expect(commandMatrix.filter((row) => row.readiness === 'ready')).toHaveLength(44);
+    expect(commandMatrix.filter((row) => row.readiness === 'ready')).toHaveLength(45);
     expect(commandMatrix.filter((row) => row.readiness === 'pending')).toHaveLength(0);
     expect(
       commandMatrix.filter((row) => row.readiness === 'target').map((row) => row.command),

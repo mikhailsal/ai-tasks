@@ -1,4 +1,5 @@
 import * as z from 'zod/mini';
+import { recordedValuesInputSchema, valueDeclarationsSchema } from './occurrence-values.js';
 import {
   configKeySchema,
   jsonValueSchema,
@@ -48,6 +49,8 @@ export const recurrenceInputSchema = z.strictObject({
   schedule: scheduleSchema,
   miss_policy: missPolicySchema,
   confirmation_window_ms: confirmationWindowSchema,
+  // Spec 008: named values a completion may carry; [] clears; absent keeps them.
+  values: z.exactOptional(valueDeclarationsSchema),
 });
 const selectedOccurrenceSchema = z.strictObject({
   id: uuidSchema,
@@ -68,6 +71,7 @@ export const outcomeTextSchema = z
 export const selectedCompletionSchema = z.extend(selectedOccurrenceSchema, {
   actual_completed_at: z.optional(timestampSchema),
   note: z.optional(outcomeTextSchema),
+  values: z.optional(recordedValuesInputSchema),
 });
 function distinctSelection<
   T extends {

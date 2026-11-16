@@ -73,6 +73,12 @@ const commands = [
     input: queryInput,
   }),
   z.strictObject({
+    operation: z.literal('occurrence.progress'),
+    scope: projectScope,
+    task_id: uuidSchema,
+    input: queryInput,
+  }),
+  z.strictObject({
     operation: z.literal('occurrence.get'),
     scope: projectScope,
     task_id: uuidSchema,

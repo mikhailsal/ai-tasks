@@ -23,6 +23,7 @@ it('lists list items with [] names, repeats and bounds, and names timestamps', (
     },
     { name: 'occurrences[].id', type: 'uuid', required: true, repeats: true, min: 1 },
     { name: 'occurrences[].note', type: 'string', required: false, repeats: true, min: 1 },
+    { name: 'occurrences[].values', type: 'object', required: false, repeats: true, min: 1 },
   ]);
 });
 

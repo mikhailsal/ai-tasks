@@ -7,6 +7,7 @@ import {
   occurrenceScheduleLabel,
   type SelectedOccurrence,
 } from './occurrence-model.js';
+import { recordedValuesLabel } from './occurrence-values.js';
 
 function ActualFields({
   value,
@@ -53,6 +54,7 @@ export function OccurrenceRow({
       <p>
         Срок: <time dateTime={row.deadline}>{row.deadline}</time>
       </p>
+      {row.occurrence_day !== null && <p>День: {row.occurrence_day}</p>}
       <p>
         Граница подтверждения: <time dateTime={row.expires_at}>{row.expires_at}</time>
       </p>
@@ -75,6 +77,9 @@ export function OccurrenceRow({
       {row.cancel_reason !== null && <p>Причина отмены: {row.cancel_reason}</p>}
       {row.miss_reason !== undefined && <p>Причина пропуска: {row.miss_reason}</p>}
       {row.completion_note !== undefined && <p>Заметка: {row.completion_note}</p>}
+      {row.recorded_values !== undefined && (
+        <p>Значения: {recordedValuesLabel(row.recorded_values)}</p>
+      )}
       <p>
         Сохранённые условия: поколение {row.schedule_snapshot.generation_number},{' '}
         {row.schedule_snapshot.timezone};{' '}

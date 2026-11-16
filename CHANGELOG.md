@@ -5,6 +5,23 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Agent-visible changes: occurrence day, recorded values, goal progress (spec 008)
+
+- Projects have `day_start_hour` (0..23, default 0), set by `project update`; the project
+  resource shows it only when non-zero.
+- Occurrences carry `occurrence_day`, stored at creation under the project's rule and never
+  recomputed; existing rows are filled with the midnight rule on upgrade. This key is always
+  present: clients that reject unknown keys must accept it.
+- `occurrence list` (CLI `--day`, `--from-day`, `--to-day`; HTTP `day`, `from_day`, `to_day`)
+  filters by day.
+- Recurrence input accepts `values` (declared names and kinds); completion items accept
+  `values`; occurrence resources show `recorded_values` and the recurrence resource shows
+  `values` only when set.
+- New read `occurrence progress <task-id>` (HTTP `GET .../occurrences/progress`) with
+  `{done, decided, open, breakdown}` over an inclusive window of days. The web occurrence
+  screen shows the day, the values, a date filter and the progress block.
+- Migration `0005_occurrence_day` plus a backfill step in `migrateDatabase` (also on restore).
+
 ### Agent-visible changes: reasons and notes on occurrence outcomes (spec 007)
 
 - New `occurrence miss <task-id>` (HTTP `POST .../occurrences/miss`): record a miss now with an

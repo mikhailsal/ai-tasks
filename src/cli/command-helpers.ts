@@ -4,6 +4,7 @@ import { domainError } from '../core/errors.js';
 import { successEnvelopeSchema, type MutationEnvelope } from '../schema/envelopes.js';
 import type { JsonValue } from '../schema/values.js';
 import type { createCliMutationContext, createReadContext } from './context.js';
+import { humanOccurrence, humanProgress } from './human-occurrence.js';
 import { mutationOptions, readOptions } from './registry/option-sets.js';
 import { descriptorFor } from './registry/index.js';
 import { mutationInput, readJsonInput, scopedInput, writeJson, type CliInput } from './io.js';
@@ -67,12 +68,6 @@ export function requireEmptyInput(body: CliInput): void {
 }
 function isObject(value: JsonValue): value is Record<string, JsonValue> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-/** One occurrence line with its reason and note (spec 007 US4). */
-function humanOccurrence(value: Record<string, JsonValue>): string {
-  const text = (label: string, field: JsonValue | undefined) =>
-    typeof field === 'string' ? `; ${label}: ${field}` : '';
-  return `${String(value.id)} ${String(value.state)} ${String(value.deadline)}${text('причина пропуска', value.miss_reason)}${text('заметка', value.completion_note)}${text('причина отмены', value.cancel_reason)}`;
 }
 function humanItem(value: JsonValue): string {
   if (!isObject(value)) return JSON.stringify(value);
@@ -168,6 +163,8 @@ function humanGroups(data: Record<string, JsonValue>): string | undefined {
 function humanResult(data: JsonValue): string {
   if (!isObject(data)) return humanItem(data);
   if (typeof data.rendered_html === 'string') return data.rendered_html;
+  const progress = humanProgress(data);
+  if (progress !== undefined) return progress;
   const grouped = humanGroups(data);
   if (grouped !== undefined) return grouped;
   if (Array.isArray(data.items)) return data.items.map(humanItem).join('\n') || 'No results';

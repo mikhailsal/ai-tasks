@@ -69,7 +69,7 @@ envelopes. There are no implicit mutations during reads.
 | `project list` | R | Required scope selection; filters/pagination → project list |
 | `project get` | R | `--project` → Project |
 | `project create` | M | `--project <new-slug>`, ProjectCreate (slug must match); no old revision → Project with default or supplied config |
-| `project update` | M | ProjectPatch → Project |
+| `project update` | M | ProjectPatch (optional `day_start_hour` 0..23, spec 008) → Project |
 | `project archive` | M | `{affected_tasks:[{task_id,expected_revision}]}` → Project; reconcile owed anchors and validate every child lifecycle/revision |
 | `project restore` | M | `{affected_tasks:[{task_id,expected_revision}]}` → Project; formerly active recurring children become paused, other children retain state |
 | `config presets` | R | Explicit read scope → built-in ordinary/recurring workflows and priority presets |
@@ -88,12 +88,13 @@ envelopes. There are no implicit mutations during reads.
 | `dependency add <task-id>` | M | Dependency mutation payload; expected parent task revision → updated task and links |
 | `dependency remove <task-id>` | M | Same endpoint identifiers/revision → updated task and links |
 | `recurrence get <task-id>` | R | `--project` → settings, lifecycle category, derived deadline, pending/debt counts |
-| `recurrence configure <task-id>` | M | RecurrenceInput, expected parent revision → revised future schedule |
+| `recurrence configure <task-id>` | M | RecurrenceInput (optional `values:[{name,kind}]`, `[]` clears, spec 008), expected parent revision → revised future schedule |
 | `recurrence control <task-id>` | M | `{to_status_id,confirmation?,first_deadline?}` → parent/recurrence; lifecycle category supplies activate/pause/resume behavior |
 | `recurrence tick` | M | `--project`, `{tasks:[{task_id,expected_revision}],expected_config_revision}` → generated/expired occurrence IDs and updated revisions; server clock only |
-| `occurrence list <task-id>` | R | `--project`, `--state` optional, pagination → occurrence list |
+| `occurrence list <task-id>` | R | `--project`, `--state` optional, `--day` or `--from-day`/`--to-day` optional (spec 008), pagination → occurrence list |
+| `occurrence progress <task-id>` | R | `--project`, `--from-day`, `--to-day` (inclusive, at most 366 days) → `{task_id,from_day,to_day,done,decided,open,breakdown}` (spec 008) |
 | `occurrence get <task-id> <occurrence-id>` | R | `--project` → occurrence with description/settings snapshot |
-| `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times and `note`; expected parent revision → selected occurrences and parent revision |
+| `occurrence complete <task-id>` | M | Explicit occurrence IDs/revisions and optional per-row actual times, `note` and `values` (spec 008); expected parent revision → selected occurrences and parent revision |
 | `occurrence cancel <task-id>` | M | Explicit occurrence IDs/revisions plus reason; expected parent revision → cancelled rows and parent revision |
 | `occurrence miss <task-id>` | M | Explicit occurrence IDs/revisions plus optional reason (required for owed and carry-forward rows); expected parent, config and settings revisions → missed rows and parent revision (spec 007) |
 | `agenda` | R | Scope/filters/pagination → project/agenda groups containing Task summaries |

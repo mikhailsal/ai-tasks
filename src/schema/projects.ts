@@ -20,12 +20,15 @@ export const projectCreateSchema = z.strictObject({
   priority: z.optional(projectPrioritySchema),
   config: z.optional(projectConfigInputSchema),
 });
+export const dayStartHourSchema = z.int().check(z.minimum(0)).check(z.maximum(23));
 export const projectPatchSchema = z
   .strictObject({
     name: z.optional(nameSchema),
     description: z.optional(descriptionSchema),
     emoji: z.optional(z.string()),
     priority: z.optional(projectPrioritySchema),
+    // Spec 008: local hour at which the project's day begins.
+    day_start_hour: z.optional(dayStartHourSchema),
   })
   .check(
     z.refine((input) => Object.keys(input).length > 0, 'At least one project field is required'),
@@ -45,5 +48,6 @@ export const projectResourceSchema = z.strictObject({
   config_revision: revisionSchema,
   created_at: timestampSchema,
   updated_at: timestampSchema,
+  day_start_hour: z.exactOptional(dayStartHourSchema),
 });
 export type ProjectResource = z.infer<typeof projectResourceSchema>;

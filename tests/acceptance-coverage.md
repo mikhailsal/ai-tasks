@@ -247,3 +247,18 @@ a scheduling refinement after a timed-out whole run, not a claim that the rerun 
 | FR-011, SC-004 retired schedule archives with no completion              | `tests/integration/occurrence-miss.test.ts` (11 Nov case)                                                                                           |
 | Race (T015)                                                              | `tests/contention/occurrence-miss-race.test.ts`                                                                                                     |
 | Upgrade from schema 3                                                    | `tests/integration/migration-0004.test.ts`                                                                                                          |
+
+## Specification 008: occurrence day, recorded values, goal progress
+
+| Requirement                                        | Evidence                                                                                                                                              |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 day rule                                    | `tests/integration/occurrence-day.test.ts` (project update, refusal of 24)                                                                            |
+| FR-002 day of an occurrence, filters               | `tests/integration/occurrence-day.test.ts`, `tests/contracts/occurrence-progress.test.ts` (CLI `--day`)                                               |
+| FR-003 history is stable                           | `tests/integration/occurrence-day.test.ts` (rule change keeps the stored day), `tests/integration/migration-0005.test.ts` (backfill never recomputes) |
+| SC-001 boundary cases incl. 23 and 25 hour days    | `tests/unit/occurrence-day.test.ts` (13 cases)                                                                                                        |
+| FR-004..006 declared and recorded values, refusals | `tests/integration/occurrence-values.test.ts`                                                                                                         |
+| FR-007, SC-002 progress                            | `tests/integration/occurrence-progress.test.ts` (contract example 6 of 7, owed and open, windows)                                                     |
+| FR-008, SC-003 web parity                          | `tests/e2e/occurrence-progress.spec.ts` (430 px, Chromium and WebKit)                                                                                 |
+| FR-009, SC-004 compatibility                       | optional keys only when set; `tests/integration/occurrence-values.test.ts`; human help snapshot gains only the three day options                      |
+| Upgrade from schema 4                              | `tests/integration/migration-0005.test.ts`                                                                                                            |
+| Progress cost                                      | `scripts/benchmark-query.ts` (`occurrence_progress`, 366-day window)                                                                                  |

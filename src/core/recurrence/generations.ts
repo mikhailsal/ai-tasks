@@ -19,6 +19,7 @@ import { domainError } from '../errors.js';
 import { requireTask } from '../tasks/read.js';
 import { parseTimestamp, readClock } from '../time.js';
 import { parseInput } from '../validation.js';
+import { writeDeclarations } from './values.js';
 
 export type RecurringTask = typeof tasks.$inferSelect;
 export type ScheduleGeneration = typeof scheduleGenerations.$inferSelect;
@@ -207,6 +208,8 @@ export function publishGeneration(
       set: state,
     })
     .run();
+  // Declarations live beside the generation, not in it (spec 008 R4); absent keeps them.
+  if (input.values !== undefined) writeDeclarations(transaction, options.task.id, input.values);
   return generation;
 }
 

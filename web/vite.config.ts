@@ -31,6 +31,7 @@ const browserSchemaFiles = new Set([
   'meta.ts',
   'scopes.ts',
   'projects.ts',
+  'occurrence-values.ts',
   'recurrence-input.ts',
   'recurrence-query.ts',
   'settings.ts',

@@ -1,3 +1,4 @@
+import type { JsonValue } from '../../schema/values.js';
 import { and, eq, max } from 'drizzle-orm';
 import { completeOccurrencesSchema } from '../../schema/recurrence-input.js';
 import { occurrences } from '../../schema/recurrence.js';
@@ -18,6 +19,7 @@ import {
 } from './outcomes.js';
 import { occurrenceEvent, type OccurrenceRow } from './snapshots.js';
 import { createCompletionSuccessor } from './successors.js';
+import { readDeclarations, recordedValues } from './values.js';
 
 function completionPlan(
   transaction: DatabaseTransaction,
@@ -66,6 +68,7 @@ function completeSelected(
     row: OccurrenceRow;
     actual: number;
     note: string | undefined;
+    values: Record<string, JsonValue> | undefined;
     now: number;
   },
 ) {
@@ -78,6 +81,9 @@ function completeSelected(
       actualCompletedAt: options.actual,
       completionRecordedAt: options.now,
       ...(options.note === undefined ? {} : { completionNote: options.note }),
+      ...(options.values === undefined || Object.keys(options.values).length === 0
+        ? {}
+        : { recordedValues: options.values }),
       revision: before.revision + 1,
     })
     .where(and(eq(occurrences.id, before.id), eq(occurrences.revision, before.revision)))
@@ -119,6 +125,13 @@ export function completeOccurrences(
       );
       const plans = completionPlan(transaction, { rows, actuals });
       const notes = new Map(payload.occurrences.map((selected) => [selected.id, selected.note]));
+      const declarations = readDeclarations(transaction, command.task.id);
+      const values = new Map(
+        payload.occurrences.map((selected) => [
+          selected.id,
+          selected.values === undefined ? undefined : recordedValues(declarations, selected.values),
+        ]),
+      );
       const current = currentRecurrence(transaction, command.task);
       const events: AuditEvent[] = [];
       const completed: OccurrenceRow[] = [];
@@ -127,6 +140,7 @@ export function completeOccurrences(
           row: plan.row,
           actual: plan.actual,
           note: notes.get(plan.row.id),
+          values: values.get(plan.row.id),
           now,
         });
         completed.push(result.row);

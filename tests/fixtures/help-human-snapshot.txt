@@ -27,6 +27,9 @@ Options:
   --archive <mode>                        Archive mode: exclude, include, or only
   --deadline-preset <preset>              Deadline: overdue, today, from_tomorrow, next_3_days, undated
   --deadline-day <date>                   Exact local deadline day in application timezone: YYYY-MM-DD
+  --day <date>                            Occurrence day under the project day rule: YYYY-MM-DD
+  --from-day <date>                       First occurrence day of a window, inclusive: YYYY-MM-DD
+  --to-day <date>                         Last occurrence day of a window, inclusive: YYYY-MM-DD
   -V, --version                           output the version number
   -h, --help                              display help for command
 

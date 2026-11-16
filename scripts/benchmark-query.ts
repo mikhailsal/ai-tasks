@@ -4,6 +4,7 @@ import { createReadContext } from '../src/core/context.js';
 import { openDatabase } from '../src/core/database/open.js';
 import { listTasks } from '../src/core/queries/tasks.js';
 import { listAgenda } from '../src/core/queries/agenda.js';
+import { occurrenceProgress } from '../src/core/queries/progress.js';
 import { acquireDatabaseLock, releaseDatabaseLock } from '../src/runtime/database-lock.js';
 
 const benchmarkClock = 1_800_000_000_000;
@@ -18,6 +19,7 @@ function materialize(value: unknown) {
   if (!object(decoded) || decoded.ok !== true || !object(decoded.data))
     throw new Error('Production query returned an invalid envelope');
   let rows = 0;
+  const { decided, open } = decoded.data;
   if (Array.isArray(decoded.data.items)) rows = decoded.data.items.length;
   else if (Array.isArray(decoded.data.groups)) {
     for (const group of decoded.data.groups) {
@@ -25,7 +27,8 @@ function materialize(value: unknown) {
         throw new Error('Production agenda returned an invalid group');
       rows += group.items.length;
     }
-  } else throw new Error('Production query returned no row collection');
+  } else if (typeof decided === 'number' && typeof open === 'number') rows = decided + open;
+  else throw new Error('Production query returned no row collection');
   return { rows, serialized_bytes: Buffer.byteLength(serialized) };
 }
 function samples(run: () => unknown, warmupCount: number, sampleCount: number) {
@@ -54,6 +57,18 @@ function samples(run: () => unknown, warmupCount: number, sampleCount: number) {
   };
 }
 
+const targetSchema = z.optional(z.strictObject({ task_id: z.string(), project_slug: z.string() }));
+function busiestRecurring(sqlite: ReturnType<typeof openDatabase>['sqlite']) {
+  return targetSchema.parse(
+    sqlite
+      .prepare(
+        `SELECT task_id, project_slug FROM occurrences GROUP BY task_id, project_slug
+         ORDER BY count(*) DESC, task_id LIMIT 1`,
+      )
+      .get(),
+  );
+}
+
 /** Real production query paths, including complete DTO serialization and consumer materialization. */
 export function runQuerySamples(databasePath: string, warmupCount = 10, sampleCount = 500) {
   if (
@@ -79,6 +94,19 @@ export function runQuerySamples(databasePath: string, warmupCount = 10, sampleCo
       const context = createReadContext({ connection, now: () => benchmarkClock });
       const task_list = samples(() => listTasks(context, query), warmupCount, sampleCount);
       const agenda = samples(() => listAgenda(context, query), warmupCount, sampleCount);
+      const progressTarget = busiestRecurring(connection.sqlite);
+      // Spec 008 R5: one grouped query over a 366-day window; a goal, not a gate.
+      const occurrence_progress = progressTarget
+        ? samples(
+            () =>
+              occurrenceProgress(context, progressTarget.project_slug, progressTarget.task_id, {
+                from_day: '2026-01-01',
+                to_day: '2027-01-01',
+              }),
+            warmupCount,
+            sampleCount,
+          )
+        : null;
       const after = facts();
       if (after.changes !== before.changes || after.read_revision !== before.read_revision)
         throw new Error('Benchmark queries changed database state');
@@ -89,6 +117,7 @@ export function runQuerySamples(databasePath: string, warmupCount = 10, sampleCo
         sample_count: sampleCount,
         task_list,
         agenda,
+        occurrence_progress,
         query_facts: {
           input: query,
           timing: 'query + JSON.stringify + JSON.parse + exact materialized row count',

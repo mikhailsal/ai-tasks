@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it } from 'vitest';
 import { migrateDatabase } from '../../src/core/database/migrate.js';
 import { generationFixture } from '../fixtures/recurrence-generations.js';
 import { seedOccurrence, seedOutcomeParent } from '../fixtures/occurrence-outcomes.js';
-import { dropOccurrenceReasons, migrationTimes } from '../fixtures/migration-rewind.js';
+import { rewindMigrations } from '../fixtures/migration-rewind.js';
 import type { OrdinaryFixture } from '../fixtures/ordinary-work.js';
 
 /** Spec 007: 0004 upgrades a populated schema-3 database without rewriting rows. */
@@ -13,10 +13,7 @@ beforeEach(async () => {
 afterEach(() => fixture.close());
 
 function rewindTo0003() {
-  dropOccurrenceReasons(fixture.connection.sqlite);
-  fixture.connection.sqlite
-    .prepare('DELETE FROM __drizzle_migrations WHERE created_at >= ?')
-    .run(migrationTimes.occurrenceReasons);
+  rewindMigrations(fixture.connection.sqlite, 'occurrenceReasons');
 }
 
 it('adds the reason and note columns as NULL and keeps every existing row', () => {
@@ -33,6 +30,8 @@ it('adds the reason and note columns as NULL and keeps every existing row', () =
       miss_reason: null,
       miss_reason_recorded_at: null,
       completion_note: null,
+      occurrence_day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/u),
+      recorded_values: null,
     })),
   );
 });

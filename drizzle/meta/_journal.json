@@ -36,6 +36,13 @@
       "when": 1794823297325,
       "tag": "0004_occurrence_reasons",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794824922838,
+      "tag": "0005_occurrence_day",
+      "breakpoints": true
     }
   ]
 }

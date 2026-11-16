@@ -1,3 +1,4 @@
+import { occurrenceProgress } from '../core/queries/progress.js';
 import { createReadContext } from '../core/context.js';
 import type { CoreContext } from '../core/database/types.js';
 import { getSettings, updateSettings } from '../core/projects/settings.js';
@@ -22,9 +23,33 @@ export function isRecurrenceCommand(command: HelperCommand): command is Recurren
     command.operation.startsWith('settings.')
   );
 }
+type OccurrenceRead = Extract<
+  RecurrenceCommand,
+  { operation: 'occurrence.list' | 'occurrence.progress' | 'occurrence.get' }
+>;
+function isOccurrenceRead(command: RecurrenceCommand): command is OccurrenceRead {
+  return ['occurrence.list', 'occurrence.progress', 'occurrence.get'].includes(command.operation);
+}
+function occurrenceRead(read: ReturnType<typeof createReadContext>, command: OccurrenceRead) {
+  const slug = command.scope.project_slug;
+  switch (command.operation) {
+    case 'occurrence.list':
+      return listOccurrences(
+        read,
+        slug,
+        command.task_id,
+        parseInput(occurrenceListInputSchema, command.input),
+      );
+    case 'occurrence.progress':
+      return occurrenceProgress(read, slug, command.task_id, command.input);
+    case 'occurrence.get':
+      return getOccurrence(read, slug, command.task_id, command.occurrence_id);
+  }
+}
 export function recurrenceDispatch(context: CoreContext, command: RecurrenceCommand) {
   const read = createReadContext({ connection: context.connection, now: context.now });
   if (command.operation === 'settings.get') return getSettings(read, command.scope);
+  if (isOccurrenceRead(command)) return occurrenceRead(read, command);
   const slug = command.scope.project_slug;
   switch (command.operation) {
     case 'recurrence.get':
@@ -35,15 +60,6 @@ export function recurrenceDispatch(context: CoreContext, command: RecurrenceComm
       return controlRecurrence(context, slug, command.task_id, command.input);
     case 'recurrence.tick':
       return tickRecurrence(context, slug, command.input);
-    case 'occurrence.list':
-      return listOccurrences(
-        read,
-        slug,
-        command.task_id,
-        parseInput(occurrenceListInputSchema, command.input),
-      );
-    case 'occurrence.get':
-      return getOccurrence(read, slug, command.task_id, command.occurrence_id);
     case 'occurrence.complete':
       return completeOccurrences(context, slug, command.task_id, command.input);
     case 'occurrence.cancel':

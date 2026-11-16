@@ -1,4 +1,4 @@
-import { dropOccurrenceReasons, migrationTimes } from '../fixtures/migration-rewind.js';
+import { rewindMigrations } from '../fixtures/migration-rewind.js';
 import { acquireDatabaseLock, releaseDatabaseLock } from '../../src/runtime/database-lock.js';
 import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -205,10 +205,7 @@ it('upgrades a populated prior schema with deterministic seeded order and unchan
   const { api, second } = await boardWork(fixture);
   api.archiveTask(fixture.human, 'alpha', second.id, ordinaryInput(fixture, {}, { revision: 1 }));
   const prior = boardSnapshot(fixture);
-  dropOccurrenceReasons(fixture.connection.sqlite);
-  fixture.connection.sqlite
-    .prepare('DELETE FROM __drizzle_migrations WHERE created_at >= ?')
-    .run(migrationTimes.sharedBoardOrder);
+  rewindMigrations(fixture.connection.sqlite, 'sharedBoardOrder');
   fixture.connection.sqlite.exec('DROP TABLE board_order; DROP TABLE board_columns');
   migrateDatabase(fixture.connection);
   const upgraded = boardSnapshot(fixture);

@@ -204,6 +204,14 @@ All selected rows must belong to the named parent/project and be completable; an
 rolls back the entire batch. Double completion with a new operation ID fails validation;
 an exact idempotent retry returns the original result.
 
+Occurrence day and goal progress (spec 008): each occurrence stores `occurrence_day`, the local
+date of its deadline in its generation's zone under the project's `day_start_hour` (a deadline
+before that hour belongs to the previous day; exactly at it, to the day it starts). It is
+written once at creation and never recomputed. Recorded values are stored as
+`{name:{kind,value}}` against the declarations current at completion. `occurrence progress`
+counts over an inclusive window of days: `done` = completed + completed_late, `decided` =
+done + missed + debt, `open` = pending, cancelled excluded.
+
 Recording a miss (spec 007): `occurrence miss` turns a `pending` row whose window is still open
 into `missed` at once (`missed_at` = now), adds a reason to a `missed` row that has none, or
 closes a `debt` row as `missed` with a required reason, keeping its original `missed_at`. A

@@ -337,6 +337,32 @@ A row that is already completed, cancelled or missed with a reason is refused wi
 `blockers[]` naming its state. Repeating the same request with the same `operation_id`
 returns the stored result and writes nothing.
 
+### Days, measured values and goal progress
+
+Every occurrence has an `occurrence_day` (`YYYY-MM-DD`). It is the local date of its deadline,
+where the project's day starts at `day_start_hour` (0 by default; set it with `project update`
+and `"day_start_hour": 4` so a 01:30 bedtime belongs to the evening before). The day is stored
+when the occurrence is created and never recomputed: a rule change applies only to occurrences
+created afterwards, and occurrences already created ahead of their deadline keep the old rule.
+
+A recurring task can declare up to 8 named values in its recurrence input
+(`"values":[{"name":"asleep_at","kind":"time_of_day"},{"name":"slept","kind":"duration"}]`;
+kinds `number`, `time_of_day` `HH:MM`, `duration` in whole minutes). `recurrence configure`
+replaces them, `[]` clears them, leaving the field out keeps them. A completion item may then
+carry `"values":{"asleep_at":"23:40","slept":450}`; values are always optional. An unknown name
+or a wrong kind is refused with `details.allowed` listing the declared names and kinds.
+
+To answer "how many nights out of 7", ask once:
+
+```bash
+ai occurrence progress "$HABIT" --project demo --from-day 2026-11-01 --to-day 2026-11-07 --json
+```
+
+`done` counts `completed` and `completed_late`; `decided` adds `missed` and owed (`debt`);
+`open` is still pending; cancelled rows are left out. The window is inclusive and at most 366
+days. `occurrence list` takes the same days as `--day` or `--from-day`/`--to-day`. Targets
+such as "6 of 7" stay in the task text; the application reports, it does not judge.
+
 ### Archive a recurring task
 
 Archive is refused while the task is active or has open occurrences. The refusal lists every

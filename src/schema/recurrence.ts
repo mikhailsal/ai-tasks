@@ -106,6 +106,8 @@ export const occurrences = sqliteTable(
     missReason: text('miss_reason'),
     missReasonRecordedAt: integer('miss_reason_recorded_at'),
     completionNote: text('completion_note'),
+    occurrenceDay: text('occurrence_day'),
+    recordedValues: text('recorded_values', { mode: 'json' }).$type<JsonValue>(),
     createdAt: integer('created_at').notNull(),
   },
   (table) => [
@@ -179,6 +181,15 @@ export const occurrences = sqliteTable(
     ),
     index('occurrences_state_deadline_idx').on(table.state, table.deadline, table.id),
     index('occurrences_expiry_idx').on(table.state, table.expiresAt, table.id),
+    index('occurrences_task_day_idx').on(table.taskId, table.occurrenceDay),
+    check(
+      'occurrence_day_format',
+      sql`${table.occurrenceDay} IS NULL OR ${table.occurrenceDay} GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'`,
+    ),
+    check(
+      'occurrence_recorded_values_fields',
+      sql`${table.recordedValues} IS NULL OR (${table.state} IN ('completed','completed_late') AND json_valid(${table.recordedValues}) AND json_type(${table.recordedValues}) = 'object')`,
+    ),
   ],
 );
 
@@ -192,6 +203,7 @@ export const recurrenceState = sqliteTable(
     waitingPredecessorId: text('waiting_predecessor_id'),
     nextCandidateAt: integer('next_candidate_at'),
     revision: integer('revision').notNull().default(1),
+    valueDeclarations: text('value_declarations', { mode: 'json' }).$type<JsonValue>(),
   },
   (table) => [
     primaryKey({ columns: [table.projectSlug, table.taskId] }),
@@ -213,6 +225,10 @@ export const recurrenceState = sqliteTable(
     }),
     check('recurrence_state_task_uuid', uuidConstraint(table.taskId)),
     check('recurrence_state_generation_uuid', uuidConstraint(table.currentGenerationId)),
+    check(
+      'recurrence_state_value_declarations',
+      sql`${table.valueDeclarations} IS NULL OR (json_valid(${table.valueDeclarations}) AND json_type(${table.valueDeclarations}) = 'array' AND json_array_length(${table.valueDeclarations}) <= 8)`,
+    ),
     check(
       'recurrence_state_predecessor_uuid',
       sql`${table.waitingPredecessorId} IS NULL OR ${uuidConstraint(table.waitingPredecessorId)}`,

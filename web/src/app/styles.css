@@ -1460,3 +1460,22 @@ dd {
   font-size: 11px;
   line-height: 1.5;
 }
+/* Spec 008: goal progress and the day filter. */
+.progress-figure {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2a3d;
+}
+.progress-skeleton {
+  min-height: 4.5rem;
+  border-radius: 12px;
+  background: #eef2f7;
+}
+.day-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.day-filter input {
+  min-height: 44px;
+}

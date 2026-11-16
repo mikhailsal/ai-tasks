@@ -56,9 +56,14 @@ export const projects = sqliteTable(
     archivedAt: integer('archived_at'),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
+    dayStartHour: integer('day_start_hour').notNull().default(0),
   },
   (table) => [
     check('project_id_uuid', uuidConstraint(table.id)),
+    check(
+      'project_day_start_hour',
+      sql`${integerConstraint(table.dayStartHour)} AND ${table.dayStartHour} BETWEEN 0 AND 23`,
+    ),
     check('project_slug_valid', slugConstraint(table.slug)),
     check(
       'project_name_length',
