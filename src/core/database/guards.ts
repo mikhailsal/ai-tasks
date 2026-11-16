@@ -4,10 +4,20 @@ import { projects, tasks } from '../../schema/entities.js';
 import type { MutationEnvelope } from '../../schema/envelopes.js';
 import { uuidSchema } from '../../schema/values.js';
 import { domainError } from '../errors.js';
+import {
+  missingRevisions,
+  missingRevisionsError,
+  requiredRevisions,
+} from './required-revisions.js';
 import type { CoreContext, DatabaseTransaction } from './types.js';
+function payloadKind(payload: unknown): unknown {
+  return typeof payload === 'object' && payload !== null && !Array.isArray(payload)
+    ? Reflect.get(payload, 'kind')
+    : undefined;
+}
 export const mutationGuardsSchema = z.strictObject({
   config: z.optional(z.boolean()),
-  settings: z.optional(z.boolean()),
+  settings: z.optional(z.union([z.boolean(), z.literal('recurring')])),
   projectRequired: z.optional(z.boolean()),
   entity: z.optional(z.strictObject({ type: z.enum(['task', 'project']), id: uuidSchema })),
 });
@@ -69,9 +79,20 @@ function enforceProjectGuards(
   const entityRow = guards.entity
     ? checkEntity(transaction, { projectSlug, entity: guards.entity })
     : undefined;
+  const recurring =
+    (entityRow !== undefined && 'kind' in entityRow && entityRow.kind === 'recurring') ||
+    payloadKind(input.payload) === 'recurring';
+  const missing = missingRevisions(
+    input,
+    requiredRevisions(
+      { settings: guards.settings, entity: guards.entity !== undefined, config: guards.config },
+      { recurring },
+    ),
+  );
+  if (missing.length > 0) throw missingRevisionsError(missing);
   // Ownership is checked first. A timezone version also bumps its parent, so report
   // the changed schedule interpretation before the resulting stale parent revision.
-  if (guards.settings)
+  if (guards.settings === true)
     checkRevision({
       expected: input.expected_settings_revision,
       current: settingsRevision,
@@ -114,7 +135,11 @@ export function enforceMutationGuards(
   } else if (guards.entity || guards.config !== false) {
     throw domainError('INTERNAL_ERROR', 'New-project guard configuration is invalid');
   }
-  if (guards.settings && guards.projectRequired === false)
+  if (guards.settings === true && guards.projectRequired === false) {
+    const missing = missingRevisions(input, requiredRevisions({ settings: true, config: false }));
+    if (missing.length > 0) throw missingRevisionsError(missing);
+  }
+  if (guards.settings === true && guards.projectRequired === false)
     checkRevision({
       expected: input.expected_settings_revision,
       current: settingsRevision,

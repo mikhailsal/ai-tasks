@@ -1,5 +1,6 @@
 import { createReadStream } from 'node:fs';
 import * as z from 'zod/mini';
+import { envelopeRefusal } from '../core/database/required-revisions.js';
 import { domainError, errorEnvelope, cliExit, DomainError } from '../core/errors.js';
 import { mutationEnvelopeSchema } from '../schema/envelopes.js';
 import { BODY_LIMIT_BYTES, jsonValueSchema, type JsonValue } from '../schema/values.js';
@@ -80,10 +81,10 @@ export function mutationInput(options: CliOptions, body: CliInput) {
       preconditions[field] = jsonValueSchema.parse(payload[field]);
     delete payload[field];
   }
-  return {
-    projectSlug: scope.project_slug,
-    input: mutationEnvelopeSchema.parse({ ...preconditions, payload }),
-  };
+  const raw = { ...preconditions, payload };
+  const parsed = mutationEnvelopeSchema.safeParse(raw);
+  if (!parsed.success) throw envelopeRefusal(raw, parsed.error);
+  return { projectSlug: scope.project_slug, input: parsed.data };
 }
 export function writeJson(value: unknown): void {
   process.stdout.write(`${JSON.stringify(value)}\n`);

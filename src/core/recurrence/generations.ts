@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, isNull, max } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, max } from 'drizzle-orm';
 import { applicationState, type tasks } from '../../schema/entities.js';
 import {
   occurrences,
@@ -14,6 +14,7 @@ import {
 } from '../../schema/recurrence-input.js';
 import { timezoneSchema } from '../../schema/values.js';
 import type { DatabaseTransaction } from '../database/types.js';
+import { collectBlockers, describeBlockers } from '../diagnostics/blockers.js';
 import { domainError } from '../errors.js';
 import { requireTask } from '../tasks/read.js';
 import { parseTimestamp, readClock } from '../time.js';
@@ -70,6 +71,15 @@ export function recurrenceSettings(transaction: DatabaseTransaction) {
   return state;
 }
 
+/** Pending and debt rows of one parent, oldest deadline first (spec 004 blockers). */
+export function openOccurrences(transaction: DatabaseTransaction, taskId: string) {
+  return transaction
+    .select({ id: occurrences.id, state: occurrences.state, deadline: occurrences.deadline })
+    .from(occurrences)
+    .where(and(eq(occurrences.taskId, taskId), inArray(occurrences.state, ['pending', 'debt'])))
+    .orderBy(asc(occurrences.deadline), asc(occurrences.id))
+    .all();
+}
 export function hasOpenOccurrences(transaction: DatabaseTransaction, taskId: string): boolean {
   return (
     transaction
@@ -106,11 +116,16 @@ function assertGenerationChange(
   if (
     current.schedule.mode !== options.input.schedule.mode &&
     hasOpenOccurrences(transaction, options.task.id)
-  )
+  ) {
+    const blockers = collectBlockers(openOccurrences(transaction, options.task.id), {
+      now: options.now,
+    });
     throw domainError(
       'VALIDATION_ERROR',
-      'A timing-mode change requires no pending or debt occurrences',
+      `A timing-mode change needs no open occurrences: ${describeBlockers(blockers)}`,
+      { blockers },
     );
+  }
   if (options.entry !== 'timezone') {
     const collision = transaction
       .select({ id: occurrences.id })

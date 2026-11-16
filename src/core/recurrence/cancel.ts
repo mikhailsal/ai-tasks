@@ -4,6 +4,7 @@ import { cancelOccurrencesSchema } from '../../schema/recurrence-input.js';
 import { occurrences } from '../../schema/recurrence.js';
 import { executeMutation } from '../database/mutate.js';
 import type { CoreContext } from '../database/types.js';
+import { collectBlockers, describeBlockers, occurrenceReason } from '../diagnostics/blockers.js';
 import { domainError } from '../errors.js';
 import { parseInput } from '../validation.js';
 import {
@@ -28,19 +29,28 @@ export function cancelOccurrences(
     handler(transaction, now) {
       const command = occurrenceCommandContext(transaction, projectSlug, taskId);
       const payload = parseInput(cancelOccurrencesSchema, input.payload);
-      if (command.status.category !== 'paused')
-        throw domainError('VALIDATION_ERROR', 'Pause the recurring parent before cancelling work');
+      if (command.status.category !== 'paused') {
+        const blockers = collectBlockers([], { now, extra: ['parent_not_paused'] });
+        throw domainError('VALIDATION_ERROR', 'Pause the recurring parent before cancelling work', {
+          blockers,
+        });
+      }
       const selected = selectOccurrences(transaction, {
         task: command.task,
         selected: payload.occurrences,
       });
-      for (const row of selected) {
-        if (row.state !== 'pending' || row.deadline <= now)
-          throw domainError(
-            'VALIDATION_ERROR',
-            'Only future pending occurrences can be cancelled',
-            { entity_id: row.id },
-          );
+      const refused = selected.filter((row) => occurrenceReason(row, now) !== 'future_pending');
+      const first = refused[0];
+      if (first) {
+        const blockers = collectBlockers(refused, { now });
+        const owedOnly = blockers.length === 1 && blockers[0]?.reason === 'owed';
+        throw domainError(
+          'VALIDATION_ERROR',
+          owedOnly
+            ? 'Owed occurrences cannot be cancelled. Complete them instead'
+            : `${String(refused.length)} of ${String(selected.length)} occurrences cannot be cancelled: ${describeBlockers(blockers)}`,
+          { entity_id: first.id, blockers },
+        );
       }
       const cancelled = selected.map((before) => {
         const after = transaction

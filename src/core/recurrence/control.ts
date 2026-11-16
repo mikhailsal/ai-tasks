@@ -204,7 +204,11 @@ function changeBehavior(
 ) {
   const events: AuditEvent[] = [];
   if (move.target.category === 'archived')
-    assertRetirable(transaction, { task: options.task, now: options.now });
+    assertRetirable(transaction, {
+      task: options.task,
+      now: options.now,
+      paused: move.source.category === 'paused',
+    });
   if (move.source.category === move.target.category) return events;
   if (resumingActivation(transaction, options, move))
     return resumeRecurrence(transaction, {

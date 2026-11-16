@@ -1,5 +1,6 @@
 import { type Command, InvalidArgumentError, Option } from 'commander';
 import * as z from 'zod/mini';
+import { scopeRefusal } from '../core/diagnostics/scope.js';
 import { domainError } from '../core/errors.js';
 import { readScopeSchema } from '../schema/scopes.js';
 export const cliOptionsSchema = z.strictObject({
@@ -72,10 +73,17 @@ export function addCommonOptions(command: Command): Command {
 export function commandOptions(command: Command): CliOptions {
   return cliOptionsSchema.parse(command.optsWithGlobals());
 }
+function flagName(key: string): string {
+  return `--${key.replaceAll(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)}`;
+}
 export function requireOptions(options: CliOptions, allowed: readonly (keyof CliOptions)[]): void {
   for (const [key, value] of Object.entries(options)) {
     if (value !== undefined && !allowed.some((name) => name === key)) {
-      throw domainError('VALIDATION_ERROR', 'Option is not supported by this command');
+      const option = flagName(key);
+      throw domainError('VALIDATION_ERROR', `Option ${option} is not supported by this command`, {
+        option,
+        supported_options: allowed.map(flagName).sort(),
+      });
     }
   }
 }
@@ -83,11 +91,17 @@ export function readScope(options: CliOptions) {
   if (options.project !== undefined && options.allProjects !== undefined) {
     throw domainError('VALIDATION_ERROR', 'Choose either project or all-projects scope');
   }
-  return readScopeSchema.parse(
+  const parsed = readScopeSchema.safeParse(
     options.project !== undefined
       ? { project_slug: options.project }
       : { all_projects: options.allProjects },
   );
+  if (parsed.success) return parsed.data;
+  if (options.project !== undefined) throw parsed.error;
+  throw scopeRefusal(parsed.error, 'Choose a read scope: --project SLUG or --all-projects', [
+    '--project',
+    '--all-projects',
+  ]);
 }
 export function positiveIntegerOption(value: string): number {
   if (!/^[1-9]\d*$/u.test(value) || !Number.isSafeInteger(Number(value))) {

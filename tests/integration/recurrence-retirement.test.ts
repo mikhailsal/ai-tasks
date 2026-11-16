@@ -61,7 +61,12 @@ it('an empty occurrence table cannot hide unresolved active-period anchors and p
   expect(() => retirable(parent)).toThrow(
     expect.objectContaining({
       code: 'VALIDATION_ERROR',
-      details: { reason: 'owed_anchors', action: 'tick', task_id: parent.id },
+      details: {
+        reason: 'owed_anchors',
+        action: 'tick',
+        task_id: parent.id,
+        blockers: [expect.objectContaining({ reason: 'owed_anchors', count: 0 })],
+      },
     }),
   );
   expect(outcomeSnapshot(fixture)).toEqual(before);
@@ -84,6 +89,18 @@ it.each(['past-pending', 'future-pending', 'debt'] as const)(
           task_id: parent.id,
           occurrence_id: row.id,
           state: row.state,
+          blockers: [
+            expect.objectContaining({
+              reason: {
+                'past-pending': 'past_pending',
+                'future-pending': 'future_pending',
+                debt: 'owed',
+              }[kind],
+              count: 1,
+              occurrence_ids: [row.id],
+              omitted: 0,
+            }),
+          ],
         },
       }),
     );

@@ -17,6 +17,11 @@ import { findReceipt, fingerprintRequest, storeReceipt } from '../audit/receipts
 import { domainError, normalizeError } from '../errors.js';
 import { formatTimestamp } from '../time.js';
 import { enforceMutationGuards, mutationGuardsSchema } from './guards.js';
+import {
+  missingRevisions,
+  missingRevisionsError,
+  requiredRevisions,
+} from './required-revisions.js';
 import type { CoreContext, DatabaseTransaction } from './types.js';
 type MutationCommand = {
   context: CoreContext;
@@ -43,8 +48,40 @@ function parseCommand(command: MutationCommand) {
       operation: z.string().check(z.minLength(1)).parse(command.operation),
     };
   } catch (error) {
-    throw normalizeError(error);
+    throw envelopeFailure(command, error);
   }
+}
+function recurringPayload(input: unknown): boolean {
+  if (typeof input !== 'object' || input === null) return false;
+  const payload: unknown = Reflect.get(input, 'payload');
+  return (
+    typeof payload === 'object' && payload !== null && Reflect.get(payload, 'kind') === 'recurring'
+  );
+}
+/** Missing envelope tokens are reported together with every other missing revision value. */
+function envelopeFailure(command: MutationCommand, error: unknown) {
+  const normalized = normalizeError(error);
+  const guards = mutationGuardsSchema.safeParse(command.guards ?? {});
+  if (!guards.success) return normalized;
+  const missing = missingRevisions(
+    command.input,
+    requiredRevisions(
+      {
+        settings: guards.data.settings,
+        entity: guards.data.entity !== undefined,
+        config: guards.data.config !== false && guards.data.projectRequired !== false,
+      },
+      { recurring: recurringPayload(command.input) },
+    ),
+  );
+  if (!missing.includes('operation_id') && !missing.includes('database_epoch')) return normalized;
+  const details =
+    typeof normalized.details === 'object' &&
+    normalized.details !== null &&
+    !Array.isArray(normalized.details)
+      ? normalized.details
+      : {};
+  return missingRevisionsError(missing, details);
 }
 function currentState(transaction: DatabaseTransaction) {
   const state = transaction.select().from(applicationState).where(eq(applicationState.id, 1)).get();

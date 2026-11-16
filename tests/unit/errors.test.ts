@@ -96,7 +96,7 @@ it('exposes only path and issue code from Zod failures, excluding input and cust
     ok: false,
     error: {
       code: 'VALIDATION_ERROR',
-      message: errorDefinitions.VALIDATION_ERROR.message,
+      message: 'Invalid request: tasks[0].title is invalid',
       retryable: false,
       details: { issues: [{ code: 'custom', path: ['tasks', 0, 'title'] }] },
     },

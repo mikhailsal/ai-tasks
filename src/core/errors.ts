@@ -2,6 +2,7 @@ import { $ZodError } from 'zod/v4/core';
 import { errorCodeSchema, errorDefinitions, type ErrorCode } from '../schema/errors.js';
 import type { ErrorEnvelope } from '../schema/envelopes.js';
 import { jsonValueSchema, type JsonValue } from '../schema/values.js';
+import { validationDetails } from './diagnostics/issues.js';
 /** Messages and details supplied here are authored public diagnostics, never raw
  * persistence errors or unvalidated transport payloads. */
 export class DomainError extends Error {
@@ -42,17 +43,8 @@ function operationalError(error: unknown): DomainError | undefined {
 export function normalizeError(error: unknown): DomainError {
   if (error instanceof DomainError) return error;
   if (error instanceof $ZodError) {
-    return domainError('VALIDATION_ERROR', errorDefinitions.VALIDATION_ERROR.message, {
-      issues: error.issues.map((issue) => ({
-        code: issue.code,
-        path: issue.path.map((part) => {
-          if (typeof part === 'symbol') return '[symbol]';
-          // Repair diagnostic labels only. Malformed source is rejected by input
-          // validation; it must never break serialization of the error reporting it.
-          return typeof part === 'string' ? part.toWellFormed() : part;
-        }),
-      })),
-    });
+    const { message, details } = validationDetails(error.issues);
+    return domainError('VALIDATION_ERROR', message, details);
   }
   return operationalError(error) ?? defaultError('INTERNAL_ERROR');
 }
