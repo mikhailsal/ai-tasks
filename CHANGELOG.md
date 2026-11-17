@@ -5,6 +5,24 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-17
+
+First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
+needs a backup, `npm ci`, `npm run build` and `npm run db:migrate`, which applies migrations
+`0004_occurrence_reasons`, `0005_occurrence_day` and `0006_worker_passes`; then restart
+`serve` so the server and the workers run the new code.
+
+### Local network access (spec 003)
+
+- `serve` can listen on a LAN address: `AI_TASKS_HOST=<LAN IPv4> npm start` prints the URL
+  to open on a phone. The default stays loopback only. See `docs/operations.md`.
+
+### Development: pull requests and pre-push checks
+
+- Changes reach `main` only through pull requests with green CI.
+- `npm run hooks:install` installs the committed pre-push hook: runtime check, typecheck,
+  lint, format check and ShellCheck; it refuses direct pushes to `main`.
+
 ### Agent-visible changes: worker liveness (spec 011)
 
 - `meta` gains `data.workers`: `[{project_slug, status, last_pass_at?, tolerance_seconds}]` for

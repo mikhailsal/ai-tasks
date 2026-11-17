@@ -3,8 +3,10 @@
 ## Current baseline
 
 The application contract and persisted application schema report version **1**. The package
-version is **0.1.0**. This repository has no released predecessor: a released-version upgrade
-matrix and predecessor rollback result are **not applicable**, not presumed passing.
+version is **0.2.0** (tag `v0.2.0`), the first tagged release. Its predecessor, 0.1.0, was never
+tagged: a released-version upgrade matrix and predecessor rollback result are **not
+applicable**, not presumed passing. Upgrade steps from a 0.1.0 checkout are in
+`CHANGELOG.md` under 0.2.0.
 Internal populated-schema migration tests are useful evidence, but they are not a substitute
 for testing upgrades from an actual shipped release.
 
