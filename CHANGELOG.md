@@ -5,6 +5,14 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web: marking a recurring occurrence done takes one tap. «Открытые повторения» at the top of
+  the occurrence history lists each open occurrence with «Отметить выполненным»; a recurring
+  task's page has «Отметить выполнение», and its card in «План» links straight there
+  (`?occurrences=open`). After completing or cancelling, a status line confirms how many
+  occurrences changed.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
