@@ -17,6 +17,7 @@ import {
   type SelectedOccurrence,
 } from './occurrence-model.js';
 import { useOccurrenceCommands } from './occurrence-commands.js';
+import { useOccurrenceQuickActions } from './occurrence-quick.js';
 export type OccurrencesProps = {
   projectSlug: string;
   taskId: string;
@@ -129,6 +130,7 @@ export function useOccurrencePage(options: OccurrencesProps) {
     commands.operation.storageError,
   ].some(Boolean);
   useOccurrenceOperationReport(options.onOperationState, operationBlocked);
+  const quick = useOccurrenceQuickActions({ key, editor, commands, query, recurrence, metadata });
   function change(fields: OccurrenceFields) {
     if (editor.draft.fields.selected.length === 0 && fields.selected.length > 0)
       editor.replace(
@@ -175,6 +177,7 @@ export function useOccurrencePage(options: OccurrencesProps) {
     setCursor,
     change,
     updateSelected,
+    ...quick,
     firstPage,
     filter,
     days,

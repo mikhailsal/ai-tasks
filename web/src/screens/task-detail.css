@@ -343,3 +343,33 @@
     font-size: 12px;
   }
 }
+
+.occurrence-notice:empty {
+  display: none;
+}
+.occurrence-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e5f4ea;
+  color: #1d5c34;
+  font-weight: 600;
+}
+.task-mark-done {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.occurrence-open ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.occurrence-open li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}

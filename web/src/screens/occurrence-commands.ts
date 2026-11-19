@@ -78,7 +78,7 @@ export function useOccurrenceCommands(options: {
     record = editor.draft,
     reviewedEpoch?: string,
   ) {
-    if (!operation.ready || sending.current) return;
+    if (!operation.ready || sending.current) return false;
     sending.current = true;
     setPreparing(true);
     setError('');
@@ -86,10 +86,11 @@ export function useOccurrenceCommands(options: {
     try {
       await editor.persist(record);
       const request = exact ? operation.pending : occurrenceProposal(record, kind, options.path);
-      if (!request) return;
+      if (!request) return false;
       await operation.run(request, reviewedEpoch);
       setRefreshNeeded(true);
       await refreshed();
+      return true;
     } catch (failure) {
       setError(errorMessage(failure));
       if (operation.wasSaved()) setRefreshNeeded(true);
@@ -101,6 +102,7 @@ export function useOccurrenceCommands(options: {
       sending.current = false;
       setPreparing(false);
     }
+    return false;
   }
   async function reconcile() {
     if (!conflict) return;

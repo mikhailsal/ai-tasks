@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { AdvisoryNotice } from '../components/AdvisoryNotice.js';
 import { OccurrenceProgress } from './occurrence-progress.js';
 import { shiftDay, todayIn } from './occurrence-values.js';
 import { occurrenceLabels } from './occurrence-model.js';
 import { useOccurrencePage, type OccurrencesProps } from './occurrence-page.js';
 import { OccurrenceResults } from './occurrence-results.js';
+import { OpenOccurrences } from './occurrence-open.js';
 import { OccurrenceActions, OccurrenceNotices } from './occurrence-actions.js';
 /** The chosen window, or the last 7 days ending today (spec 008 R6). */
 function progressWindow(days: { from: string; to: string }, timezone: string) {
@@ -13,9 +15,18 @@ function progressWindow(days: { from: string; to: string }, timezone: string) {
 }
 export function Occurrences(props: OccurrencesProps) {
   const page = useOccurrencePage(props);
+  useEffect(() => {
+    // Opened from «План»: bring the occurrences into view once they mount in the sheet.
+    if (new URLSearchParams(window.location.search).get('occurrences') === 'open')
+      document.getElementById('occurrences')?.scrollIntoView({ block: 'start' });
+  }, []);
   return (
     <section className="stack" aria-label="Повторения задачи">
       <h2>История повторений</h2>
+      <p role="status" className="occurrence-notice">
+        {page.notice}
+      </p>
+      <OpenOccurrences page={page} />
       <AdvisoryNotice
         advisories={page.query.data?.advisories ?? []}
         checkedAt={page.query.data?.meta.now}

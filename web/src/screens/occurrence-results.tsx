@@ -3,6 +3,7 @@ import { ApiClientError } from '../data/api.js';
 import { errorMessage } from '../data/resources.js';
 import { OccurrenceRow } from './occurrence-row.js';
 import type { OccurrencePage } from './occurrence-page.js';
+import { selectionFromRow } from './occurrence-model.js';
 export function OccurrenceResults({ page }: { page: OccurrencePage }) {
   const { query, editor } = page;
   if (query.error)
@@ -34,18 +35,7 @@ export function OccurrenceResults({ page }: { page: OccurrencePage }) {
             page.change({
               ...editor.draft.fields,
               selected: checked
-                ? [
-                    ...editor.draft.fields.selected,
-                    {
-                      id: row.id,
-                      revision: row.revision,
-                      state: row.state,
-                      deadline: row.deadline,
-                      date: '',
-                      time: '',
-                      offset: '',
-                    },
-                  ]
+                ? [...editor.draft.fields.selected, selectionFromRow(row)]
                 : editor.draft.fields.selected.filter((item) => item.id !== row.id),
             })
           }
