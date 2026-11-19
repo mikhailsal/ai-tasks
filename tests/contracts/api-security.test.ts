@@ -77,6 +77,40 @@ describe('real API helper and browser request security', () => {
     expect(response.json()).toMatchObject({ ok: false, error: { code: 'ORIGIN_REJECTED' } });
   });
 
+  const navigation = { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document' };
+  it('lets a link from another site open a page, but never the API (QA F11)', async () => {
+    const page = await app.inject({
+      url: '/projects',
+      headers: { host, 'sec-fetch-site': 'cross-site', ...navigation },
+    });
+    expect(page.statusCode).not.toBe(403);
+    expect(page.body).not.toContain('ORIGIN_REJECTED');
+    for (const [url, headers] of [
+      ['/api/v1/meta?all_projects=true', navigation],
+      ['/projects', { 'sec-fetch-mode': 'no-cors', 'sec-fetch-dest': 'script' }],
+      ['/projects', { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'iframe' }],
+    ] as const) {
+      const response = await app.inject({
+        url,
+        headers: { host, 'sec-fetch-site': 'cross-site', ...headers },
+      });
+      expect(response.statusCode).toBe(403);
+    }
+    const post = await app.inject({
+      method: 'POST',
+      url: '/projects',
+      headers: { ...mutationHeaders, 'sec-fetch-site': 'cross-site', ...navigation },
+      payload: '{}',
+    });
+    expect(post.statusCode).toBe(403);
+    // The Host check still applies to a navigation.
+    const wrongHost = await app.inject({
+      url: '/projects',
+      headers: { host: 'attacker.example:3000', 'sec-fetch-site': 'cross-site', ...navigation },
+    });
+    expect(wrongHost.statusCode).toBe(403);
+  });
+
   it.each([
     '',
     '?all_projects=false',

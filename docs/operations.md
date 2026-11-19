@@ -66,7 +66,11 @@ as `ai-cli:SLUG`; browser writes use `human-web`. Supplying an actor in a reques
 Loopback access, filesystem permissions, and access to the OS account are the trust boundary.
 Origin/Host checks are browser request protections, not proof of an authorized human.
 
-The API checks exact Host and rejects disallowed `Sec-Fetch-Site` values. POST/PATCH/PUT
+The API checks exact Host and rejects disallowed `Sec-Fetch-Site` values. One exception: a
+top-level page navigation from another site (`Sec-Fetch-Site: cross-site` with
+`Sec-Fetch-Mode: navigate` and `Sec-Fetch-Dest: document`, GET or HEAD, outside `/api/`)
+opens the page, so a link to the app works. The page holds no data, and its API calls are
+same-origin. POST/PATCH/PUT
 also require the configured Origin, JSON content type, and `X-AI-Tasks-Mutation: 1`, including
 pure POST previews/validation. The raw JSON limit is 1 MiB. A valid same-origin HTTP mutation
 has this shape (the route supplies the project):

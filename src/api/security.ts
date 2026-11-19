@@ -10,12 +10,30 @@ function exactOrigin(origin: string): string {
   return origin;
 }
 
+/**
+ * A person following a link from another site to the app (QA F11): a top-level GET of a page,
+ * never of the API. The page carries no data; its own API calls are same-origin and checked.
+ */
+function pageNavigation(request: FastifyRequest): boolean {
+  return (
+    (request.method === 'GET' || request.method === 'HEAD') &&
+    request.headers['sec-fetch-mode'] === 'navigate' &&
+    request.headers['sec-fetch-dest'] === 'document' &&
+    !request.url.startsWith('/api/')
+  );
+}
+
+function allowedSite(site: string | string[] | undefined, request: FastifyRequest): boolean {
+  if (site === undefined || ['same-origin', 'same-site', 'none'].includes(String(site)))
+    return true;
+  return site === 'cross-site' && pageNavigation(request);
+}
+
 function checkRequest(request: FastifyRequest, options: SecurityOptions): void {
   const reject = () => domainError('ORIGIN_REJECTED', 'Request origin is not allowed');
   if (request.headers.host !== options.host) throw reject();
   const site = request.headers['sec-fetch-site'];
-  if (site !== undefined && !['same-origin', 'same-site', 'none'].includes(String(site)))
-    throw reject();
+  if (!allowedSite(site, request)) throw reject();
   if (!['POST', 'PATCH', 'PUT'].includes(request.method)) return;
   const origin = request.headers.origin;
   if (
