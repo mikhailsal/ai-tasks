@@ -2,6 +2,7 @@ import { navigate } from '../app/router.js';
 import { BoardColumn } from './BoardColumn.js';
 import { BoardStageTab } from './BoardStageTab.js';
 import type { BoardSessionState, SessionProps } from './use-board-session.js';
+import { useVisibleColumns } from './use-visible-columns.js';
 export function BoardStageTrack({
   board,
   configuration,
@@ -25,6 +26,8 @@ export function BoardStageTrack({
     setMenuTask,
     onTrackScroll,
   } = board;
+  // Load what can be seen, plus one stage on each side for a swipe or a scroll.
+  const visible = useVisibleColumns();
   const createParams = new URLSearchParams({
     kind: new URLSearchParams(scope.search).get('kind') === 'recurring' ? 'recurring' : 'ordinary',
     return_to: window.location.pathname + window.location.search,
@@ -57,7 +60,7 @@ export function BoardStageTrack({
             key={status.id}
             scope={scope}
             status={status}
-            enabled={Math.abs(index - active) <= 1}
+            enabled={index >= active - 1 && index <= active + visible}
             model={configuration.data.priority_model}
             timezone={metadata.timezone}
             readingKey={readingKey}

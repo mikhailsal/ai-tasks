@@ -23,6 +23,7 @@ export function updateDrag(current: Drag, track: HTMLDivElement) {
     current.x <= bounds.right &&
     current.y >= bounds.top &&
     current.y <= bounds.bottom;
+  current.to = columnUnderPointer(current, track, bounds) ?? current.to;
   const column = track.children[current.to];
   if (!(column instanceof HTMLElement)) return;
   document
@@ -69,6 +70,23 @@ export function advanceDrag(
     else if (current.y > rect.bottom - 44) list.scrollTop += 9;
   }
   updateDrag(current, track);
+}
+
+/**
+ * On a wide screen several stages are fully visible (QA F15); the pointer picks one of them.
+ * A column that only peeks in at the edge is never picked: the edge zone advances instead.
+ */
+function columnUnderPointer(current: Drag, track: HTMLDivElement, bounds: DOMRect) {
+  const index = [...track.children].findIndex((element) => {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.left >= bounds.left &&
+      rect.right <= bounds.right &&
+      current.x >= rect.left &&
+      current.x <= rect.right
+    );
+  });
+  return index >= 0 ? index : undefined;
 }
 
 function insideTrack(current: Drag, bounds: DOMRect) {

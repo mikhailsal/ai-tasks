@@ -5,6 +5,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web board on a wide screen (900 px and up) shows several stages side by side instead of one
+  phone-width column, and loads every stage in view. Dragging a card drops it into the column
+  under the pointer. Phones keep one column with swipe.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
