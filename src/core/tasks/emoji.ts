@@ -85,7 +85,9 @@ export function reserveProjectEmoji(
   const normalized = normalizeEmoji(options.emoji);
   const now = readClock(() => options.now);
   if (normalized.key === DEFAULT_TASK_EMOJI) {
-    throw domainError('VALIDATION_ERROR', 'Projects require a nondefault emoji');
+    throw domainError('VALIDATION_ERROR', 'Projects require a nondefault emoji', {
+      issues: [{ code: 'custom', path: ['emoji'], expected: 'an emoji other than the default ⚪' }],
+    });
   }
   const existing = transaction
     .select()

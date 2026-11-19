@@ -131,11 +131,14 @@ export function invalidFields(error: unknown): string[] {
   return [...new Set(fields)];
 }
 function validationMessage(error: ApiClientError) {
-  const named = invalidFields(error).filter((field) => Object.hasOwn(fieldLabels, field));
+  const fields = invalidFields(error);
+  const named = fields.filter((field) => Object.hasOwn(fieldLabels, field));
   if (named.length === 0) return genericValidation;
+  // Fields without a label are not hidden: the message says there are more.
+  const more = named.length < fields.length ? ' и другие поля' : '';
   const list = named.map((field) => `«${fieldLabels[field] ?? field}»`).join(', ');
   const hints = named.flatMap((field) => fieldRuleHints[field] ?? []).join(' ');
-  return `Проверьте ${named.length === 1 ? 'поле' : 'поля'} ${list}. ${hints ? `${hints} ` : ''}Данные не сохранены.`;
+  return `Проверьте ${named.length === 1 && !more ? 'поле' : 'поля'} ${list}${more}. ${hints ? `${hints} ` : ''}Данные не сохранены.`;
 }
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiClientError) {
