@@ -18,7 +18,7 @@ test('a missing task offers a way back instead of a dead end', async ({ page }) 
     expect(await page.evaluate('window.__sameDocument')).toBe(true);
     await expect(way.getByRole('link', { name: 'К задачам', exact: true })).toHaveAttribute(
       'href',
-      '/',
+      '/tasks?all_projects=true',
     );
     await way.getByRole('link', { name: 'К проекту', exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/projects/${slug}$`, 'u'));

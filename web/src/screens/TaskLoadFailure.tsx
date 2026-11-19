@@ -16,7 +16,7 @@ export function TaskLoadFailure({
       <p role="alert">{message}</p>
       <nav aria-label="Куда перейти" className="stack">
         <AppLink href={`/projects/${encodeURIComponent(projectSlug)}`}>К проекту</AppLink>
-        <AppLink href="/">К задачам</AppLink>
+        <AppLink href="/tasks?all_projects=true">К задачам</AppLink>
         <Button onClick={onRetry}>Повторить загрузку</Button>
       </nav>
     </section>
