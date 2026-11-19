@@ -185,7 +185,11 @@ export function TaskDetail({
       <>
         <h1>{title}</h1>
         {editor.error ? (
-          <TaskLoadFailure message={editor.error} projectSlug={projectSlug} />
+          <TaskLoadFailure
+            message={editor.error}
+            projectSlug={projectSlug}
+            onRetry={editor.retryLoad}
+          />
         ) : (
           <p role="status">Загружаем задачу…</p>
         )}

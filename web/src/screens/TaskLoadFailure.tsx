@@ -5,9 +5,11 @@ import { Button } from '../components/Button.js';
 export function TaskLoadFailure({
   message,
   projectSlug,
+  onRetry,
 }: {
   message: string;
   projectSlug: string;
+  onRetry(): void;
 }) {
   return (
     <section className="stack">
@@ -15,7 +17,7 @@ export function TaskLoadFailure({
       <nav aria-label="Куда перейти" className="stack">
         <AppLink href={`/projects/${encodeURIComponent(projectSlug)}`}>К проекту</AppLink>
         <AppLink href="/">К задачам</AppLink>
-        <Button onClick={() => window.location.reload()}>Повторить загрузку</Button>
+        <Button onClick={onRetry}>Повторить загрузку</Button>
       </nav>
     </section>
   );
