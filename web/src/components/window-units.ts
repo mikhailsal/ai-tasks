@@ -17,3 +17,10 @@ export function windowUnit(ms: string): Unit {
 export function factorOf(unit: Unit) {
   return units.find(([id]) => id === unit)?.[2] ?? 1;
 }
+/** Whether `unit` shows the stored milliseconds as a whole number within the limit. */
+export function fits(ms: string, unit: Unit): boolean {
+  if (ms === '') return true;
+  const value = Number(ms);
+  const factor = factorOf(unit);
+  return Number.isInteger(value / factor) && value / factor <= Math.floor(MAX_MS / factor);
+}

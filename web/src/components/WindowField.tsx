@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { Field } from './Field.js';
 import { SelectField } from './SelectField.js';
-import { MAX_MS, factorOf, units, windowUnit, type Unit } from './window-units.js';
+import { MAX_MS, factorOf, fits, units, windowUnit, type Unit } from './window-units.js';
 
 /**
  * The confirmation window as a number and a unit (QA F10) instead of raw milliseconds. The
  * stored value stays milliseconds; it is explicit, so an empty field stays empty (spec 001).
  */
 export function WindowField({ value, onChange }: { value: string; onChange(ms: string): void }) {
-  const [unit, setUnit] = useState<Unit>(() => windowUnit(value));
+  const [chosen, setUnit] = useState<Unit>(() => windowUnit(value));
+  // A value set from outside (a reload, a reset) that the chosen unit cannot show as a whole
+  // number within the limit picks its own unit again.
+  const unit = fits(value, chosen) ? chosen : windowUnit(value);
   const factor = factorOf(unit);
   const shown = value === '' ? '' : String(Number(value) / factor);
   const toMs = (text: string, by: number) =>

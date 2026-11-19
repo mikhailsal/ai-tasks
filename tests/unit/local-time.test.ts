@@ -6,7 +6,7 @@ import {
   resolveLocalDeadline,
   timeStep,
 } from '../../web/src/data/local-time.js';
-import { windowUnit } from '../../web/src/components/window-units.js';
+import { fits, windowUnit } from '../../web/src/components/window-units.js';
 
 describe('browser native-Intl precise local deadlines', () => {
   it('preserves milliseconds and existing offset when editing an exact saved deadline', () => {
@@ -70,5 +70,11 @@ describe('time precision people need (QA F10)', () => {
     ['123456', 'ms'],
   ])('a window of %s ms is shown in %s', (ms, unit) => {
     expect(windowUnit(ms)).toBe(unit);
+  });
+  it('a value set from outside leaves a unit that cannot show it whole', () => {
+    expect(fits('5400000', 'minute')).toBe(true);
+    expect(fits('5400000', 'hour')).toBe(false);
+    expect(fits('123456', 'minute')).toBe(false);
+    expect(fits('', 'day')).toBe(true);
   });
 });

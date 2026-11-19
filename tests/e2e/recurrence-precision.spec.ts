@@ -19,6 +19,12 @@ test('the recurrence editor shows minutes and a window unit, not milliseconds (Q
       'step',
       '60',
     );
+    // Seconds stay reachable: the switch opens them (spec 001 Q10 takes milliseconds).
+    await page.getByLabel('Местное время повторения: с секундами', { exact: true }).check();
+    await expect(page.getByLabel('Местное время повторения', { exact: true })).toHaveAttribute(
+      'step',
+      '0.001',
+    );
     const unit = page.getByLabel('Единица окна подтверждения', { exact: true });
     await expect(unit).not.toHaveValue('ms');
     await expect(page.getByText(/2 592 000 000|, мс/u)).toHaveCount(0);

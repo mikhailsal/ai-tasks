@@ -8,7 +8,8 @@ All notable changes are listed here. The format follows
 ### Fixed
 
 - Web time fields show the precision a value has: «08:00» instead of «08:00:00.000», with
-  seconds or milliseconds only when they are set. The confirmation window is entered as a
+  seconds or milliseconds only when they are set; a «с секундами» switch opens them for a new
+  value. The confirmation window is entered as a
   number with a unit (мин, ч, сут., or мс) instead of raw milliseconds; it stays explicit and
   starts empty, as do «Правило пропуска» and the first deadline. A field the browser scrolls
   to for its validation message is no longer hidden behind the fixed save bar.

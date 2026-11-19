@@ -6,7 +6,7 @@ import { Field } from './Field.js';
 import { DateTimeInputs } from './DateTimeInputs.js';
 import { SelectField as Choice } from './SelectField.js';
 import { WindowField } from './WindowField.js';
-import { timeStep } from '../data/local-time.js';
+import { TimeField } from './TimeField.js';
 
 type Props = {
   value: Fields;
@@ -103,13 +103,11 @@ function CalendarFields({ value, onChange }: Pick<Props, 'value' | 'onChange'>) 
           onChange={(event) => onChange({ ...value, dayOfMonth: event.target.value })}
         />
       )}
-      <Field
+      <TimeField
         label="Местное время повторения"
-        type="time"
-        step={timeStep(value.localTime)}
         required
         value={value.localTime}
-        onChange={(event) => onChange({ ...value, localTime: event.target.value })}
+        onChange={(localTime) => onChange({ ...value, localTime })}
       />
       <p>
         Календарные дни и недели следуют местному времени; в коротком месяце используется последний
