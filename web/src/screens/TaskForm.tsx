@@ -6,6 +6,11 @@ import { TaskIdentityFields } from './TaskIdentityFields.js';
 import { TaskFacts } from './TaskFacts.js';
 import { TaskParameters } from './TaskParameters.js';
 
+function draftCaption(title: string, dirty: boolean) {
+  if (title.trim() === '') return 'Введите название задачи, чтобы сохранить';
+  return dirty ? 'Есть несохранённые изменения' : 'Поля можно редактировать сразу';
+}
+
 export function TaskForm({
   page,
   fields,
@@ -41,6 +46,7 @@ export function TaskForm({
         <TaskIdentityFields
           fields={fields}
           heading={page.task?.title ?? 'Новая задача'}
+          autoFocus={!page.task}
           onChange={onChange}
         />
         {!page.task && (
@@ -62,9 +68,7 @@ export function TaskForm({
           </div>
         )}
         <TaskFacts page={page} />
-        <p className="task-draft-caption">
-          {dirty ? 'Есть несохранённые изменения' : 'Поля можно редактировать сразу'}
-        </p>
+        <p className="task-draft-caption">{draftCaption(fields.title, dirty)}</p>
         <MarkdownEditor
           value={fields.description}
           projectSlug={page.project.slug}

@@ -4,10 +4,13 @@ import type { TaskFields } from './task-model.js';
 export function TaskIdentityFields({
   fields,
   heading,
+  autoFocus = false,
   onChange,
 }: {
   fields: TaskFields;
   heading: string;
+  /** A new task opens with the cursor in its title. */
+  autoFocus?: boolean;
   onChange: (fields: TaskFields) => void;
 }) {
   const title = useRef<HTMLTextAreaElement>(null);
@@ -45,6 +48,8 @@ export function TaskIdentityFields({
           value={fields.title}
           rows={1}
           maxLength={300}
+          placeholder="Название задачи"
+          autoFocus={autoFocus}
           required
           onChange={(event) => onChange({ ...fields, title: event.target.value })}
         />
