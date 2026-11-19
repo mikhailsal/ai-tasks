@@ -5,6 +5,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web task editor: the title field is visible on a new task. It shows a placeholder and a
+  dashed outline while empty, takes focus on open, and the caption says a title is needed
+  before «Сохранить» becomes available.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
