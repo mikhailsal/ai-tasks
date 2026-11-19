@@ -33,6 +33,8 @@ export function TaskForm({
   onActions?: () => void;
 }) {
   const kindId = useId();
+  const captionId = useId();
+  const untitled = fields.title.trim() === '';
   return (
     <form
       aria-label="Редактор задачи"
@@ -47,6 +49,7 @@ export function TaskForm({
           fields={fields}
           heading={page.task?.title ?? 'Новая задача'}
           autoFocus={!page.task}
+          describedBy={captionId}
           onChange={onChange}
         />
         {!page.task && (
@@ -68,7 +71,9 @@ export function TaskForm({
           </div>
         )}
         <TaskFacts page={page} />
-        <p className="task-draft-caption">{draftCaption(fields.title, dirty)}</p>
+        <p id={captionId} className="task-draft-caption" aria-live="polite">
+          {draftCaption(fields.title, dirty)}
+        </p>
         <MarkdownEditor
           value={fields.description}
           projectSlug={page.project.slug}
@@ -80,7 +85,7 @@ export function TaskForm({
         <Button onClick={onCancel} disabled={cancelDisabled}>
           Отмена
         </Button>
-        <Button variant="primary" type="submit" disabled={disabled || !dirty}>
+        <Button variant="primary" type="submit" disabled={disabled || !dirty || untitled}>
           Сохранить
         </Button>
         {page.task && onActions && (

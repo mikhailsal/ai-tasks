@@ -5,12 +5,15 @@ export function TaskIdentityFields({
   fields,
   heading,
   autoFocus = false,
+  describedBy,
   onChange,
 }: {
   fields: TaskFields;
   heading: string;
   /** A new task opens with the cursor in its title. */
   autoFocus?: boolean;
+  /** Id of the caption that says why the form cannot be saved yet. */
+  describedBy?: string;
   onChange: (fields: TaskFields) => void;
 }) {
   const title = useRef<HTMLTextAreaElement>(null);
@@ -50,6 +53,7 @@ export function TaskIdentityFields({
           maxLength={300}
           placeholder="Название задачи"
           autoFocus={autoFocus}
+          aria-describedby={describedBy}
           required
           onChange={(event) => onChange({ ...fields, title: event.target.value })}
         />

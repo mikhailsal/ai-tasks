@@ -189,6 +189,10 @@ test('a new task opens with a visible, focused title field and says why it canno
     expect(border).not.toBe('rgba(0, 0, 0, 0)');
     await expect(page.getByText('Введите название задачи, чтобы сохранить')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
+    await expect(title).toHaveAttribute('aria-describedby', /.+/u);
+    // A dirty form with an empty title still cannot be saved.
+    await page.getByLabel('Эмодзи задачи', { exact: true }).fill('🧪');
+    await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeDisabled();
     await title.fill('Новая задача из формы');
     await expect(page.getByText('Есть несохранённые изменения')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeEnabled();

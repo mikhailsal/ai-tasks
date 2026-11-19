@@ -90,7 +90,7 @@
 }
 /* The title edits in place; an empty title or the focused field shows its outline. */
 .task-identity-fields textarea::placeholder {
-  color: #8a94a6;
+  color: #69758a;
   font-weight: 500;
 }
 .task-identity-fields textarea:placeholder-shown {
@@ -99,7 +99,7 @@
 }
 .task-identity-fields textarea:hover:not(:disabled),
 .task-identity-fields textarea:focus {
-  border-color: #b7c0cf;
+  border: 1px solid #b7c0cf;
   background: #fff;
 }
 .task-emoji-field {
