@@ -40,6 +40,15 @@ const actions: Readonly<Record<string, string>> = {
   'config.migrate': 'Конфигурация изменена',
   'dependency.add': 'Добавлена зависимость',
   'dependency.remove': 'Удалена зависимость',
+  'recurrence.configure': 'Повторение настроено',
+  'recurrence.control': 'Повторение включено, приостановлено или остановлено',
+  'recurrence.tick': 'Обработаны наступившие сроки',
+  'recurrence.timezone': 'Часовой пояс повторения изменён',
+  'occurrence.complete': 'Повторение выполнено',
+  'occurrence.cancel': 'Повторение отменено',
+  'occurrence.miss': 'Пропуск записан',
+  'settings.update': 'Настройки изменены',
+  'database.restore': 'База данных восстановлена',
 };
 export function auditField(field: string): string {
   return Object.hasOwn(fields, field) ? (fields[field] ?? field) : field;
@@ -90,20 +99,41 @@ function statusMeaning(value: string, snapshot: JsonValue): string {
   );
 }
 
+type Meaning = (value: JsonValue, snapshot: JsonValue) => string | undefined;
+const meanings: Readonly<Record<string, Meaning>> = {
+  status_id: (value, snapshot) =>
+    typeof value === 'string' ? statusMeaning(value, snapshot) : undefined,
+  category: (value) =>
+    typeof value === 'string' ? `${categoryLabels[value] ?? value} (${value})` : undefined,
+  configuration: (value) => {
+    const config = capturedConfiguration(value);
+    return config
+      ? Object.entries(configurationMeaning(configurationDraft(config)))
+          .map(([name, text]) => `${name}: ${text}`)
+          .join('\n')
+      : undefined;
+  },
+  priority: priorityMeaning,
+  board_position: boardPosition,
+};
+
 export function auditValue(field: string, value: JsonValue, snapshot: JsonValue): string {
   if (value === null) return 'Не задано';
-  if (field === 'status_id' && typeof value === 'string') return statusMeaning(value, snapshot);
-  if (field === 'category' && typeof value === 'string')
-    return `${categoryLabels[value] ?? value} (${value})`;
-  if (field === 'configuration') {
-    const config = capturedConfiguration(value);
-    if (config)
-      return Object.entries(configurationMeaning(configurationDraft(config)))
-        .map(([name, text]) => `${name}: ${text}`)
-        .join('\n');
-  }
-  if (field === 'priority') return priorityMeaning(value, snapshot) ?? plainValue(value);
-  return plainValue(value);
+  const meaning = Object.hasOwn(meanings, field) ? meanings[field] : undefined;
+  return meaning?.(value, snapshot) ?? plainValue(value);
+}
+
+/** `{status_id, position}` as «Стадия «Черновик», позиция 2» (QA F9), not raw JSON. */
+function boardPosition(value: JsonValue, snapshot: JsonValue): string | undefined {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const { status_id: id, position } = value;
+  if (typeof id !== 'string' || typeof position !== 'number') return undefined;
+  const config = capturedConfiguration(snapshot);
+  const label = [
+    ...(config?.ordinary_workflow.statuses ?? []),
+    ...(config?.recurring_workflow.statuses ?? []),
+  ].find((status) => status.id === id)?.label;
+  return `Стадия «${label ?? id}», позиция ${String(position)}`;
 }
 
 function plainValue(value: JsonValue): string {
