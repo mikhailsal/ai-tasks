@@ -40,6 +40,17 @@ describe('web advisory wording', () => {
       'Переведите задачу в активную стадию.',
     );
   });
+  it('says when no active status is reachable instead of asking to move', () => {
+    const text = advisoryText(
+      advisory(
+        'recurring_not_generating',
+        'No active status is reachable from this status; see config get.',
+      ),
+    );
+    expect(text.remedy).toBe(
+      'Из этой стадии нет перехода в активную; проверьте настройки стадий проекта.',
+    );
+  });
   it('names the project in the worker remedy', () => {
     const text = advisoryText({
       ...advisory('worker_stale', 'Start the service (serve)'),

@@ -4,11 +4,14 @@ type Labels = Readonly<Record<string, string>>;
 type Remedy = { times: readonly string[]; advisory: Advisory; labels: Labels };
 type Wording = { message: string; remedy(remedy: Remedy): string };
 
-// Same wording as WorkerStatus, so the two notices read as one.
+/** Shared with WorkerStatus, so the two worker notices read as one. */
+export function workerRemedyText(slug: string | undefined): string {
+  return slug === undefined
+    ? 'Запустите сервис (serve), он запускает обработчик.'
+    : `Запустите сервис (serve), он запускает обработчик; вручную: worker run --project ${slug}.`;
+}
 const workerRemedy: Wording['remedy'] = ({ advisory }) =>
-  advisory.subject?.type === 'project'
-    ? `Запустите сервис (serve), он запускает обработчик; вручную: worker run --project ${advisory.subject.id}.`
-    : 'Запустите сервис (serve), он запускает обработчик.';
+  workerRemedyText(advisory.subject?.type === 'project' ? advisory.subject.id : undefined);
 
 /**
  * Russian wording for people. The server's advisory text is fixed English for agents
@@ -27,6 +30,8 @@ const wordings: Readonly<Record<string, Wording>> = {
   recurring_not_generating: {
     message: 'Задача в черновой стадии и пока не создаёт повторений.',
     remedy: ({ advisory, labels }) => {
+      if (advisory.remedy.text.startsWith('No active status is reachable'))
+        return 'Из этой стадии нет перехода в активную; проверьте настройки стадий проекта.';
       // The agent text lists the target status ids after the colon.
       const ids = /: ([a-z0-9_, -]+)\.$/u.exec(advisory.remedy.text)?.[1]?.split(', ') ?? [];
       const names = ids.map((id) => labels[id]);
