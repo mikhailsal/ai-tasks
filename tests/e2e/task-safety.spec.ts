@@ -221,8 +221,15 @@ test('resolving a conflict with my version keeps the other client edit to an unt
   await description.fill('Правка из вкладки A');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   const proposed = page.getByRole('region', { name: 'Ваш вариант' });
-  await expect(proposed).toContainText('Записаться к врачу (вкладка B)');
+  // Only differing fields, in form terms: the merged title equals the server's and is hidden.
   await expect(proposed).toContainText('Правка из вкладки A');
+  await expect(proposed).not.toContainText('Записаться к врачу (вкладка B)');
+  await expect(page.getByRole('region', { name: 'Текущая версия' })).not.toContainText(
+    /timezone|kind|recurrence/u,
+  );
+  await expect(
+    page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }),
+  ).toBeInViewport();
   await page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }).click();
   await expect(page.getByRole('region', { name: 'Ваш вариант' })).toHaveCount(0);
   const saved = z

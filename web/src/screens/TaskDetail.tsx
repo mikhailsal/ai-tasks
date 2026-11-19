@@ -10,6 +10,7 @@ import { useMutationAvailability } from '../app/MutationBoundary.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
 import { AdvisoryNotice, pageAdvisories } from '../components/AdvisoryNotice.js';
 import { ConflictReview } from '../components/ConflictReview.js';
+import { taskConflictView } from './task-conflict.js';
 import { TaskSavedDetails } from './TaskSavedDetails.js';
 import { TaskForm } from './TaskForm.js';
 import { MarkerCollision } from './TaskControls.js';
@@ -141,15 +142,23 @@ function TaskOperationReview({
     <>
       {commands.conflict && (
         <ConflictReview
-          current={fieldsFromPage(commands.conflict)}
+          current={taskConflictView(fieldsFromPage(commands.conflict, draft.fields.kind))}
           proposed={
             commands.conflictAction
               ? commands.conflictAction.payload
-              : mergeTaskFields(
-                  draft.fields,
-                  draft.origin,
-                  fieldsFromPage(commands.conflict, draft.fields.kind),
+              : taskConflictView(
+                  mergeTaskFields(
+                    draft.fields,
+                    draft.origin,
+                    fieldsFromPage(commands.conflict, draft.fields.kind),
+                  ),
                 )
+          }
+          changedOnly={!commands.conflictAction}
+          note={
+            commands.conflictAction
+              ? undefined
+              : 'Поля, которые вы не меняли, взяты из текущей версии.'
           }
           disabled={commands.conflictAction ? actionUnavailable : formUnavailable}
           onRetry={() => void commands.reconcile()}
@@ -215,6 +224,13 @@ export function TaskDetail({
         metadata={metadata}
         archived={archived}
       />
+      <TaskOperationReview
+        editor={editor}
+        commands={commands}
+        formUnavailable={formUnavailable}
+        actionUnavailable={actionUnavailable}
+        epoch={metadata.database_epoch}
+      />
       <TaskForm
         page={page}
         fields={editor.draft.fields}
@@ -261,13 +277,6 @@ export function TaskDetail({
         />
         <Button onClick={() => setActionsOpen(false)}>Закрыть</Button>
       </Modal>
-      <TaskOperationReview
-        editor={editor}
-        commands={commands}
-        formUnavailable={formUnavailable}
-        actionUnavailable={actionUnavailable}
-        epoch={metadata.database_epoch}
-      />
     </div>
   );
 }

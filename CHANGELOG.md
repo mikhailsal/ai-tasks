@@ -10,6 +10,10 @@ All notable changes are listed here. The format follows
 - Web task editor: "Сохранить мой вариант ещё раз" after a conflict no longer reverts fields
   that only the other client changed. Fields you did not edit take the current server value;
   the compare block shows the merged result before you save.
+- Web task editor: the conflict comparison appears right under the warning, scrolls into view
+  and lists only the fields that differ, in form terms (title, emoji, description, priority,
+  deadline). Internal fields such as `timezone`, `kind` and recurrence settings are no longer
+  shown.
 
 ## [0.2.0] - 2026-11-17
 
