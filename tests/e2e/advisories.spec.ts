@@ -7,7 +7,7 @@ import {
 import { controlRecurrence } from '../../src/core/recurrence/control.js';
 
 /** Specs 010 and 012: people see the advisory where the task is shown, at 430 px. */
-const draftText = 'This recurring task generates no occurrences in its current status.';
+const draftText = 'Задача в черновой стадии и пока не создаёт повторений.';
 
 test('a draft recurring task shows the notice on the task and in the list, then loses it', async ({
   page,
@@ -19,8 +19,10 @@ test('a draft recurring task shows the notice on the task and in the list, then 
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
     const notice = page.getByRole('complementary', { name: 'Обратите внимание' });
     await expect(notice).toContainText(draftText);
-    await expect(notice).toContainText('Move it to an active status');
-    await expect(notice).toContainText('По данным на');
+    await expect(notice).toContainText(/Переведите задачу в активную стадию: «[^»]+»\./u);
+    await expect(notice).not.toContainText(/Move it|status/u);
+    // To the minute: «По данным на 19.11.2026, 12:38», no seconds or milliseconds.
+    await expect(notice).toContainText(/По данным на \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}$/u);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
