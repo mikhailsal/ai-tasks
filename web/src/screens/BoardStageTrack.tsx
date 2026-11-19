@@ -26,8 +26,9 @@ export function BoardStageTrack({
     setMenuTask,
     onTrackScroll,
   } = board;
-  // Load what can be seen, plus one stage on each side for a swipe or a scroll.
-  const visible = useVisibleColumns();
+  // Load what can be seen on either side of the active stage: the stage beside it on a phone,
+  // a screenful each way on a wide screen, where the active stage need not be the leftmost.
+  const reach = Math.max(1, useVisibleColumns(track) - 1);
   const createParams = new URLSearchParams({
     kind: new URLSearchParams(scope.search).get('kind') === 'recurring' ? 'recurring' : 'ordinary',
     return_to: window.location.pathname + window.location.search,
@@ -60,7 +61,7 @@ export function BoardStageTrack({
             key={status.id}
             scope={scope}
             status={status}
-            enabled={index >= active - 1 && index <= active + visible}
+            enabled={Math.abs(index - active) <= reach}
             model={configuration.data.priority_model}
             timezone={metadata.timezone}
             readingKey={readingKey}

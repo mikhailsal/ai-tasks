@@ -1509,6 +1509,8 @@ dd {
   }
   .board-column {
     flex: 0 0 300px;
+    /* Scrolling past several stages in view should not stop at each one. */
+    scroll-snap-stop: normal;
   }
   .board-column:last-child {
     margin-right: 20px;

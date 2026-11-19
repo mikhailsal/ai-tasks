@@ -10,6 +10,7 @@ import type { configurationEnvelopeSchema, projectEnvelopeSchema } from '../data
 import { boardFilterLabels } from './BoardFilters.js';
 import { useBoardMove } from './use-board-move.js';
 import { useBoardDrag } from './use-board-drag.js';
+import { fullyInside } from './board-drag.js';
 export type SessionProps = {
   project: z.output<typeof projectEnvelopeSchema>;
   configuration: z.output<typeof configurationEnvelopeSchema>;
@@ -109,6 +110,14 @@ export function useBoardSession({ project, configuration, metadata, search, kind
   }, [go, reading, stages, searching]);
   function onTrackScroll() {
     if (!track.current) return;
+    // On a wide screen the chosen stage stays active while it is wholly in view, even when the
+    // track cannot scroll it to the left edge (QA F15).
+    const chosen = stages.findIndex((status) => status.id === reading.stage);
+    const kept = track.current.children[chosen];
+    if (kept && fullyInside(kept, track.current.getBoundingClientRect())) {
+      setActive(chosen);
+      return;
+    }
     const first = track.current.children[0];
     const width =
       first instanceof HTMLElement
