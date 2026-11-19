@@ -113,6 +113,18 @@ export function resolveLocalDeadline(value: DeadlineDraft, timezone: string): st
   return new Date(choice.instant).toISOString();
 }
 
+/**
+ * «08:00:00.000» → «08:00» (QA F10): seconds and milliseconds only when they are set,
+ * so a time field shows the precision the value has.
+ */
+export function compactTime(time: string): string {
+  return time.replace(/\.0+$/u, '').replace(/^(\d{2}:\d{2}):00$/u, '$1');
+}
+/** Step for a time input: minutes, unless the value carries seconds or milliseconds. */
+export function timeStep(time: string): string {
+  if (/\.\d+$/u.test(time)) return '0.001';
+  return /^\d{2}:\d{2}:\d{2}$/u.test(time) ? '1' : '60';
+}
 export function deadlineDraft(instant: string | null, timezone: string): DeadlineDraft {
   if (instant === null) return { date: '', time: '', offset: '' };
   const milliseconds = new Date(instant).getTime();
@@ -120,7 +132,9 @@ export function deadlineDraft(instant: string | null, timezone: string): Deadlin
   const two = (value: number) => value.toString().padStart(2, '0');
   return {
     date: `${wall.year.toString().padStart(4, '0')}-${two(wall.month)}-${two(wall.day)}`,
-    time: `${two(wall.hour)}:${two(wall.minute)}:${two(wall.second)}.${wall.millisecond.toString().padStart(3, '0')}`,
+    time: compactTime(
+      `${two(wall.hour)}:${two(wall.minute)}:${two(wall.second)}.${wall.millisecond.toString().padStart(3, '0')}`,
+    ),
     offset: offsetText(wallEpoch(wall) - milliseconds),
   };
 }
