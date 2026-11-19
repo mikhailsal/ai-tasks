@@ -5,7 +5,10 @@ export async function registerShell() {
   try {
     registration = await navigator.serviceWorker.register('/sw.js', { scope: '/', type: 'module' });
     const check = () => {
-      if (registration?.waiting) updateConnectivity({ shellUpdateAvailable: true });
+      // On the first visit no worker controls the page yet: the new worker passes through
+      // «waiting» on its way to activation, which is an install, not an update (QA F12).
+      if (registration?.waiting && navigator.serviceWorker.controller)
+        updateConnectivity({ shellUpdateAvailable: true });
     };
     check();
     registration.addEventListener('updatefound', () => {

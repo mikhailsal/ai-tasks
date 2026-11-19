@@ -5,6 +5,11 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web: the first visit no longer shows «Доступна новая версия приложения». Installing the
+  offline shell is not an update; the notice now needs a page already run by an older shell.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
