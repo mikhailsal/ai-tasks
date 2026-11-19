@@ -21,6 +21,10 @@ import {
   type TaskPage,
 } from './task-model.js';
 
+function pageDraft(key: string, page: TaskPage, kind: TaskFields['kind']) {
+  const fields = fieldsFromPage(page, kind);
+  return createDraft({ key, fields, base: baseFromPage(page), origin: fields });
+}
 export function useTaskDraft(projectSlug: string, taskId?: string) {
   const initialKind =
     new URLSearchParams(window.location.search).get('kind') === 'recurring'
@@ -59,11 +63,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     async function initialize() {
       const loaded = await loadTaskPage(projectSlug, taskId);
       if (!active) return;
-      let record = createDraft({
-        key,
-        fields: fieldsFromPage(loaded, initialKind),
-        base: baseFromPage(loaded),
-      });
+      let record = pageDraft(key, loaded, initialKind);
       try {
         const [stored, proposal] = await Promise.all([loadDraft(key), loadProposal(key)]);
         if (!active) return;
@@ -72,6 +72,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
             key,
             fields: taskFieldsSchema.parse(stored.fields),
             base: stored.base,
+            origin: stored.origin,
           });
           setDirty(true);
           dirtyRef.current = true;
@@ -109,9 +110,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
   }
   function cancel() {
     if (!page || pendingProposal) return;
-    setDraft(
-      createDraft({ key, fields: fieldsFromPage(page, initialKind), base: baseFromPage(page) }),
-    );
+    setDraft(pageDraft(key, page, initialKind));
     setDirty(false);
     dirtyRef.current = false;
     storageQueue.current = storageQueue.current
@@ -130,22 +129,13 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     setPage(loaded);
     if (preserveDirty && dirty) return;
     await deleteDraft(key);
-    setDraft(
-      createDraft({ key, fields: fieldsFromPage(loaded, initialKind), base: baseFromPage(loaded) }),
-    );
+    setDraft(pageDraft(key, loaded, initialKind));
     setDirty(false);
     dirtyRef.current = false;
   }
   function refreshed(loaded: TaskPage) {
     setPage(loaded);
-    if (!dirtyRef.current)
-      setDraft(
-        createDraft({
-          key,
-          fields: fieldsFromPage(loaded, initialKind),
-          base: baseFromPage(loaded),
-        }),
-      );
+    if (!dirtyRef.current) setDraft(pageDraft(key, loaded, initialKind));
   }
   return {
     key,

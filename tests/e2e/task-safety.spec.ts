@@ -47,12 +47,12 @@ test.beforeEach(async ({ request }, info) => {
       payload: {
         slug,
         name: 'Безопасность действий',
-        emoji: (info.project.name === 'webkit' ? ['🛟', '🪕', '🧶'] : ['🧭', '🥁', '🧵'])[
-          info.title.startsWith('two synchronous')
-            ? 1
-            : info.title.startsWith('stale completion')
-              ? 2
-              : 0
+        emoji: (info.project.name === 'webkit'
+          ? ['🛟', '🪕', '🧶', '🪁']
+          : ['🧭', '🥁', '🧵', '🪀'])[
+          ['two synchronous', 'stale completion', 'resolving a conflict'].findIndex((prefix) =>
+            info.title.startsWith(prefix),
+          ) + 1
         ],
         config: {
           priority_model: { type: 'classic' },
@@ -194,4 +194,41 @@ test('stale completion retains the exact consent and target for explicit reconci
   expect(proposals[1]?.payload).toEqual(proposals[0]?.payload);
   expect(proposals[1]?.operation_id).not.toBe(proposals[0]?.operation_id);
   expect(proposals[1]?.expected_revision).toBe(2);
+});
+test('resolving a conflict with my version keeps the other client edit to an untouched field', async ({
+  page,
+  request,
+}) => {
+  const task = taskIdentity.parse(
+    (await mutate(request, '/tasks', { kind: 'ordinary', title: 'Записаться к врачу' })).data,
+  );
+  await page.goto(`/projects/${slug}/tasks/${task.id}`);
+  const description = page.getByLabel('Описание', { exact: true });
+  await expect(description).toBeVisible();
+  // Another client renames the task after this page read it.
+  const patched = await request.patch(`/api/v1/projects/${slug}/tasks/${task.id}`, {
+    headers: { Origin: origin, 'Content-Type': 'application/json', 'X-AI-Tasks-Mutation': '1' },
+    data: {
+      operation_id: randomUUID(),
+      database_epoch: epoch,
+      expected_revision: task.revision,
+      expected_config_revision: 1,
+      payload: { title: 'Записаться к врачу (вкладка B)' },
+    },
+  });
+  expect(patched.status()).toBe(200);
+  await description.fill('Правка из вкладки A');
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  const proposed = page.getByRole('region', { name: 'Ваш вариант' });
+  await expect(proposed).toContainText('Записаться к врачу (вкладка B)');
+  await expect(proposed).toContainText('Правка из вкладки A');
+  await page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }).click();
+  await expect(page.getByRole('region', { name: 'Ваш вариант' })).toHaveCount(0);
+  const saved = z
+    .object({ data: z.object({ title: z.string(), description: z.string() }) })
+    .parse(await (await request.get(`/api/v1/projects/${slug}/tasks/${task.id}`)).json());
+  expect(saved.data).toMatchObject({
+    title: 'Записаться к врачу (вкладка B)',
+    description: 'Правка из вкладки A',
+  });
 });

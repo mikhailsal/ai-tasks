@@ -13,7 +13,7 @@ import { ConflictReview } from '../components/ConflictReview.js';
 import { TaskSavedDetails } from './TaskSavedDetails.js';
 import { TaskForm } from './TaskForm.js';
 import { MarkerCollision } from './TaskControls.js';
-import { fieldsFromPage, loadTaskPage, type TaskPage } from './task-model.js';
+import { fieldsFromPage, loadTaskPage, mergeTaskFields, type TaskPage } from './task-model.js';
 import { Recurrence } from './Recurrence.js';
 import { useTaskDraft } from './use-task-draft.js';
 import { useTaskCommands } from './use-task-commands.js';
@@ -142,7 +142,11 @@ function TaskOperationReview({
       {commands.conflict && (
         <ConflictReview
           current={fieldsFromPage(commands.conflict)}
-          proposed={commands.conflictAction ? commands.conflictAction.payload : draft.fields}
+          proposed={
+            commands.conflictAction
+              ? commands.conflictAction.payload
+              : mergeTaskFields(draft.fields, draft.origin, fieldsFromPage(commands.conflict))
+          }
           disabled={commands.conflictAction ? actionUnavailable : formUnavailable}
           onRetry={() => void commands.reconcile()}
         />

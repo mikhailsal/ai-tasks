@@ -3,7 +3,8 @@ import {
   priorityValueSchema,
   validatePriorityForModel,
 } from '../../../src/schema/configuration.js';
-import { descriptionSchema, titleSchema } from '../../../src/schema/values.js';
+import { descriptionSchema, titleSchema, type JsonValue } from '../../../src/schema/values.js';
+import { mergeDraftFields } from '../data/drafts.js';
 import { readConfiguration, readProject, readTask, readSettings } from '../data/resources.js';
 import { deadlineDraft, resolveLocalDeadline } from '../data/local-time.js';
 import { recurrenceConfigurationSchema } from '../../../src/schema/recurrence-query.js';
@@ -82,6 +83,14 @@ function taskKindFields(page: TaskPage, initialKind: TaskFields['kind']) {
           )
         : blankRecurrenceFields(),
   };
+}
+/** Conflict merge for task drafts; see `mergeDraftFields`. */
+export function mergeTaskFields(
+  mine: TaskFields,
+  origin: JsonValue | undefined,
+  current: TaskFields,
+): TaskFields {
+  return mergeDraftFields(mine, origin, current, (value) => taskFieldsSchema.parse(value));
 }
 export function baseFromPage(page: TaskPage) {
   return {

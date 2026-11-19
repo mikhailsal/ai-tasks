@@ -4,6 +4,7 @@ import { boardReturnHref } from '../data/board-links.js';
 import * as z from 'zod/mini';
 import { ApiClientError, mutateApi } from '../data/api.js';
 import {
+  createDraft,
   deleteProposal,
   proposalFor,
   reconcileDraft,
@@ -14,7 +15,9 @@ import {
 import { errorMessage } from '../data/resources.js';
 import {
   baseFromPage,
+  fieldsFromPage,
   loadTaskPage,
+  mergeTaskFields,
   taskPayload,
   type TaskFields,
   type TaskPage,
@@ -49,6 +52,16 @@ function openCreatedTask(projectSlug: string, id: string, loaded: TaskPage) {
     ? `?${new URLSearchParams({ return_to: boardReturnHref(projectSlug, loaded.task?.kind ?? 'ordinary') })}`
     : '';
   navigate(`/projects/${projectSlug}/tasks/${id}${context}`, true);
+}
+/** "Save my version": keep this draft's edits, take every untouched field from `current`. */
+function rebaseOnConflict(draft: DraftRecord<TaskFields>, current: TaskPage) {
+  const fields = fieldsFromPage(current);
+  return createDraft({
+    key: draft.key,
+    fields: mergeTaskFields(draft.fields, draft.origin, fields),
+    base: baseFromPage(current),
+    origin: fields,
+  });
 }
 export function useTaskCommands(editor: Editor, projectSlug: string) {
   const sending = useRef(false);
@@ -163,7 +176,7 @@ export function useTaskCommands(editor: Editor, projectSlug: string) {
       await action(conflictAction);
       return;
     }
-    const record = reconcileDraft(editor.draft, baseFromPage(conflict));
+    const record = rebaseOnConflict(editor.draft, conflict);
     editor.setDraft(record);
     setConflict(null);
     await save(record);
