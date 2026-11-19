@@ -55,7 +55,8 @@ function openCreatedTask(projectSlug: string, id: string, loaded: TaskPage) {
 }
 /** "Save my version": keep this draft's edits, take every untouched field from `current`. */
 function rebaseOnConflict(draft: DraftRecord<TaskFields>, current: TaskPage) {
-  const fields = fieldsFromPage(current);
+  // A new task's kind comes from the draft, not the server page, so pass it through.
+  const fields = fieldsFromPage(current, draft.fields.kind);
   return createDraft({
     key: draft.key,
     fields: mergeTaskFields(draft.fields, draft.origin, fields),

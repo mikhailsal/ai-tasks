@@ -195,6 +195,7 @@ test('stale completion retains the exact consent and target for explicit reconci
   expect(proposals[1]?.operation_id).not.toBe(proposals[0]?.operation_id);
   expect(proposals[1]?.expected_revision).toBe(2);
 });
+
 test('resolving a conflict with my version keeps the other client edit to an untouched field', async ({
   page,
   request,

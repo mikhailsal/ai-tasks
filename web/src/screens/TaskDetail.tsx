@@ -145,7 +145,11 @@ function TaskOperationReview({
           proposed={
             commands.conflictAction
               ? commands.conflictAction.payload
-              : mergeTaskFields(draft.fields, draft.origin, fieldsFromPage(commands.conflict))
+              : mergeTaskFields(
+                  draft.fields,
+                  draft.origin,
+                  fieldsFromPage(commands.conflict, draft.fields.kind),
+                )
           }
           disabled={commands.conflictAction ? actionUnavailable : formUnavailable}
           onRetry={() => void commands.reconcile()}

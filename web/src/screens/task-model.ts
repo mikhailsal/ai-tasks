@@ -90,7 +90,10 @@ export function mergeTaskFields(
   origin: JsonValue | undefined,
   current: TaskFields,
 ): TaskFields {
-  return mergeDraftFields(mine, origin, current, (value) => taskFieldsSchema.parse(value));
+  return mergeDraftFields(mine, origin, current, (value) => {
+    const merged = taskFieldsSchema.safeParse(value);
+    return merged.success ? merged.data : mine;
+  });
 }
 export function baseFromPage(page: TaskPage) {
   return {
