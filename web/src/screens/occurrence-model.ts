@@ -68,9 +68,46 @@ export function occurrenceScheduleLabel(
     return `После выполнения: каждые ${schedule.every} ${schedule.unit === 'hours' ? 'ч.' : 'сут.'}`;
   if (schedule.pattern === 'weekdays') {
     const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    return `Дни недели: ${schedule.weekdays.map((day) => days[day - 1]).join(', ')}; время ${schedule.local_time}`;
+    return `Дни недели: ${schedule.weekdays.map((day) => days[day - 1]).join(', ')}; время ${shortLocalTime(schedule.local_time)}`;
   }
   if (schedule.pattern === 'months')
-    return `Каждые ${schedule.every} мес., день ${schedule.day_of_month}; время ${schedule.local_time}`;
-  return `Каждые ${schedule.every} ${schedule.pattern === 'days' ? 'сут.' : 'нед.'}; время ${schedule.local_time}`;
+    return `Каждые ${schedule.every} мес., день ${schedule.day_of_month}; время ${shortLocalTime(schedule.local_time)}`;
+  return `Каждые ${schedule.every} ${schedule.pattern === 'days' ? 'сут.' : 'нед.'}; время ${shortLocalTime(schedule.local_time)}`;
+}
+
+/** «08:00:00.000» → «08:00»; seconds stay only when they are not zero. */
+export function shortLocalTime(time: string): string {
+  const match = /^(\d{2}:\d{2})(?::(\d{2}))?(?:\.\d+)?$/u.exec(time);
+  if (!match) return time;
+  const [, minutes = time, seconds] = match;
+  return seconds && seconds !== '00' ? `${minutes}:${seconds}` : minutes;
+}
+/** A moment in the task's time zone, to the minute unless it carries seconds. */
+export function occurrenceMoment(instant: string, timezone: string): string {
+  const date = new Date(instant);
+  const seconds = date.getUTCSeconds() !== 0 || date.getUTCMilliseconds() !== 0;
+  return new Intl.DateTimeFormat('ru-RU', {
+    timeZone: timezone,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(seconds ? { second: '2-digit' } : {}),
+  }).format(date);
+}
+/** The confirmation window in days, hours and minutes instead of milliseconds. */
+export function windowLabel(ms: number): string {
+  if (ms === 0) return 'нет';
+  const minutes = ms / 60000;
+  if (!Number.isInteger(minutes)) return `${String(ms / 1000)} с`;
+  const parts = [
+    [Math.floor(minutes / 1440), 'сут.'],
+    [Math.floor((minutes % 1440) / 60), 'ч'],
+    [minutes % 60, 'мин'],
+  ] as const;
+  return parts
+    .filter(([count]) => count > 0)
+    .map(([count, unit]) => `${String(count)} ${unit}`)
+    .join(' ');
 }
