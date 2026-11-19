@@ -4,6 +4,7 @@ import { ConflictReview } from '../components/ConflictReview.js';
 import { RecurrenceFields } from '../components/RecurrenceFields.js';
 import type { RecurrencePage } from './recurrence-data.js';
 import type { useRecurrenceDraft } from './use-recurrence-draft.js';
+import { windowLabel } from './occurrence-model.js';
 import type { useRecurrenceCommands } from './use-recurrence-commands.js';
 
 type EditorProps = {
@@ -31,7 +32,7 @@ export function RecurrenceSummary({ source }: { source: RecurrencePage }) {
           : 'Пропуск записывается в историю'}
         .
       </p>
-      <p>Окно подтверждения: {source.data.configuration.confirmation_window_ms} мс.</p>
+      <p>Окно подтверждения: {windowLabel(source.data.configuration.confirmation_window_ms)}.</p>
       <p>
         Архивирование требует обработки наступивших сроков и закрытия ожидающих выполнений и долгов,
         включая созданные будущие.

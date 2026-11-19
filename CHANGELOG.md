@@ -5,6 +5,13 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web occurrence rows show times in the task's time zone («Срок: 19 нояб. 2026 г., 08:00»)
+  instead of UTC ISO; the exact instant stays in the tooltip. The confirmation window reads
+  in days, hours and minutes instead of milliseconds, schedule times drop zero seconds
+  («время 08:00»), and «поколение» reads «версия расписания».
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
