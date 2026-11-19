@@ -41,7 +41,7 @@ const actions: Readonly<Record<string, string>> = {
   'dependency.add': 'Добавлена зависимость',
   'dependency.remove': 'Удалена зависимость',
   'recurrence.configure': 'Повторение настроено',
-  'recurrence.control': 'Повторение включено, приостановлено или остановлено',
+  'recurrence.control': 'Состояние повторения изменено',
   'recurrence.tick': 'Обработаны наступившие сроки',
   'recurrence.timezone': 'Часовой пояс повторения изменён',
   'occurrence.complete': 'Повторение выполнено',
@@ -129,11 +129,19 @@ function boardPosition(value: JsonValue, snapshot: JsonValue): string | undefine
   const { status_id: id, position } = value;
   if (typeof id !== 'string' || typeof position !== 'number') return undefined;
   const config = capturedConfiguration(snapshot);
-  const label = [
-    ...(config?.ordinary_workflow.statuses ?? []),
-    ...(config?.recurring_workflow.statuses ?? []),
-  ].find((status) => status.id === id)?.label;
-  return `Стадия «${label ?? id}», позиция ${String(position)}`;
+  // Both workflows may use the same id; then both names are shown, as statusMeaning does.
+  const labels = [
+    ...new Set(
+      [
+        ...(config?.ordinary_workflow.statuses ?? []),
+        ...(config?.recurring_workflow.statuses ?? []),
+      ]
+        .filter((status) => status.id === id)
+        .map((status) => status.label),
+    ),
+  ];
+  const name = labels.length > 0 ? labels.join(' / ') : id;
+  return `Стадия «${name}», позиция ${String(position)}`;
 }
 
 function plainValue(value: JsonValue): string {

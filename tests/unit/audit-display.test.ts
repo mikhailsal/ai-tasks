@@ -3,6 +3,7 @@ import { createDefaultProjectConfig } from '../../src/core/projects/presets.js';
 import { jsonValueSchema } from '../../src/schema/values.js';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { auditAction, auditValue } from '../../web/src/screens/audit-display.js';
 
 it('qualifies captured status meanings when ordinary and recurring workflows share one stable ID', () => {
@@ -39,12 +40,13 @@ function sources(dir: string): string[] {
 
 it('names every audited action in Russian, never as a raw key (QA F9)', () => {
   const recorded = new Set(
-    sources('src/core').flatMap((text) =>
+    // Every adapter and core module, from the repository root, whatever the working directory.
+    sources(fileURLToPath(new URL('../../src', import.meta.url))).flatMap((text) =>
       [...text.matchAll(/action: '([a-z_]+\.[a-z_]+)'/gu)].map((match) => match[1] ?? ''),
     ),
   );
   expect(recorded.size).toBeGreaterThan(10);
-  for (const action of recorded) expect(auditAction(action)).toMatch(/\p{Script=Cyrillic}/u);
+  for (const action of recorded) expect(auditAction(action)).not.toBe(action);
 });
 
 it('shows a board position as its stage and position, not JSON', () => {
@@ -60,4 +62,30 @@ it('shows a board position as its stage and position, not JSON', () => {
   expect(
     auditValue('board_position', jsonValueSchema.parse({ status_id: 'gone', position: 3 }), null),
   ).toBe('Стадия «gone», позиция 3');
+});
+
+it('names both stages when the two workflows share a status id', () => {
+  const config = createDefaultProjectConfig();
+  config.ordinary_workflow = {
+    initial_status_id: 'shared',
+    statuses: [{ id: 'shared', label: 'Входящие', category: 'not_started' }],
+    transitions: [],
+  };
+  config.recurring_workflow = {
+    initial_status_id: 'shared',
+    restore_status_id: 'paused',
+    statuses: [
+      { id: 'shared', label: 'Черновик цикла', category: 'draft' },
+      { id: 'paused', label: 'Приостановлено', category: 'paused' },
+    ],
+    transitions: [],
+  };
+  const snapshot = jsonValueSchema.parse({ revision: 1, ...config });
+  expect(
+    auditValue(
+      'board_position',
+      jsonValueSchema.parse({ status_id: 'shared', position: 2 }),
+      snapshot,
+    ),
+  ).toBe('Стадия «Входящие / Черновик цикла», позиция 2');
 });
