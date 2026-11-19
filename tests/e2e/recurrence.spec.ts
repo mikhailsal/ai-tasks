@@ -52,7 +52,7 @@ test('recurring creation requires explicit anchor, policy and window and keeps t
     await page.getByLabel('Название задачи', { exact: true }).fill('Проверка оборудования');
     await page.getByLabel('Тип задачи', { exact: true }).selectOption('recurring');
     await expect(page.getByLabel('Правило пропуска', { exact: true })).toHaveValue('');
-    await expect(page.getByLabel('Окно подтверждения, мс', { exact: true })).toHaveValue('');
+    await expect(page.getByLabel('Окно подтверждения', { exact: true })).toHaveValue('');
     const save = page.getByRole('button', { name: 'Сохранить', exact: true });
     if (await save.isEnabled()) await save.click();
     expect(
@@ -62,7 +62,8 @@ test('recurring creation requires explicit anchor, policy and window and keeps t
     await page.getByLabel('Первое время', { exact: true }).fill('13:02:03.123');
     await page.getByLabel('Режим повторения', { exact: true }).selectOption('calendar');
     await page.getByLabel('Правило пропуска', { exact: true }).selectOption('record_miss');
-    await page.getByLabel('Окно подтверждения, мс', { exact: true }).fill('2592000000');
+    await page.getByLabel('Единица окна подтверждения', { exact: true }).selectOption('day');
+    await page.getByLabel('Окно подтверждения', { exact: true }).fill('30');
     await page.getByLabel('Режим повторения', { exact: true }).selectOption('after_completion');
     await expect(page.getByLabel('Правило пропуска', { exact: true })).toHaveValue('record_miss');
     await page.getByLabel('Единица интервала', { exact: true }).selectOption('hours');
@@ -244,7 +245,8 @@ test('timezone conflict preserves recurrence draft and original base across relo
     await page.goto(`${server.origin}/projects/alpha/tasks/${id}`);
     await openTaskActions(page);
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
-    await page.getByLabel('Окно подтверждения, мс', { exact: true }).fill('123456');
+    await page.getByLabel('Единица окна подтверждения', { exact: true }).selectOption('ms');
+    await page.getByLabel('Окно подтверждения', { exact: true }).fill('123456');
     const snapshots = browserOccurrences(server, id);
     await changeBrowserTimezone(server);
     const before = browserWriteSnapshot(server);
@@ -260,7 +262,7 @@ test('timezone conflict preserves recurrence draft and original base across relo
     await expect(page.getByRole('region', { name: 'Ваш вариант', exact: true })).toContainText(
       '123456',
     );
-    await expect(page.getByLabel('Окно подтверждения, мс', { exact: true })).toHaveValue('123456');
+    await expect(page.getByLabel('Окно подтверждения', { exact: true })).toHaveValue('123456');
     expect(browserWriteSnapshot(server)).toEqual(before);
     const originalIds = new Set(snapshots.map((item) => item.id));
     expect(browserOccurrences(server, id).filter((item) => originalIds.has(item.id))).toEqual(
@@ -269,7 +271,7 @@ test('timezone conflict preserves recurrence draft and original base across relo
     await page.reload();
     await openTaskActions(page);
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
-    await expect(page.getByLabel('Окно подтверждения, мс', { exact: true })).toHaveValue('123456');
+    await expect(page.getByLabel('Окно подтверждения', { exact: true })).toHaveValue('123456');
     expect(browserWriteSnapshot(server)).toEqual(before);
   } finally {
     await page.context().close();

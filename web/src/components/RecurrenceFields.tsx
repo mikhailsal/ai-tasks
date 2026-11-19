@@ -5,6 +5,8 @@ import {
 import { Field } from './Field.js';
 import { DateTimeInputs } from './DateTimeInputs.js';
 import { SelectField as Choice } from './SelectField.js';
+import { WindowField } from './WindowField.js';
+import { timeStep } from '../data/local-time.js';
 
 type Props = {
   value: Fields;
@@ -104,7 +106,7 @@ function CalendarFields({ value, onChange }: Pick<Props, 'value' | 'onChange'>) 
       <Field
         label="Местное время повторения"
         type="time"
-        step="0.001"
+        step={timeStep(value.localTime)}
         required
         value={value.localTime}
         onChange={(event) => onChange({ ...value, localTime: event.target.value })}
@@ -171,16 +173,9 @@ export function RecurrenceFields({ value, onChange, timezone, disabled = false }
         <option value="carry_forward">Сохранить долг</option>
         <option value="record_miss">Зафиксировать пропуск</option>
       </Choice>
-      <Field
-        label="Окно подтверждения, мс"
-        type="number"
-        min="0"
-        max="2592000000"
-        step="1"
-        required
+      <WindowField
         value={value.confirmationWindowMs}
-        onChange={(event) => onChange({ ...value, confirmationWindowMs: event.target.value })}
-        hint="От 0 до 2 592 000 000 мс. При 0 подтверждение принимается точно до срока включительно."
+        onChange={(confirmationWindowMs) => onChange({ ...value, confirmationWindowMs })}
       />
     </fieldset>
   );

@@ -1,4 +1,4 @@
-import { localTimeChoices, type DeadlineDraft } from '../data/local-time.js';
+import { localTimeChoices, timeStep, type DeadlineDraft } from '../data/local-time.js';
 import { Field } from './Field.js';
 import { SelectField } from './SelectField.js';
 
@@ -43,7 +43,7 @@ export function DateTimeInputs({
       <Field
         label={labels[1]}
         type="time"
-        step="0.001"
+        step={timeStep(value.time)}
         value={value.time}
         required={required === 'always' || (required === 'paired' && Boolean(value.date))}
         onChange={(event) => onChange({ ...value, time: event.target.value, offset: '' })}
