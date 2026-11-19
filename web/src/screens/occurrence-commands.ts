@@ -65,12 +65,8 @@ export function useOccurrenceCommands(options: {
     await options.refresh();
     setRefreshNeeded(false);
   }
-  async function refresh() {
-    try {
-      await refreshed();
-    } catch (failure) {
-      setError(errorMessage(failure));
-    }
+  function refresh() {
+    return refreshed().catch((failure: unknown) => setError(errorMessage(failure)));
   }
   async function send(
     kind: 'complete' | 'cancel',
@@ -83,14 +79,15 @@ export function useOccurrenceCommands(options: {
     setPreparing(true);
     setError('');
     setAction(kind);
+    let acknowledged = false;
     try {
       await editor.persist(record);
       const request = exact ? operation.pending : occurrenceProposal(record, kind, options.path);
       if (!request) return false;
       await operation.run(request, reviewedEpoch);
+      acknowledged = true;
       setRefreshNeeded(true);
       await refreshed();
-      return true;
     } catch (failure) {
       setError(errorMessage(failure));
       if (operation.wasSaved()) setRefreshNeeded(true);
@@ -102,7 +99,7 @@ export function useOccurrenceCommands(options: {
       sending.current = false;
       setPreparing(false);
     }
-    return false;
+    return acknowledged;
   }
   async function reconcile() {
     if (!conflict) return;

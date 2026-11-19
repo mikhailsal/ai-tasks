@@ -1,6 +1,8 @@
 import { Button } from '../components/Button.js';
-import { occurrenceLabels, openOccurrenceStates } from './occurrence-model.js';
-import type { OccurrencePage } from './occurrence-page.js';
+import { occurrenceLabels } from './occurrence-model.js';
+import { useOccurrenceList, type OccurrencePage } from './occurrence-page.js';
+
+const noDays = { from: '', to: '' };
 
 function deadlineLabel(deadline: string, timezone: string) {
   return new Intl.DateTimeFormat('ru-RU', {
@@ -12,13 +14,31 @@ function deadlineLabel(deadline: string, timezone: string) {
   }).format(new Date(deadline));
 }
 
+/** Open rows of every open state, independent of the history filters and pages below. */
+function useOpenRows(page: OccurrencePage) {
+  const { metadata, taskId, recurrence } = page.options;
+  const key = (state: string) =>
+    [
+      metadata.database_epoch,
+      taskId,
+      recurrence.task_revision,
+      { state, days: noDays, cursor: undefined },
+    ] as const;
+  const lists = [
+    useOccurrenceList(page.path, [...key('debt')]),
+    useOccurrenceList(page.path, [...key('missed')]),
+    useOccurrenceList(page.path, [...key('pending')]),
+  ];
+  return lists
+    .flatMap((list) => list.data?.data.items ?? [])
+    .sort((left, right) => Date.parse(left.deadline) - Date.parse(right.deadline));
+}
+
 /** Open occurrences first, each with a one-tap «done»; the full history follows below. */
 export function OpenOccurrences({ page }: { page: OccurrencePage }) {
-  const rows = (page.query.data?.data.items ?? []).filter((row) =>
-    openOccurrenceStates.includes(row.state),
-  );
+  const rows = useOpenRows(page);
   if (rows.length === 0) return null;
-  const timezone = page.editor.draft.fields.timezone;
+  const timezone = page.options.metadata.timezone;
   return (
     <section aria-label="Открытые повторения" className="occurrence-open">
       <h3>Открытые повторения</h3>

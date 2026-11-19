@@ -67,7 +67,7 @@ function dayParams(days: { from: string; to: string }): Record<string, string> {
   const one = days.from || days.to;
   return one ? { day: one } : {};
 }
-function useOccurrenceList(
+export function useOccurrenceList(
   path: string,
   [epoch, taskId, revision, filters]: [
     string,

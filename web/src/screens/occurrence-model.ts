@@ -23,12 +23,6 @@ export const occurrenceFieldsSchema = z.strictObject({
 });
 export type OccurrenceFields = z.infer<typeof occurrenceFieldsSchema>;
 export type SelectedOccurrence = OccurrenceFields['selected'][number];
-/** States that can still be marked done. */
-export const openOccurrenceStates: readonly OccurrenceResource['state'][] = [
-  'pending',
-  'debt',
-  'missed',
-];
 /** A row selected with no actual completion time: the server records the current time. */
 export function selectionFromRow(row: OccurrenceResource): SelectedOccurrence {
   return {

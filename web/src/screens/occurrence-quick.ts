@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { MetaData } from '../../../src/schema/meta.js';
 import type {
   OccurrenceResource,
@@ -24,14 +25,19 @@ export function useOccurrenceQuickActions(options: {
 }) {
   const { key, editor, commands, query, recurrence, metadata } = options;
   const [notice, setNotice] = useState('');
+  const queryClient = useQueryClient();
   async function sendWithNotice(kind: 'complete' | 'cancel', record = editor.draft) {
     setNotice('');
     const count = record.fields.selected.length;
     if (await commands.send(kind, false, record)) setNotice(noticeFor(kind, count));
+    await queryClient.invalidateQueries({ queryKey: ['occurrences'] });
   }
   /** Blocked while other rows are selected, so a one-tap never discards a selection. */
   function completeOneBlocked(id: string) {
     return (
+      commands.busy ||
+      !commands.operation.ready ||
+      Boolean(commands.operation.pending) ||
       Boolean(commands.conflict) ||
       Boolean(query.error) ||
       editor.draft.fields.selected.some((item) => item.id !== id)

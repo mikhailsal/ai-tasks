@@ -17,8 +17,12 @@ export function Occurrences(props: OccurrencesProps) {
   const page = useOccurrencePage(props);
   useEffect(() => {
     // Opened from «План»: bring the occurrences into view once they mount in the sheet.
-    if (new URLSearchParams(window.location.search).get('occurrences') === 'open')
-      document.getElementById('occurrences')?.scrollIntoView({ block: 'start' });
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('occurrences') !== 'open') return;
+    document.getElementById('occurrences')?.scrollIntoView({ block: 'start' });
+    // Used once: closing and reopening the sheet should not jump back here.
+    url.searchParams.delete('occurrences');
+    window.history.replaceState(window.history.state, '', url);
   }, []);
   return (
     <section className="stack" aria-label="Повторения задачи">
