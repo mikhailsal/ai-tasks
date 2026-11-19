@@ -142,6 +142,8 @@ function TaskOperationReview({
     <>
       {commands.conflict && (
         <ConflictReview
+          // A newer conflict remounts the review, so it scrolls into view again.
+          key={`${commands.conflict.epoch}:${String(commands.conflict.task?.revision)}`}
           current={taskConflictView(fieldsFromPage(commands.conflict, draft.fields.kind))}
           proposed={
             commands.conflictAction

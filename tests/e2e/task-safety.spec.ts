@@ -224,9 +224,8 @@ test('resolving a conflict with my version keeps the other client edit to an unt
   // Only differing fields, in form terms: the merged title equals the server's and is hidden.
   await expect(proposed).toContainText('Правка из вкладки A');
   await expect(proposed).not.toContainText('Записаться к врачу (вкладка B)');
-  await expect(page.getByRole('region', { name: 'Текущая версия' })).not.toContainText(
-    /timezone|kind|recurrence/u,
-  );
+  for (const name of ['Текущая версия', 'Ваш вариант'])
+    await expect(page.getByRole('region', { name })).not.toContainText(/timezone|kind|recurrence/u);
   await expect(
     page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }),
   ).toBeInViewport();
