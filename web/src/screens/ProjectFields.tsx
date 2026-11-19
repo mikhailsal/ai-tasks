@@ -5,8 +5,18 @@ import { Field } from '../components/Field.js';
 import { EmojiField } from '../components/EmojiField.js';
 import { presetLabels, type ProjectFields as Fields } from './project-fields.js';
 import { fieldRuleHints } from '../data/resources.js';
-import { followName } from './project-slug.js';
+import { followName, validSlug } from './project-slug.js';
 
+function slugHint(fields: Fields): { hint?: string } {
+  if (validSlug(fields.slug)) return { hint: `Ссылка проекта: /projects/${fields.slug}` };
+  if (fields.name.trim() === '') return {};
+  return {
+    hint:
+      fields.slug === ''
+        ? 'Из этого названия ссылку не составить: задайте «Slug проекта» ниже.'
+        : 'Проверьте «Slug проекта» ниже: латинские буквы, цифры и дефисы.',
+  };
+}
 export function ProjectFields({
   fields,
   onChange,
@@ -41,7 +51,7 @@ export function ProjectFields({
         onChange={(event) => change('name', event.target.value)}
         required
         disabled={disabled}
-        {...(editing || !fields.slug ? {} : { hint: `Ссылка проекта: /projects/${fields.slug}` })}
+        {...(editing ? {} : slugHint(fields))}
         {...error('name')}
       />
       <EmojiField

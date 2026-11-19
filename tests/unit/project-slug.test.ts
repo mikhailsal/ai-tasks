@@ -9,6 +9,8 @@ describe('project slug from its name', () => {
     ['Café Déjà Vu', 'cafe-deja-vu'],
     ['  --Объявления--  ', 'obyavleniya'],
     ['🚀✨', ''],
+    ['Їжак і Ґанок, Єва, Ўзор', 'yizhak-i-ganok-yeva-uzor'],
+    ['Мои\u0306 проект', 'moy-proekt'],
   ])('%j becomes %j', (name, slug) => {
     expect(slugFromName(name)).toBe(slug);
   });

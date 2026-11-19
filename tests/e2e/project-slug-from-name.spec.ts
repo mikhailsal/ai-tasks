@@ -22,6 +22,11 @@ test('a new project gets its link from a Cyrillic name and saves without touchin
     await name.fill('Щука');
     await expect(slug).toHaveValue('pike');
     await slug.fill('');
+    await name.fill('项目');
+    await expect(slug).toHaveValue('');
+    await expect(
+      page.getByText('Из этого названия ссылку не составить', { exact: false }),
+    ).toBeVisible();
     await name.fill('Ёлка');
     await expect(slug).toHaveValue('elka');
 

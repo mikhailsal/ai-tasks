@@ -32,6 +32,12 @@ const cyrillic: Readonly<Record<string, string>> = {
   э: 'e',
   ю: 'yu',
   я: 'ya',
+  // Ukrainian and Belarusian letters that the Russian table lacks.
+  і: 'i',
+  ї: 'yi',
+  є: 'ye',
+  ґ: 'g',
+  ў: 'u',
 };
 
 /**
@@ -39,7 +45,8 @@ const cyrillic: Readonly<Record<string, string>> = {
  * everything else collapsed to single hyphens; at most 64 characters, as `slugSchema` allows.
  */
 export function slugFromName(name: string): string {
-  const latin = [...name.toLowerCase()]
+  // NFC first, so a decomposed «й» (и + breve) maps like the precomposed letter.
+  const latin = [...name.normalize('NFC').toLowerCase()]
     .map((letter) => cyrillic[letter] ?? letter)
     .join('')
     .normalize('NFKD')
@@ -55,6 +62,11 @@ export function slugFromName(name: string): string {
  * A new project's slug follows its name until someone types a different slug: an empty slug,
  * or one still equal to the suggestion for the previous name, is replaced.
  */
+/** Whether a slug is valid as typed, as `slugSchema` checks it. */
+export function validSlug(slug: string): boolean {
+  return slug.length <= 64 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slug);
+}
+
 export function followName(previous: { name: string; slug: string }, name: string): string {
   return previous.slug === '' || previous.slug === slugFromName(previous.name)
     ? slugFromName(name)
