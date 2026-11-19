@@ -78,37 +78,57 @@ describe('real API helper and browser request security', () => {
   });
 
   const navigation = { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document' };
-  it('lets a link from another site open a page, but never the API (QA F11)', async () => {
-    const page = await app.inject({
-      url: '/projects',
-      headers: { host, 'sec-fetch-site': 'cross-site', ...navigation },
-    });
+  const crossSite = (headers: Record<string, string>) => ({
+    host,
+    'sec-fetch-site': 'cross-site',
+    ...headers,
+  });
+  it('lets a link from another site open a page (QA F11)', async () => {
+    const page = await app.inject({ url: '/projects/alpha?x=1', headers: crossSite(navigation) });
     expect(page.statusCode).not.toBe(403);
     expect(page.body).not.toContain('ORIGIN_REJECTED');
-    for (const [url, headers] of [
-      ['/api/v1/meta?all_projects=true', navigation],
-      ['/projects', { 'sec-fetch-mode': 'no-cors', 'sec-fetch-dest': 'script' }],
-      ['/projects', { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'iframe' }],
-    ] as const) {
+  });
+
+  it.each([
+    ['GET', '/api/v1/meta?all_projects=true', navigation],
+    ['GET', '/%61pi/v1/meta?all_projects=true', navigation],
+    ['GET', '//api/v1/meta?all_projects=true', navigation],
+    ['GET', '/API/v1/meta', navigation],
+    ['GET', '/api', navigation],
+    ['GET', '/assets/app.js', navigation],
+    ['HEAD', '/projects', navigation],
+    ['GET', '/projects', { 'sec-fetch-mode': 'no-cors', 'sec-fetch-dest': 'script' }],
+    ['GET', '/projects', { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'iframe' }],
+  ] as const)('still refuses a cross-site %s %s %j', async (method, url, headers) => {
+    const response = await app.inject({ method, url, headers: crossSite(headers) });
+    expect(response.statusCode).toBe(403);
+  });
+
+  it.each(['POST', 'PUT', 'PATCH'] as const)(
+    'refuses a cross-site %s even with navigation headers',
+    async (method) => {
       const response = await app.inject({
-        url,
-        headers: { host, 'sec-fetch-site': 'cross-site', ...headers },
+        method,
+        url: '/projects',
+        headers: { ...mutationHeaders, 'sec-fetch-site': 'cross-site', ...navigation },
+        payload: '{}',
       });
       expect(response.statusCode).toBe(403);
-    }
-    const post = await app.inject({
-      method: 'POST',
+    },
+  );
+
+  it('serves no page for a malformed path from another site', async () => {
+    const response = await app.inject({ url: '/%E0%A4%A', headers: crossSite(navigation) });
+    expect(response.statusCode).toBe(400);
+    expect(response.body).not.toContain('<html');
+  });
+
+  it('keeps the Host check for a navigation', async () => {
+    const response = await app.inject({
       url: '/projects',
-      headers: { ...mutationHeaders, 'sec-fetch-site': 'cross-site', ...navigation },
-      payload: '{}',
+      headers: { ...crossSite(navigation), host: 'attacker.example:3000' },
     });
-    expect(post.statusCode).toBe(403);
-    // The Host check still applies to a navigation.
-    const wrongHost = await app.inject({
-      url: '/projects',
-      headers: { host: 'attacker.example:3000', 'sec-fetch-site': 'cross-site', ...navigation },
-    });
-    expect(wrongHost.statusCode).toBe(403);
+    expect(response.statusCode).toBe(403);
   });
 
   it.each([

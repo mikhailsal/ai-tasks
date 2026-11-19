@@ -8,9 +8,10 @@ All notable changes are listed here. The format follows
 ### Fixed
 
 - HTTP: a link to the app from another site opens the page instead of the raw
-  `ORIGIN_REJECTED` JSON. Only a top-level page navigation (GET or HEAD outside `/api/`, with
-  `Sec-Fetch-Mode: navigate` and `Sec-Fetch-Dest: document`) is let through; the API, frames,
-  scripts and every write still refuse `Sec-Fetch-Site: cross-site`, and the Host check is
+  `ORIGIN_REJECTED` JSON. Only a cross-site GET navigation (`Sec-Fetch-Mode: navigate`,
+  `Sec-Fetch-Dest: document`) that the router answers with the page shell is let through: the
+  decoded path is neither the API nor a file. The API (in any spelling), files, frames,
+  scripts, HEAD and every write still refuse `Sec-Fetch-Site: cross-site`, and the Host check is
   unchanged. See `docs/operations.md`.
 
 ## [0.2.0] - 2026-11-17
