@@ -18,13 +18,23 @@ describe('occurrence times for people (QA F7)', () => {
     ['08:00:00.000', '08:00'],
     ['08:00:00', '08:00'],
     ['08:00', '08:00'],
-    ['13:02:03.123', '13:02:03'],
+    ['13:02:03.123', '13:02:03.123'],
     ['13:02:03.000', '13:02:03'],
+    ['08:00:00.500', '08:00:00.500'],
   ])('local time %s reads %s', (time, label) => {
     expect(shortLocalTime(time)).toBe(label);
   });
+  it('keeps milliseconds and shows an unformattable value as stored', () => {
+    expect(occurrenceMoment('2026-11-19T05:00:00.500Z', 'Europe/Moscow')).toBe(
+      '19 нояб. 2026 г., 08:00:00,500',
+    );
+    expect(occurrenceMoment('2026-11-19T05:00:00.000Z', 'Not/AZone')).toBe(
+      '2026-11-19T05:00:00.000Z',
+    );
+  });
   it.each([
     [0, 'нет'],
+    [-1, '-1 мс'],
     [5400000, '1 ч 30 мин'],
     [86400000, '1 сут.'],
     [2592000000, '30 сут.'],

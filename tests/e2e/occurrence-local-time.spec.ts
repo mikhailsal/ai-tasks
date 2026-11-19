@@ -14,7 +14,7 @@ test('occurrence rows show local times and a readable window, not UTC ISO or ms'
     await sheet.getByRole('button', { name: 'Обработать наступившие сроки', exact: true }).click();
     const row = sheet.getByRole('article', { name: /^Повторение / }).first();
     await expect(row).toBeVisible();
-    await expect(row).toContainText(/Срок: \d{1,2} [а-я]+\. \d{4} г\., \d{2}:\d{2}/u);
+    await expect(row).toContainText(/Срок: \d{1,2} [а-я]+\.? \d{4} г\., \d{2}:\d{2}/u);
     await expect(row).toContainText('окно подтверждения:');
     await expect(row).not.toContainText(/\d{4}-\d{2}-\d{2}T|\.\d{3}Z|\d+ мс|поколение/u);
     // The exact instant stays available on hover.

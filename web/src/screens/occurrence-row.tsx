@@ -52,7 +52,7 @@ export function OccurrenceRow({
   const closed = ['completed', 'completed_late', 'cancelled'].includes(row.state);
   const at = (instant: string) => (
     <time dateTime={instant} title={`${instant} (UTC)`}>
-      {occurrenceMoment(instant, timezone)}
+      {occurrenceMoment(instant, row.schedule_snapshot.timezone)}
     </time>
   );
   return (

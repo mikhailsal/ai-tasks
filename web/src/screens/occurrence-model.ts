@@ -77,28 +77,38 @@ export function occurrenceScheduleLabel(
 
 /** «08:00:00.000» → «08:00»; seconds stay only when they are not zero. */
 export function shortLocalTime(time: string): string {
-  const match = /^(\d{2}:\d{2})(?::(\d{2}))?(?:\.\d+)?$/u.exec(time);
+  const match = /^(\d{2}:\d{2})(?::(\d{2}))?(?:\.(\d+))?$/u.exec(time);
   if (!match) return time;
-  const [, minutes = time, seconds] = match;
-  return seconds && seconds !== '00' ? `${minutes}:${seconds}` : minutes;
+  const [, minutes = time, seconds = '00', fraction = ''] = match;
+  if (/^0*$/u.test(fraction)) return seconds === '00' ? minutes : `${minutes}:${seconds}`;
+  return `${minutes}:${seconds}.${fraction}`;
 }
-/** A moment in the task's time zone, to the minute unless it carries seconds. */
+/**
+ * A moment in the given time zone, to the minute unless it carries seconds or milliseconds.
+ * An instant or zone the browser cannot format is shown as stored, never breaking the screen.
+ */
 export function occurrenceMoment(instant: string, timezone: string): string {
   const date = new Date(instant);
   const seconds = date.getUTCSeconds() !== 0 || date.getUTCMilliseconds() !== 0;
-  return new Intl.DateTimeFormat('ru-RU', {
-    timeZone: timezone,
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    ...(seconds ? { second: '2-digit' } : {}),
-  }).format(date);
+  try {
+    return new Intl.DateTimeFormat('ru-RU', {
+      timeZone: timezone,
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      ...(seconds ? { second: '2-digit' } : {}),
+      ...(date.getUTCMilliseconds() !== 0 ? { fractionalSecondDigits: 3 } : {}),
+    }).format(date);
+  } catch {
+    return instant;
+  }
 }
 /** The confirmation window in days, hours and minutes instead of milliseconds. */
 export function windowLabel(ms: number): string {
   if (ms === 0) return 'нет';
+  if (ms < 0 || !Number.isFinite(ms)) return `${String(ms)} мс`;
   const minutes = ms / 60000;
   if (!Number.isInteger(minutes)) return `${String(ms / 1000)} с`;
   const parts = [
