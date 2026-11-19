@@ -40,6 +40,17 @@ export function priorityLabel(value: PriorityValue, model: PriorityModel): strin
   if (value.important) return value.urgent ? 'Важно и срочно' : 'Важно, не срочно';
   return value.urgent ? 'Не важно, срочно' : 'Не важно и не срочно';
 }
+/** A moment to the minute, for «по данным на» and similar notes where seconds are noise. */
+export function viewMinute(instant: string, timezone: string): string {
+  return new Intl.DateTimeFormat('ru-RU', {
+    timeZone: timezone,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(instant));
+}
 export function viewTime(instant: string, timezone: string): string {
   return new Intl.DateTimeFormat('ru-RU', {
     timeZone: timezone,
