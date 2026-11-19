@@ -101,14 +101,14 @@ const messages: Readonly<Record<string, string>> = {
   DB_CONFLICT: 'База данных занята. Повторите ту же операцию.',
   MAINTENANCE: 'Приложение временно недоступно. Сохраните свой вариант и повторите позже.',
 };
+// Neutral labels: errorMessage serves every form, so a label never names one screen's field.
 const fieldLabels: Readonly<Record<string, string>> = {
-  name: 'Название проекта',
+  name: 'Название',
+  title: 'Название',
   emoji: 'Эмодзи',
-  slug: 'Slug проекта',
+  slug: 'Slug',
   description: 'Описание',
   priority: 'Приоритет',
-  title: 'Название задачи',
-  config: 'Настройки стадий и приоритетов',
 };
 /** Field-level hints for rules people cannot guess from the label alone. */
 export const fieldRuleHints: Readonly<Record<string, string>> = {

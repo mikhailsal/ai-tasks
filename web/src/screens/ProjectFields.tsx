@@ -57,7 +57,13 @@ export function ProjectFields({
           onChange={(event) => change('description', event.target.value)}
           disabled={disabled}
           aria-invalid={invalid.includes('description') || undefined}
+          aria-describedby={invalid.includes('description') ? `${id}-description-error` : undefined}
         />
+        {invalid.includes('description') && (
+          <p id={`${id}-description-error`} className="field-error">
+            Проверьте значение этого поля.
+          </p>
+        )}
       </div>
       <Field
         label="Приоритет проекта"
@@ -74,7 +80,7 @@ export function ProjectFields({
       />
       <details
         className="project-editor-advanced"
-        open={!editing || invalid.includes('slug') || invalid.includes('config')}
+        open={!editing}
         onInvalidCapture={(event) => {
           event.currentTarget.open = true;
         }}
