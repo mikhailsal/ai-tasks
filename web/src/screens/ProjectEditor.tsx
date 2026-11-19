@@ -158,6 +158,7 @@ export function ProjectEditor({
             onChange={editor.change}
             editing={source !== undefined}
             disabled={disabled}
+            invalid={editor.invalid}
           >
             {source && (
               <ProjectDescriptionPreview

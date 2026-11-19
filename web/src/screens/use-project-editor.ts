@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { z } from 'zod/mini';
 import { metaEnvelopeSchema, type MetaData } from '../../../src/schema/meta.js';
 import { configurationInput } from '../components/configuration-model.js';
@@ -7,6 +7,7 @@ import { jsonValueSchema } from '../../../src/schema/values.js';
 import { reconcileDraft, proposalFor, type DraftRecord } from '../data/drafts.js';
 import {
   errorMessage,
+  invalidFields,
   readProject,
   readPresets,
   type projectEnvelopeSchema,
@@ -158,6 +159,9 @@ export function useProjectEditor(options: {
   const [savedSlug, setSavedSlug] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [failure, setFailure] = useState<unknown>();
+  // An edit clears the field marks from the last rejected save.
+  useEffect(() => setFailure(undefined), [draft]);
   const [current, setCurrent] = useState<ProjectEnvelope>();
   const [epochReview, setEpochReview] = useState<MetaData>();
   const operation = useProjectOperation(key, latestReadEpoch(current, epochReview, metadata));
@@ -166,6 +170,7 @@ export function useProjectEditor(options: {
     submitting.current = true;
     setBusy(true);
     setMessage('');
+    setFailure(undefined);
     try {
       const target = projectTarget(source, record.fields.slug);
       const path = `/projects/${encodeURIComponent(target.slug)}`;
@@ -182,6 +187,7 @@ export function useProjectEditor(options: {
       setSavedSlug(slug);
       await completeProjectSave(slug, operation.cleanup, stored.remove, onSaved);
     } catch (error) {
+      setFailure(error);
       await updateSaveFailure({
         error,
         saved: operation.wasSaved(),
@@ -231,6 +237,7 @@ export function useProjectEditor(options: {
       current?.data ??
       (epochReview ? { name: 'База данных восстановлена. Проверьте свой вариант.' } : undefined),
     change: stored.change,
+    invalid: invalidFields(failure),
     submit,
     retry,
     review,

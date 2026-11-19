@@ -4,21 +4,29 @@ import { ProjectConfigurationFields } from './ProjectConfigurationFields.js';
 import { Field } from '../components/Field.js';
 import { EmojiField } from '../components/EmojiField.js';
 import { presetLabels, type ProjectFields as Fields } from './project-fields.js';
+import { fieldRuleHints } from '../data/resources.js';
 
 export function ProjectFields({
   fields,
   onChange,
   editing,
   disabled,
+  invalid = [],
   children,
 }: {
   fields: Fields;
   onChange(fields: Fields): void;
   editing: boolean;
   disabled: boolean;
+  /** Fields the server rejected on the last save; each gets its own message. */
+  invalid?: readonly string[];
   children?: ReactNode;
 }) {
   const id = useId();
+  const error = (field: string) =>
+    invalid.includes(field)
+      ? { error: fieldRuleHints[field] ?? 'Проверьте значение этого поля.' }
+      : {};
   function change(key: 'slug' | 'name' | 'emoji' | 'description' | 'priority', value: string) {
     onChange({ ...fields, [key]: value });
   }
@@ -30,6 +38,7 @@ export function ProjectFields({
         onChange={(event) => change('name', event.target.value)}
         required
         disabled={disabled}
+        {...error('name')}
       />
       <EmojiField
         label="Эмодзи проекта"
@@ -37,6 +46,7 @@ export function ProjectFields({
         onChange={(value) => change('emoji', value)}
         disabled={disabled}
         hint="Уникальный маркер проекта. Прежние маркеры остаются за ним навсегда."
+        {...error('emoji')}
       />
       <div className="field">
         <label htmlFor={`${id}-description`}>Описание проекта</label>
@@ -46,6 +56,7 @@ export function ProjectFields({
           value={fields.description}
           onChange={(event) => change('description', event.target.value)}
           disabled={disabled}
+          aria-invalid={invalid.includes('description') || undefined}
         />
       </div>
       <Field
@@ -59,10 +70,11 @@ export function ProjectFields({
         onChange={(event) => change('priority', event.target.value)}
         disabled={disabled}
         hint="Большее число поднимает проект выше в списке."
+        {...error('priority')}
       />
       <details
         className="project-editor-advanced"
-        open={!editing}
+        open={!editing || invalid.includes('slug') || invalid.includes('config')}
         onInvalidCapture={(event) => {
           event.currentTarget.open = true;
         }}
@@ -75,6 +87,7 @@ export function ProjectFields({
           required
           disabled={disabled || editing}
           hint="Постоянная ссылка проекта. После создания изменить нельзя."
+          {...error('slug')}
         />
         {editing ? (
           <AppLink href={`/projects/${encodeURIComponent(fields.slug)}/configuration`}>
