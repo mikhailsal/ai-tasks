@@ -7,7 +7,12 @@ import type {
 } from '../../../src/schema/recurrence-query.js';
 import { createDraft } from '../data/drafts.js';
 import type { useOccurrenceCommands } from './occurrence-commands.js';
-import { occurrenceBase, selectionFromRow, type OccurrenceFields } from './occurrence-model.js';
+import {
+  occurrenceBase,
+  selectionFromRow,
+  type OccurrenceFields,
+  selectionBlocksQuick,
+} from './occurrence-model.js';
 import type { useSettingsDraft } from './settings-draft.js';
 
 function noticeFor(kind: 'complete' | 'cancel', count: number) {
@@ -40,7 +45,7 @@ export function useOccurrenceQuickActions(options: {
       Boolean(commands.operation.pending) ||
       Boolean(commands.conflict) ||
       Boolean(query.error) ||
-      editor.draft.fields.selected.some((item) => item.id !== id)
+      selectionBlocksQuick(editor.draft.fields.selected, id)
     );
   }
   async function completeOne(row: OccurrenceResource) {

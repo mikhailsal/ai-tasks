@@ -23,6 +23,15 @@ export const occurrenceFieldsSchema = z.strictObject({
 });
 export type OccurrenceFields = z.infer<typeof occurrenceFieldsSchema>;
 export type SelectedOccurrence = OccurrenceFields['selected'][number];
+/**
+ * One tap would replace the selection: never when another row is selected, nor when this row
+ * already carries an actual completion time the person entered.
+ */
+export function selectionBlocksQuick(selected: readonly SelectedOccurrence[], id: string) {
+  return selected.some(
+    (item) => item.id !== id || item.date !== '' || item.time !== '' || item.offset !== '',
+  );
+}
 /** A row selected with no actual completion time: the server records the current time. */
 export function selectionFromRow(row: OccurrenceResource): SelectedOccurrence {
   return {
