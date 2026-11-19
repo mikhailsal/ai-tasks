@@ -16,7 +16,8 @@ All notable changes are listed here. The format follows
 
 - An invalid emoji (`VALIDATION_ERROR`, message unchanged) now carries
   `details.issues: [{code: "custom", path: ["emoji"], expected: "exactly one RGI emoji grapheme"}]`
-  instead of `details: null`, like other invalid fields.
+  instead of `details: null`, like other invalid fields. So does the refusal of the default
+  ⚪ as a project emoji (`expected: "an emoji other than the default ⚪"`).
 
 ## [0.2.0] - 2026-11-17
 
