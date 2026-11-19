@@ -5,6 +5,11 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web: a task that cannot be loaded («Задача не найдена») offers «К проекту», «К задачам»
+  and «Повторить загрузку» instead of a dead end.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
