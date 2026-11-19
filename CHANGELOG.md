@@ -7,6 +7,9 @@ All notable changes are listed here. The format follows
 
 ### Fixed
 
+- Web, new project: the slug is suggested from the name (Russian letters transliterated, for
+  example «Щука и ёж» → `shchuka-i-ezh`) and follows the name until you type your own. The
+  link is shown under the name, so a Cyrillic name no longer fails on a hidden required slug.
 - Web forms: a rejected save names the field and its rule («Проверьте поле «Эмодзи». Нужен
   ровно один эмодзи…») instead of only «Проверьте заполненные поля». The project editor marks
   the rejected field (`aria-invalid` and a message under it) until it is edited, and opens
