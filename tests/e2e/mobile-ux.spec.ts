@@ -60,6 +60,7 @@ const layoutSchema = z.object({
   width: z.number(),
   rootX: z.number(),
   rootWidth: z.number(),
+  board: z.boolean(),
   overflow: z.boolean(),
   small: z.array(z.string()),
   wrappedLabels: z.array(z.string()),
@@ -93,10 +94,13 @@ async function checkLayouts(page: Page) {
             return false;
           }).map(node => node.textContent?.trim() ?? '');
         return { width: innerWidth, rootX: rect.x, rootWidth: rect.width,
+          board: document.querySelector('.project-board') !== null,
           overflow: document.documentElement.scrollWidth > innerWidth, small, wrappedLabels };
       })()`),
     );
-    expect(layout.rootWidth, `${width}px column`).toBeCloseTo(Math.min(width, 430), 0);
+    // From 900px the board widens to show several stages side by side (QA F15).
+    const column = layout.board && width >= 900 ? 1440 : 430;
+    expect(layout.rootWidth, `${width}px column`).toBeCloseTo(Math.min(width, column), 0);
     expect(layout.rootX, `${width}px centered column`).toBeCloseTo(
       (layout.width - layout.rootWidth) / 2,
       0,
