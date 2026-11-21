@@ -100,3 +100,50 @@ test('project editor saves visible fields through existing guarded project mutat
     await server.close();
   }
 });
+
+test('project editor header refreshes saved data without touching the draft', async ({ page }) => {
+  const server = await projectBoardServer();
+  const writes: string[] = [];
+  page.on('request', (request) => {
+    if (request.method() !== 'GET' && new URL(request.url()).pathname.startsWith('/api/'))
+      writes.push(request.url());
+  });
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${server.origin}${server.boardPath}`);
+    await page.getByRole('link', { name: 'Редактировать проект', exact: true }).click();
+    const name = page.getByLabel('Название проекта', { exact: true });
+    await expect(name).toHaveValue(boardProject.name);
+    await name.fill('Черновик до обновления');
+    // The calm status bar is hidden here, so the header carries the only refresh button.
+    const refresh = page.getByRole('button', { name: 'Обновить сохранённые данные', exact: true });
+    await expect(refresh).toHaveCount(1);
+    await expect(
+      page
+        .locator('.project-editor-head')
+        .getByRole('button', { name: 'Обновить сохранённые данные' }),
+    ).toBeInViewport();
+    const read = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/v1/meta',
+    );
+    await refresh.click();
+    expect((await read).status()).toBe(200);
+    await expect(name).toHaveValue('Черновик до обновления');
+    // Offline, the status bar speaks up with its own button and the header one steps aside.
+    await page.context().setOffline(true);
+    await expect(
+      page.getByRole('complementary', { name: 'Соединение и сохранённые данные' }),
+    ).toContainText('Нет соединения');
+    await expect(refresh).toHaveCount(1);
+    await expect(page.locator('.project-editor-head').getByRole('button')).toHaveCount(1);
+    await expect(refresh).toBeDisabled();
+    await page.context().setOffline(false);
+    await expect(page.locator('.project-editor-head .project-editor-refresh')).toBeVisible();
+    expect(writes).toEqual([]);
+  } finally {
+    await page.context().close();
+    await server.close();
+  }
+});

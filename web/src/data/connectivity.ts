@@ -7,6 +7,8 @@ export type Connectivity = {
   epoch: string | null;
   lastSuccessfulAt: number | null;
   cacheError: string | null;
+  /** The last manual refresh failed; cleared when the next one starts. */
+  refreshError: string | null;
   shellUpdateAvailable: boolean;
   unavailableProjects: readonly string[];
 };
@@ -18,6 +20,7 @@ let state: Connectivity = {
   epoch: null,
   lastSuccessfulAt: null,
   cacheError: null,
+  refreshError: null,
   shellUpdateAvailable: false,
   unavailableProjects: [],
 };
