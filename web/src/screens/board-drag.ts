@@ -23,6 +23,7 @@ export function updateDrag(current: Drag, track: HTMLDivElement) {
     current.x <= bounds.right &&
     current.y >= bounds.top &&
     current.y <= bounds.bottom;
+  current.to = columnUnderPointer(current, track, bounds) ?? current.to;
   const column = track.children[current.to];
   if (!(column instanceof HTMLElement)) return;
   document
@@ -48,20 +49,7 @@ export function advanceDrag(
   track: HTMLDivElement,
   options: { statuses: { id: string }[]; go(index: number): void },
 ) {
-  const bounds = track.getBoundingClientRect();
-  const direction = current.x < bounds.left + 44 ? -1 : current.x > bounds.right - 44 ? 1 : 0;
-  const next = current.to + direction;
-  if (
-    insideTrack(current, bounds) &&
-    direction &&
-    next >= 0 &&
-    next < options.statuses.length &&
-    Date.now() - current.lastEdge > 700
-  ) {
-    current.to = next;
-    current.lastEdge = Date.now();
-    options.go(next);
-  }
+  edgeStep(current, track, options);
   const list = track.children[current.to]?.querySelector('.board-cards');
   if (list instanceof HTMLElement) {
     const rect = list.getBoundingClientRect();
@@ -69,6 +57,61 @@ export function advanceDrag(
     else if (current.y > rect.bottom - 44) list.scrollTop += 9;
   }
   updateDrag(current, track);
+}
+
+/** A pointer held at the track edge moves on: by one column when wide, by one stage on a phone. */
+function edgeStep(
+  current: Drag,
+  track: HTMLDivElement,
+  options: { statuses: { id: string }[]; go(index: number): void },
+) {
+  const bounds = track.getBoundingClientRect();
+  const direction = current.x < bounds.left + 44 ? -1 : current.x > bounds.right - 44 ? 1 : 0;
+  if (!direction || !insideTrack(current, bounds) || Date.now() - current.lastEdge <= 700) return;
+  if (wideTrack(track, bounds)) {
+    // Several stages in view: scroll by one column; the pointer picks the stage.
+    current.lastEdge = Date.now();
+    track.scrollBy({ left: direction * columnStride(track), behavior: 'instant' });
+    return;
+  }
+  const next = current.to + direction;
+  if (next < 0 || next >= options.statuses.length) return;
+  current.to = next;
+  current.lastEdge = Date.now();
+  options.go(next);
+}
+
+/** A column wholly inside the track, allowing for sub-pixel layout. */
+export function fullyInside(element: Element, bounds: DOMRect) {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1;
+}
+
+/** A wide screen shows several whole stages at once (QA F15); a phone shows one. */
+function wideTrack(track: HTMLDivElement, bounds: DOMRect) {
+  return [...track.children].filter((element) => fullyInside(element, bounds)).length > 1;
+}
+
+function columnStride(track: HTMLDivElement) {
+  const first = track.children[0];
+  const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
+  return first instanceof HTMLElement ? first.getBoundingClientRect().width + gap : 0;
+}
+
+/**
+ * On a wide screen the pointer picks the whole stage nearest to it, so a pointer in the gap
+ * between two columns picks one of them. A phone keeps the stage the swipe or edge chose.
+ */
+function columnUnderPointer(current: Drag, track: HTMLDivElement, bounds: DOMRect) {
+  if (!wideTrack(track, bounds)) return undefined;
+  let best: { index: number; distance: number } | undefined;
+  [...track.children].forEach((element, index) => {
+    if (!fullyInside(element, bounds)) return;
+    const rect = element.getBoundingClientRect();
+    const distance = Math.max(rect.left - current.x, 0, current.x - rect.right);
+    if (!best || distance < best.distance) best = { index, distance };
+  });
+  return best?.index;
 }
 
 function insideTrack(current: Drag, bounds: DOMRect) {
