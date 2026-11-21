@@ -229,7 +229,14 @@ test('resolving a conflict with my version keeps the other client edit to an unt
   await expect(
     page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }),
   ).toBeInViewport();
+  // The review closes before the retried PATCH lands, so wait for that response, not the region.
+  const retried = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'PATCH' &&
+      response.url().endsWith(`/api/v1/projects/${slug}/tasks/${task.id}`),
+  );
   await page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }).click();
+  expect((await retried).status()).toBe(200);
   await expect(page.getByRole('region', { name: 'Ваш вариант' })).toHaveCount(0);
   const saved = z
     .object({ data: z.object({ title: z.string(), description: z.string() }) })

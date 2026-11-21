@@ -90,10 +90,18 @@ export function mergeTaskFields(
   origin: JsonValue | undefined,
   current: TaskFields,
 ): TaskFields {
-  return mergeDraftFields(mine, origin, current, (value) => {
-    const merged = taskFieldsSchema.safeParse(value);
-    return merged.success ? merged.data : mine;
+  const merged = mergeDraftFields(mine, origin, current, (value) => {
+    const parsed = taskFieldsSchema.safeParse(value);
+    return parsed.success ? parsed.data : mine;
   });
+  // A deadline or schedule is local wall time in `timezone`: one I edited keeps the zone I
+  // entered it in, so a settings change elsewhere cannot shift the instant I meant.
+  const before = taskFieldsSchema.safeParse(origin);
+  if (!before.success) return merged;
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const timingEdited =
+    !same(mine.deadline, before.data.deadline) || !same(mine.recurrence, before.data.recurrence);
+  return timingEdited ? { ...merged, timezone: mine.timezone } : merged;
 }
 export function baseFromPage(page: TaskPage) {
   return {
