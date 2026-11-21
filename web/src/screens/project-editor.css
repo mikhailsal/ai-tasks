@@ -38,7 +38,8 @@
   line-height: 1.35;
   letter-spacing: -0.3px;
 }
-.project-editor-head .project-editor-back {
+.project-editor-head .project-editor-back,
+.project-editor-head .project-editor-refresh {
   width: 44px;
   min-width: 44px;
   height: 44px;
