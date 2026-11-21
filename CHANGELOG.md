@@ -5,6 +5,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web task editor: "Сохранить мой вариант ещё раз" after a conflict no longer reverts fields
+  that only the other client changed. Fields you did not edit take the current server value;
+  the compare block shows the merged result before you save.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
