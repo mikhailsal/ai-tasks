@@ -5,6 +5,11 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Web project editor: a «Обновить сохранённые данные» button in the header. The editor hides the
+  calm status bar, so there was no way to re-read saved data there.
+
 ### Fixed
 
 - Web: the first visit no longer shows «Доступна новая версия приложения». Installing the
