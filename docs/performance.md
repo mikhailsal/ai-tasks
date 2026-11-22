@@ -182,4 +182,4 @@ long-term guarantee or a reference-hardware calibration. The final revision has 
 been measured on EPYC 7763 or Intel. Keep CPU/environment metadata when comparing future
 runs; do not discard slower results or treat a successful workflow exit as a timing pass.
 
-For feature 002, the user approved a temporary strict 170000-byte ceiling on 2026-10-23; the baseline constitutional budget remains 150000. The [plan exception](../specs/002-mobile-ux/plan.md#complexity-tracking) records ownership, expiry and removal conditions. Every emitted JavaScript asset, including SW and lazy chunks, is still counted independently at gzip level 9.
+For feature 002, the user approved a temporary strict 170000-byte ceiling on 2026-10-23; the baseline constitutional budget remains 150000. On 2026-11-22 the user approved raising it to 180000 for release 0.2.1 (the QA fixes F1–F15 measured 173849 bytes against 168700 on 0.2.0). The [plan exception](../specs/002-mobile-ux/plan.md#complexity-tracking) records ownership, expiry and removal conditions. Every emitted JavaScript asset, including SW and lazy chunks, is still counted independently at gzip level 9.

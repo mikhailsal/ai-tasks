@@ -13,7 +13,7 @@ Production CLI execution uses compiled `dist/cli.js`, without a TypeScript loade
 | `npm run test:contention`   | independent processes and real file/SQLite locks                  | 30s/case, 180s/job                                                           |
 | `npm run test:e2e`          | production Chromium/WebKit mobile application                     | 30s/case, 600s/job                                                           |
 | `npm run build`             | compiled server entries and production browser assets             | measured; 5s is a goal                                                       |
-| `npm run check:bundle-size` | all emitted browser JavaScript, individually gzip level 9         | total strictly below 170000 bytes (temporary 002 exception; baseline 150000) |
+| `npm run check:bundle-size` | all emitted browser JavaScript, individually gzip level 9         | total strictly below 180000 bytes (temporary exception; baseline 150000) |
 | `npm run bench`             | separate declared workloads                                       | 300s/job                                                                     |
 
 `scripts/run-suite.mjs` saves command, runtime, start time, duration, budget, exit code,
@@ -795,4 +795,4 @@ entries cover CLI/API/data helper/migration/lock wrapper/lock module/restore hel
 owner; worker run is a compiled CLI command, not a nonexistent standalone worker entry.
 The next complete production build remains part of T107 verification.
 
-Feature 002: the user explicitly approved a temporary strict 170000-byte JS ceiling on 2026-10-23. See [exception and expiry](../specs/002-mobile-ux/plan.md#complexity-tracking). All historical 150000-byte reports above retain their original meaning. Current exact boundary tests reject 170000/170001 and accept 169999; inventory, all-chunk accounting and gzip level 9 are unchanged.
+Feature 002: the user explicitly approved a temporary strict 170000-byte JS ceiling on 2026-10-23. See [exception and expiry](../specs/002-mobile-ux/plan.md#complexity-tracking). All historical 150000-byte reports above retain their original meaning. On 2026-11-22 the user approved raising it to 180000 for release 0.2.1; current exact boundary tests reject 180000/180001 and accept 179999; inventory, all-chunk accounting and gzip level 9 are unchanged.
