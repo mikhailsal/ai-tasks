@@ -28,6 +28,9 @@ All notable changes are listed here. The format follows
   and lists only the fields that differ, in form terms (title, emoji, description, priority,
   deadline). Internal fields such as `timezone`, `kind` and recurrence settings are no longer
   shown.
+- Web task editor: the title field is visible on a new task. It shows a placeholder and a
+  dashed outline while empty, takes focus on open, and the caption says a title is needed
+  before «Сохранить» becomes available.
 
 ## [0.2.0] - 2026-11-17
 

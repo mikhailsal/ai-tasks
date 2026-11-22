@@ -6,6 +6,11 @@ import { TaskIdentityFields } from './TaskIdentityFields.js';
 import { TaskFacts } from './TaskFacts.js';
 import { TaskParameters } from './TaskParameters.js';
 
+function draftCaption(title: string, dirty: boolean) {
+  if (title.trim() === '') return 'Введите название задачи, чтобы сохранить';
+  return dirty ? 'Есть несохранённые изменения' : 'Поля можно редактировать сразу';
+}
+
 export function TaskForm({
   page,
   fields,
@@ -28,6 +33,8 @@ export function TaskForm({
   onActions?: () => void;
 }) {
   const kindId = useId();
+  const captionId = useId();
+  const untitled = fields.title.trim() === '';
   return (
     <form
       aria-label="Редактор задачи"
@@ -41,6 +48,8 @@ export function TaskForm({
         <TaskIdentityFields
           fields={fields}
           heading={page.task?.title ?? 'Новая задача'}
+          autoFocus={!page.task}
+          describedBy={captionId}
           onChange={onChange}
         />
         {!page.task && (
@@ -62,8 +71,8 @@ export function TaskForm({
           </div>
         )}
         <TaskFacts page={page} />
-        <p className="task-draft-caption">
-          {dirty ? 'Есть несохранённые изменения' : 'Поля можно редактировать сразу'}
+        <p id={captionId} className="task-draft-caption" aria-live="polite">
+          {draftCaption(fields.title, dirty)}
         </p>
         <MarkdownEditor
           value={fields.description}
@@ -76,7 +85,7 @@ export function TaskForm({
         <Button onClick={onCancel} disabled={cancelDisabled}>
           Отмена
         </Button>
-        <Button variant="primary" type="submit" disabled={disabled || !dirty}>
+        <Button variant="primary" type="submit" disabled={disabled || !dirty || untitled}>
           Сохранить
         </Button>
         {page.task && onActions && (
