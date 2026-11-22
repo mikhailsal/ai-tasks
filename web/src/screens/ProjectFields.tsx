@@ -5,7 +5,18 @@ import { Field } from '../components/Field.js';
 import { EmojiField } from '../components/EmojiField.js';
 import { presetLabels, type ProjectFields as Fields } from './project-fields.js';
 import { fieldRuleHints } from '../data/resources.js';
+import { followName, validSlug } from './project-slug.js';
 
+function slugHint(fields: Fields): { hint?: string } {
+  if (validSlug(fields.slug)) return { hint: `Ссылка проекта: /projects/${fields.slug}` };
+  if (fields.name.trim() === '') return {};
+  return {
+    hint:
+      fields.slug === ''
+        ? 'Из этого названия ссылку не составить: задайте «Slug проекта» ниже.'
+        : 'Проверьте «Slug проекта» ниже: латинские буквы, цифры и дефисы.',
+  };
+}
 export function ProjectFields({
   fields,
   onChange,
@@ -28,7 +39,9 @@ export function ProjectFields({
       ? { error: fieldRuleHints[field] ?? 'Проверьте значение этого поля.' }
       : {};
   function change(key: 'slug' | 'name' | 'emoji' | 'description' | 'priority', value: string) {
-    onChange({ ...fields, [key]: value });
+    // A new project's link is suggested from its name (QA F5); it never changes once created.
+    const slug = key === 'name' && !editing ? { slug: followName(fields, value) } : {};
+    onChange({ ...fields, [key]: value, ...slug });
   }
   return (
     <>
@@ -38,6 +51,7 @@ export function ProjectFields({
         onChange={(event) => change('name', event.target.value)}
         required
         disabled={disabled}
+        {...(editing ? {} : slugHint(fields))}
         {...error('name')}
       />
       <EmojiField
@@ -92,7 +106,11 @@ export function ProjectFields({
           onChange={(event) => change('slug', event.target.value)}
           required
           disabled={disabled || editing}
-          hint="Постоянная ссылка проекта. После создания изменить нельзя."
+          hint={
+            editing
+              ? 'Постоянная ссылка проекта. После создания изменить нельзя.'
+              : 'Составляется из названия; можно задать свою. После создания изменить нельзя.'
+          }
           {...error('slug')}
         />
         {editing ? (
