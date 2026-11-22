@@ -40,6 +40,11 @@ All notable changes are listed here. The format follows
   instead of UTC ISO; the exact instant stays in the tooltip. The confirmation window reads
   in days, hours and minutes instead of milliseconds, schedule times drop zero seconds
   («время 08:00»), and «поколение» reads «версия расписания».
+- Web advisory notices («Обратите внимание») are in Russian. The web translates each advisory
+  by its `code` and no longer shows the English text meant for agents or raw status keys
+  such as `in_progress`; a code it does not know yet still shows the server's text.
+  «По данным на» and the worker's last pass are shown to the minute, without seconds and
+  milliseconds. The API, CLI and advisory text for agents are unchanged.
 
 ## [0.2.0] - 2026-11-17
 

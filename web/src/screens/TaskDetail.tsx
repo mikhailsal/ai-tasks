@@ -62,6 +62,9 @@ function TaskNotices({
         advisories={pageAdvisories(page.advisories, page.task?.id)}
         checkedAt={page.checkedAt}
         timezone={page.timezone}
+        statusLabels={Object.fromEntries(
+          page.configuration.recurring_workflow.statuses.map((status) => [status.id, status.label]),
+        )}
       />
       {editor.storageError && <p role="alert">{editor.storageError}</p>}
       {commands.error && <p role="alert">{commands.error}</p>}

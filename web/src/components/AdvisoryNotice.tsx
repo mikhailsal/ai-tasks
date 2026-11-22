@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Advisory } from '../../../src/schema/advisories.js';
-import { viewTime } from '../data/view-format.js';
+import { viewMinute } from '../data/view-format.js';
+import { advisoryText } from './advisory-text.js';
 import { Button } from './Button.js';
 
 const VISIBLE = 2;
@@ -32,10 +33,13 @@ export function AdvisoryNotice({
   advisories,
   checkedAt,
   timezone,
+  statusLabels,
 }: {
   advisories: readonly Advisory[];
   checkedAt?: string | undefined;
   timezone: string;
+  /** Status ids to display names, so a remedy names «Активно» rather than `active`. */
+  statusLabels?: Readonly<Record<string, string>>;
 }) {
   const [open, setOpen] = useState(false);
   if (advisories.length === 0) return null;
@@ -43,17 +47,20 @@ export function AdvisoryNotice({
   const hidden = advisories.length - shown.length;
   return (
     <aside className="advisory-notice" aria-label="Обратите внимание">
-      {shown.map((advisory) => (
-        <div key={`${advisory.code}:${advisory.subject?.id ?? 'all'}`} className="advisory-item">
-          <p>
-            {advisory.message}
-            {advisory.count === undefined ? '' : ` (${String(advisory.count)})`}
-          </p>
-          <p className="subtle">{advisory.remedy.text}</p>
-        </div>
-      ))}
+      {shown.map((advisory) => {
+        const text = advisoryText(advisory, statusLabels);
+        return (
+          <div key={`${advisory.code}:${advisory.subject?.id ?? 'all'}`} className="advisory-item">
+            <p>
+              {text.message}
+              {advisory.count === undefined ? '' : ` (${String(advisory.count)})`}
+            </p>
+            {text.remedy && <p className="subtle">{text.remedy}</p>}
+          </div>
+        );
+      })}
       {hidden > 0 && <Button onClick={() => setOpen(true)}>ещё {hidden}</Button>}
-      {checkedAt && <p className="subtle">По данным на {viewTime(checkedAt, timezone)}</p>}
+      {checkedAt && <p className="subtle">По данным на {viewMinute(checkedAt, timezone)}</p>}
     </aside>
   );
 }

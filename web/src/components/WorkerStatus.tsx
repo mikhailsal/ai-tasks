@@ -1,5 +1,6 @@
 import type { WorkerView } from '../../../src/schema/worker-status.js';
-import { viewTime } from '../data/view-format.js';
+import { viewMinute } from '../data/view-format.js';
+import { workerRemedyText } from './advisory-text.js';
 
 /** Spec 011: the same words on every screen. */
 const statusText = {
@@ -30,11 +31,9 @@ export function WorkerNotice({
         {statusText[worker.status]}: повторения этого проекта могут не создаваться.
         {worker.last_pass_at === undefined
           ? ''
-          : ` Последний проход: ${viewTime(worker.last_pass_at, timezone)}.`}
+          : ` Последний проход: ${viewMinute(worker.last_pass_at, timezone)}.`}
       </p>
-      <p className="subtle">
-        Запустите сервис (serve), он запускает обработчик; вручную: worker run --project {slug}.
-      </p>
+      <p className="subtle">{workerRemedyText(slug)}</p>
     </aside>
   );
 }

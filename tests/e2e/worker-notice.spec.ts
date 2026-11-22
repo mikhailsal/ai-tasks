@@ -4,7 +4,7 @@ import { createPassRecorder } from '../../src/core/worker/record-pass.js';
 
 /** Spec 011 US3: people see that the worker is not running, on every dependent screen. */
 const never = 'Обработчик повторений ещё не запускался';
-const advisory = 'The recurring worker has never run for this project';
+const advisory = 'Обработчик повторений ещё не запускался для этого проекта';
 
 test('the worker notice shows on the project, the list and the occurrences, then goes', async ({
   page,
@@ -26,7 +26,8 @@ test('the worker notice shows on the project, the list and the occurrences, then
     await page.getByRole('button', { name: 'Действия с задачей' }).click();
     const occurrences = page.getByRole('region', { name: 'Повторения задачи' });
     await expect(occurrences.getByText(advisory)).toBeVisible();
-    await expect(occurrences).toContainText('Start the service (serve)');
+    await expect(occurrences).toContainText('worker run --project alpha');
+    await expect(occurrences).not.toContainText(/recurring worker|Start the service/u);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
