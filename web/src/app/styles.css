@@ -1329,6 +1329,10 @@ dd {
 #root:has(.project-editor-page) main > .connection-status[data-attention='false'] {
   display: none;
 }
+/* The editor header carries the refresh button, so the status bar never shows a second one. */
+#root:has(.project-editor-page) main > .connection-status .sync-refresh {
+  display: none;
+}
 .home-add-project {
   width: 44px;
   height: 44px;
