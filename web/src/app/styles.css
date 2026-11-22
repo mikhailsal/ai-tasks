@@ -1502,3 +1502,12 @@ dd {
   color: #4a5870;
   font-size: 0.875rem;
 }
+a.task-card-done {
+  justify-content: center;
+  margin-top: 6px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #e5f4ea;
+  color: #1d5c34;
+  font-weight: 600;
+}
