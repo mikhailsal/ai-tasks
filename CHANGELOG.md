@@ -36,6 +36,10 @@ All notable changes are listed here. The format follows
   task's page has «Отметить выполнение», and its card in «План» links straight there
   (`?occurrences=open`). After completing or cancelling, a status line confirms how many
   occurrences changed.
+- Web occurrence rows show times in the task's time zone («Срок: 19 нояб. 2026 г., 08:00»)
+  instead of UTC ISO; the exact instant stays in the tooltip. The confirmation window reads
+  in days, hours and minutes instead of milliseconds, schedule times drop zero seconds
+  («время 08:00»), and «поколение» reads «версия расписания».
 
 ## [0.2.0] - 2026-11-17
 

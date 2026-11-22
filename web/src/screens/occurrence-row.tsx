@@ -4,7 +4,9 @@ import { Button } from '../components/Button.js';
 import { DateTimeInputs } from '../components/DateTimeInputs.js';
 import {
   occurrenceLabels,
+  occurrenceMoment,
   occurrenceScheduleLabel,
+  windowLabel,
   type SelectedOccurrence,
 } from './occurrence-model.js';
 import { recordedValuesLabel } from './occurrence-values.js';
@@ -48,32 +50,20 @@ export function OccurrenceRow({
 }) {
   const [instruction, setInstruction] = useState(false);
   const closed = ['completed', 'completed_late', 'cancelled'].includes(row.state);
+  const at = (instant: string) => (
+    <time dateTime={instant} title={`${instant} (UTC)`}>
+      {occurrenceMoment(instant, row.schedule_snapshot.timezone)}
+    </time>
+  );
   return (
     <article aria-label={`Повторение ${row.id}`} className="panel stack">
       <h3>{occurrenceLabels[row.state]}</h3>
-      <p>
-        Срок: <time dateTime={row.deadline}>{row.deadline}</time>
-      </p>
+      <p>Срок: {at(row.deadline)}</p>
       {row.occurrence_day !== null && <p>День: {row.occurrence_day}</p>}
-      <p>
-        Граница подтверждения: <time dateTime={row.expires_at}>{row.expires_at}</time>
-      </p>
-      {row.missed_at && (
-        <p>
-          Пропуск: <time dateTime={row.missed_at}>{row.missed_at}</time>
-        </p>
-      )}
-      {row.actual_completed_at && (
-        <p>
-          Фактическое выполнение:{' '}
-          <time dateTime={row.actual_completed_at}>{row.actual_completed_at}</time>
-        </p>
-      )}
-      {row.completion_recorded_at && (
-        <p>
-          Записано: <time dateTime={row.completion_recorded_at}>{row.completion_recorded_at}</time>
-        </p>
-      )}
+      <p>Граница подтверждения: {at(row.expires_at)}</p>
+      {row.missed_at && <p>Пропуск: {at(row.missed_at)}</p>}
+      {row.actual_completed_at && <p>Фактическое выполнение: {at(row.actual_completed_at)}</p>}
+      {row.completion_recorded_at && <p>Записано: {at(row.completion_recorded_at)}</p>}
       {row.cancel_reason !== null && <p>Причина отмены: {row.cancel_reason}</p>}
       {row.miss_reason !== undefined && <p>Причина пропуска: {row.miss_reason}</p>}
       {row.completion_note !== undefined && <p>Заметка: {row.completion_note}</p>}
@@ -81,13 +71,13 @@ export function OccurrenceRow({
         <p>Значения: {recordedValuesLabel(row.recorded_values)}</p>
       )}
       <p>
-        Сохранённые условия: поколение {row.schedule_snapshot.generation_number},{' '}
+        Условия: версия расписания {row.schedule_snapshot.generation_number},{' '}
         {row.schedule_snapshot.timezone};{' '}
-        {row.miss_policy === 'carry_forward' ? 'сохранять долг' : 'фиксировать пропуск'}; окно{' '}
-        {row.confirmation_window_ms} мс.
+        {row.miss_policy === 'carry_forward' ? 'сохранять долг' : 'фиксировать пропуск'}; окно
+        подтверждения: {windowLabel(row.confirmation_window_ms)}.
       </p>
       <p>
-        Первый срок: {row.schedule_snapshot.first_deadline}.{' '}
+        Первый срок: {at(row.schedule_snapshot.first_deadline)}.{' '}
         {occurrenceScheduleLabel(row.schedule_snapshot.schedule)}
       </p>
       <Button aria-expanded={instruction} onClick={() => setInstruction(!instruction)}>
