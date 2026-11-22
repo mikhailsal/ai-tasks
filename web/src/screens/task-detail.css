@@ -146,6 +146,10 @@
 .task-page textarea {
   max-width: 100%;
 }
+/* Keep a field the browser scrolls to (e.g. its validation bubble) above the fixed footer. */
+html:has(.task-draft-actions) {
+  scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
 .task-draft-actions {
   position: fixed;
   left: 50%;

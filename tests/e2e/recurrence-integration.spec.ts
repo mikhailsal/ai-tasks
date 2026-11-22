@@ -152,7 +152,8 @@ test('a failed recurrence background refresh remains visible, retains the mounte
     });
     await occurrence.getByLabel(`Выбрать повторение ${selected.id}`, { exact: true }).check();
     await page.getByRole('button', { name: 'Изменить повторение', exact: true }).click();
-    const window = page.getByLabel('Окно подтверждения, мс', { exact: true });
+    await page.getByLabel('Единица окна подтверждения', { exact: true }).selectOption('ms');
+    const window = page.getByLabel('Окно подтверждения', { exact: true });
     await window.fill('123456');
     await closeTaskActions(page);
     await expect(page.getByLabel('Название задачи', { exact: true })).toBeVisible();

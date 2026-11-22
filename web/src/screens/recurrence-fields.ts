@@ -4,7 +4,7 @@ import {
   type RecurrenceInput,
 } from '../../../src/schema/recurrence-input.js';
 import type { recurrenceConfigurationSchema } from '../../../src/schema/recurrence-query.js';
-import { deadlineDraft, resolveLocalDeadline } from '../data/local-time.js';
+import { compactTime, deadlineDraft, resolveLocalDeadline } from '../data/local-time.js';
 /** Draft validation preserves incomplete user input; submission uses the strict shared schema. */
 export const recurrenceFieldsSchema = z.strictObject({
   first: z.strictObject({ date: z.string(), time: z.string(), offset: z.string() }),
@@ -50,7 +50,7 @@ export function fieldsFromRecurrence(
   return {
     ...fields,
     pattern: schedule.pattern,
-    localTime: schedule.local_time,
+    localTime: compactTime(schedule.local_time),
     every: 'every' in schedule ? String(schedule.every) : '1',
     weekdays: schedule.pattern === 'weekdays' ? [...schedule.weekdays] : [],
     dayOfMonth: schedule.pattern === 'months' ? String(schedule.day_of_month) : '1',
