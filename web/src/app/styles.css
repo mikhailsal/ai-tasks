@@ -1511,3 +1511,17 @@ a.task-card-done {
   color: #1d5c34;
   font-weight: 600;
 }
+/* A wide screen shows several stages side by side (QA F15); phones keep one column. */
+@media (min-width: 900px) {
+  #root:has(.project-board) {
+    max-width: min(1440px, 100%);
+  }
+  .board-column {
+    flex: 0 0 300px;
+    /* Scrolling past several stages in view should not stop at each one. */
+    scroll-snap-stop: normal;
+  }
+  .board-column:last-child {
+    margin-right: 20px;
+  }
+}
