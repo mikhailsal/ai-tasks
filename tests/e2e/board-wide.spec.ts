@@ -83,3 +83,45 @@ test('on a wide screen a dragged card drops into the stage under the pointer (QA
     await server.close();
   }
 });
+
+test('a card dropped over a partly visible stage lands in that stage, not its neighbour', async ({
+  page,
+}) => {
+  const server = await projectBoardServer();
+  try {
+    await page.setViewportSize({ width: 1568, height: 900 });
+    await page.goto(`${server.origin}${server.boardPath}`);
+    // «Тестирование» → «Проверка» is an allowed neighbouring transition.
+    const card = page
+      .locator('.board-column[data-status-id="test"] .board-task')
+      .filter({ hasText: 'Отдельная стадия той же категории' });
+    await expect(card.locator('.board-drag-handle')).toBeEnabled();
+    const firstId = await card.getAttribute('data-task-id');
+    const handle = await card.locator('.board-drag-handle').boundingBox();
+    const track = await page.locator('.board-track').boundingBox();
+    const review = await page.locator('.board-column[data-status-id="review"]').boundingBox();
+    if (!firstId || !handle || !track || !review) throw Error('Missing draggable geometry');
+    // «Проверка» is cut by the right edge of the track: part of it shows, it is not loaded.
+    expect(review.x).toBeLessThan(track.x + track.width - 100);
+    expect(review.x + review.width).toBeGreaterThan(track.x + track.width);
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(400);
+    // Over its visible part, clear of the 44px edge-scroll zone.
+    await page.mouse.move(review.x + 40, review.y + 200, { steps: 12 });
+    await expect(page.locator('.board-column[data-status-id="review"]')).toHaveClass(
+      /board-drop-target/u,
+    );
+    const moved = page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/position'),
+    );
+    await page.mouse.up();
+    expect((await moved).status()).toBe(200);
+    await expect(
+      page.locator(`.board-column[data-status-id="review"] .board-task[data-task-id="${firstId}"]`),
+    ).toBeVisible();
+  } finally {
+    await page.context().close();
+    await server.close();
+  }
+});
