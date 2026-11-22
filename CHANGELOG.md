@@ -5,6 +5,11 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-22
+
+Fixes from the QA pass of 2026-11-19 (F1–F15). No migrations: upgrade with `npm ci`,
+`npm run build` and a restart of `serve`.
+
 ### Added
 
 - Web project editor: a «Обновить сохранённые данные» button in the header. The editor hides the
@@ -22,13 +27,6 @@ All notable changes are listed here. The format follows
   ровно один эмодзи…») instead of only «Проверьте заполненные поля». The project editor marks
   the rejected field (`aria-invalid` and a message under it) until it is edited, and opens
   «Дополнительные настройки» when the slug or configuration was rejected.
-
-### Agent-visible changes
-
-- An invalid emoji (`VALIDATION_ERROR`, message unchanged) now carries
-  `details.issues: [{code: "custom", path: ["emoji"], expected: "exactly one RGI emoji grapheme"}]`
-  instead of `details: null`, like other invalid fields. So does the refusal of the default
-  ⚪ as a project emoji (`expected: "an emoji other than the default ⚪"`).
 - Web task editor: the conflict comparison appears right under the warning, scrolls into view
   and lists only the fields that differ, in form terms (title, emoji, description, priority,
   deadline). Internal fields such as `timezone`, `kind` and recurrence settings are no longer
@@ -74,6 +72,13 @@ All notable changes are listed here. The format follows
 - Web board on a wide screen (900 px and up) shows several stages side by side instead of one
   phone-width column, and loads every stage in view. Dragging a card drops it into the column
   under the pointer. Phones keep one column with swipe.
+
+### Agent-visible changes
+
+- An invalid emoji (`VALIDATION_ERROR`, message unchanged) now carries
+  `details.issues: [{code: "custom", path: ["emoji"], expected: "exactly one RGI emoji grapheme"}]`
+  instead of `details: null`, like other invalid fields. So does the refusal of the default
+  ⚪ as a project emoji (`expected: "an emoji other than the default ⚪"`).
 
 ## [0.2.0] - 2026-11-17
 
