@@ -1,6 +1,6 @@
 # Operations
 
-Run commands from the package directory with Node.js 24.22.0 and npm 11.19.1. See
+Run commands from the package directory with Node.js 24.22.3 or newer and npm 11.19.1. See
 [README](../README.md) for installation and the [normative contracts](../specs/001-ai-task-manager/contracts/common.md)
 for exact payloads. Examples containing `CURRENT_*`, `NEW_UUID`, or `BACKUP_UUID` are shapes:
 replace those strings with values from current responses, not literal request values.

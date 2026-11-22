@@ -7,13 +7,23 @@ All notable changes are listed here. The format follows
 
 ## [0.2.1] - 2026-11-22
 
-Fixes from the QA pass of 2026-11-19 (F1–F15). No migrations: upgrade with `npm ci`,
-`npm run build` and a restart of `serve`.
+Fixes from the QA pass of 2026-11-19 (F1–F15). No migrations. The minimum Node is now
+24.22.3, so upgrade with `nvm install` (it reads `.nvmrc`), then `npm ci`, `npm run build`
+and a restart of `serve`.
 
 ### Added
 
 - Web project editor: a «Обновить сохранённые данные» button in the header. The editor hides the
   calm status bar, so there was no way to re-read saved data there.
+
+### Changed
+
+- Node.js 24.22.3 or newer is required (was exactly 24.22.0); 24.22.3 is the current 24.x
+  LTS security release and the version `.nvmrc` installs. npm stays pinned at 11.19.1.
+  `npm ci` (engine-strict), `npm run check:runtime` and the pre-push hook refuse older Node.
+- The browser JavaScript ceiling is 180000 gzip bytes (was 170000), approved by the owner on
+  2026-11-22: these fixes and the refresh button bring the build from 168700 to about 174000
+  bytes. The exception and its expiry are in `specs/002-mobile-ux/plan.md`.
 
 ### Fixed
 

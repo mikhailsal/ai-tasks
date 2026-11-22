@@ -6,7 +6,11 @@ import { join } from 'node:path';
 import Database from 'better-sqlite3';
 
 assert.equal(process.platform, 'linux', 'This release requires Linux');
-assert.equal(process.versions.node, '24.22.0', 'Use the pinned Node runtime');
+const [nodeMajor, nodeMinor, nodePatch] = process.versions.node.split('.').map(Number);
+assert.ok(
+  nodeMajor > 24 || (nodeMajor === 24 && (nodeMinor > 22 || (nodeMinor === 22 && nodePatch >= 3))),
+  `Node ${process.versions.node} is older than 24.22.3`,
+);
 const npmVersion = execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim();
 assert.equal(npmVersion, '11.19.1', 'Use the pinned npm version');
 execFileSync('flock', ['--version'], { stdio: 'pipe' });
