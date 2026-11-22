@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { mutationEnvelopeSchema } from '../../src/schema/envelopes.js';
 import { jsonValueSchema } from '../../src/schema/values.js';
+import * as z from 'zod/mini';
 import {
   createDraft,
   deleteDraft,
   deleteProposal,
   loadDraft,
   loadProposal,
+  mergeDraftFields,
   parseProposal,
   proposalFor,
   reconcileDraft,
@@ -16,6 +18,11 @@ import {
   updateDraft,
 } from '../../web/src/data/drafts.js';
 
+const fieldsSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  deadline: z.object({ date: z.string(), time: z.string() }),
+});
 const base = {
   database_epoch: randomUUID(),
   expected_revision: 7,
@@ -50,6 +57,25 @@ describe('separate browser drafts and immutable operation proposals', () => {
     expect(reconciled.fields).toEqual(edited.fields);
     expect(reconciled.base).toEqual(newBase);
     expect(edited.base).toEqual(base);
+  });
+
+  it('keeps only my edited fields when merging with the current server version', () => {
+    const origin = { title: 'Врач', description: 'Старое', deadline: { date: '', time: '' } };
+    const draft = createDraft({ key: 'alpha:task', fields: origin, base, origin });
+    const edited = updateDraft(draft, { ...origin, description: 'Моя правка' });
+    expect(edited.origin).toEqual(origin);
+    expect(reconcileDraft(edited, { ...base, expected_revision: 8 }).origin).toEqual(origin);
+    const current = { title: 'Врач (вкладка B)', description: 'Старое', deadline: origin.deadline };
+    const parse = (value: unknown) => z.parse(fieldsSchema, value);
+    expect(mergeDraftFields(edited.fields, edited.origin, current, parse)).toEqual({
+      ...current,
+      description: 'Моя правка',
+    });
+    const both = { ...current, description: 'Их правка' };
+    expect(mergeDraftFields(edited.fields, edited.origin, both, parse).description).toBe(
+      'Моя правка',
+    );
+    expect(mergeDraftFields(edited.fields, undefined, current, parse)).toEqual(edited.fields);
   });
 
   it('reuses the exact proposal and serialized body after an uncertain response', () => {
