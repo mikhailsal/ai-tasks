@@ -115,13 +115,12 @@ test('project editor header refreshes saved data without touching the draft', as
     const name = page.getByLabel('Название проекта', { exact: true });
     await expect(name).toHaveValue(boardProject.name);
     await name.fill('Черновик до обновления');
-    // The calm status bar is hidden here, so the header carries the only refresh button.
+    // The editor hides the calm status bar; the header carries the one refresh button.
     const refresh = page.getByRole('button', { name: 'Обновить сохранённые данные', exact: true });
+    const header = page.locator('.project-editor-head');
     await expect(refresh).toHaveCount(1);
     await expect(
-      page
-        .locator('.project-editor-head')
-        .getByRole('button', { name: 'Обновить сохранённые данные' }),
+      header.getByRole('button', { name: 'Обновить сохранённые данные' }),
     ).toBeInViewport();
     const read = page.waitForResponse(
       (response) =>
@@ -129,18 +128,24 @@ test('project editor header refreshes saved data without touching the draft', as
         new URL(response.url()).pathname === '/api/v1/meta',
     );
     await refresh.click();
+    // A refresh in flight shows the status bar; the header button keeps its place.
+    await expect(refresh).toHaveCount(1);
+    await expect(header.getByRole('button', { name: 'Обновить сохранённые данные' })).toHaveCount(
+      1,
+    );
     expect((await read).status()).toBe(200);
     await expect(name).toHaveValue('Черновик до обновления');
-    // Offline, the status bar speaks up with its own button and the header one steps aside.
+    // Offline, the status bar speaks up, still without a second button.
     await page.context().setOffline(true);
     await expect(
       page.getByRole('complementary', { name: 'Соединение и сохранённые данные' }),
     ).toContainText('Нет соединения');
     await expect(refresh).toHaveCount(1);
-    await expect(page.locator('.project-editor-head').getByRole('button')).toHaveCount(1);
-    await expect(refresh).toBeDisabled();
+    await expect(
+      header.getByRole('button', { name: 'Обновить сохранённые данные' }),
+    ).toBeDisabled();
     await page.context().setOffline(false);
-    await expect(page.locator('.project-editor-head .project-editor-refresh')).toBeVisible();
+    await expect(refresh).toBeEnabled();
     expect(writes).toEqual([]);
   } finally {
     await page.context().close();

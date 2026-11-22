@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { useConnectivity } from '../data/connectivity.js';
-import { connectionAttention, RefreshButton } from './RefreshButton.js';
+import { useConnectivity, type Connectivity } from '../data/connectivity.js';
+import { RefreshButton } from './RefreshButton.js';
 
 export function OfflineBanner({
   compact = false,
@@ -45,6 +45,19 @@ export function OfflineBanner({
       <ConnectionNotices state={state} />
     </aside>
   );
+}
+
+/** Whether the status bar has something to say beyond the last update time. */
+function connectionAttention(state: Connectivity) {
+  return [
+    !state.online,
+    state.maintenance,
+    state.reconciling,
+    state.unavailableProjects.length > 0,
+    state.cacheError,
+    state.refreshError,
+    state.shellUpdateAvailable,
+  ].some(Boolean);
 }
 
 function ConnectionNotices({ state }: { state: ReturnType<typeof useConnectivity> }) {

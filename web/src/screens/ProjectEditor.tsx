@@ -4,8 +4,7 @@ import type { MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
 import { ConflictReview } from '../components/ConflictReview.js';
-import { connectionAttention, RefreshButton } from '../components/RefreshButton.js';
-import { useConnectivity } from '../data/connectivity.js';
+import { RefreshButton } from '../components/RefreshButton.js';
 import type { projectEnvelopeSchema } from '../data/resources.js';
 import { ProjectFields } from './ProjectFields.js';
 import { ProjectDescriptionPreview } from './ProjectDescriptionPreview.js';
@@ -102,18 +101,6 @@ function ProjectEditorNotices({
     </>
   );
 }
-/**
- * The editor hides the calm status bar, so its header carries the refresh button. When the
- * bar has something to say it is shown with its own button, and this one steps aside.
- */
-function EditorRefresh() {
-  const attention = connectionAttention(useConnectivity());
-  return attention ? (
-    <span aria-hidden="true" />
-  ) : (
-    <RefreshButton className="project-editor-refresh" />
-  );
-}
 function projectEditorLabels(editing: boolean) {
   return editing
     ? {
@@ -156,7 +143,8 @@ export function ProjectEditor({
           ‹
         </Button>
         <h1>{labels.page}</h1>
-        <EditorRefresh />
+        {/* The editor hides the calm status bar; the header keeps the one refresh button. */}
+        <RefreshButton className="project-editor-refresh" />
       </header>
       <form
         className="project-editor-form"
