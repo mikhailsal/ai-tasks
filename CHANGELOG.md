@@ -45,6 +45,9 @@ All notable changes are listed here. The format follows
   such as `in_progress`; a code it does not know yet still shows the server's text.
   «По данным на» and the worker's last pass are shown to the minute, without seconds and
   milliseconds. The API, CLI and advisory text for agents are unchanged.
+- Web history names every recorded action in Russian («Повторение выполнено» instead of
+  `occurrence.complete`) and shows a board position as «Стадия «Черновик», позиция 1»
+  instead of JSON.
 
 ## [0.2.0] - 2026-11-17
 
