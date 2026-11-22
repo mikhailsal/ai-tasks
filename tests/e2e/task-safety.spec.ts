@@ -221,8 +221,14 @@ test('resolving a conflict with my version keeps the other client edit to an unt
   await description.fill('Правка из вкладки A');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   const proposed = page.getByRole('region', { name: 'Ваш вариант' });
-  await expect(proposed).toContainText('Записаться к врачу (вкладка B)');
+  // Only differing fields, in form terms: the merged title equals the server's and is hidden.
   await expect(proposed).toContainText('Правка из вкладки A');
+  await expect(proposed).not.toContainText('Записаться к врачу (вкладка B)');
+  for (const name of ['Текущая версия', 'Ваш вариант'])
+    await expect(page.getByRole('region', { name })).not.toContainText(/timezone|kind|recurrence/u);
+  await expect(
+    page.getByRole('button', { name: 'Сохранить мой вариант ещё раз' }),
+  ).toBeInViewport();
   // The review closes before the retried PATCH lands, so wait for that response, not the region.
   const retried = page.waitForResponse(
     (response) =>

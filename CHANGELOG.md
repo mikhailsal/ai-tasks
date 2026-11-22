@@ -21,6 +21,10 @@ All notable changes are listed here. The format follows
   `details.issues: [{code: "custom", path: ["emoji"], expected: "exactly one RGI emoji grapheme"}]`
   instead of `details: null`, like other invalid fields. So does the refusal of the default
   ⚪ as a project emoji (`expected: "an emoji other than the default ⚪"`).
+- Web task editor: the conflict comparison appears right under the warning, scrolls into view
+  and lists only the fields that differ, in form terms (title, emoji, description, priority,
+  deadline). Internal fields such as `timezone`, `kind` and recurrence settings are no longer
+  shown.
 
 ## [0.2.0] - 2026-11-17
 
