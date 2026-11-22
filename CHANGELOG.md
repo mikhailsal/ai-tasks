@@ -64,6 +64,8 @@ All notable changes are listed here. The format follows
   offline shell is not an update; the notice now needs a page already run by an older shell.
 - Web: a task that cannot be loaded («Задача не найдена») offers «К проекту», «К задачам»
   and «Повторить загрузку» instead of a dead end.
+- Web: the project list greets with «Выберите, над чем поработать», matching the «вы» used
+  everywhere else.
 
 ## [0.2.0] - 2026-11-17
 

@@ -53,7 +53,7 @@ function ProjectList({ metadata, online }: { metadata: MetaData; online: boolean
         </Button>
       </div>
       <p className="home-caption">
-        {choosingTask ? 'В какой проект добавить задачу?' : 'Выбери, над чем поработать'}
+        {choosingTask ? 'В какой проект добавить задачу?' : 'Выберите, над чем поработать'}
       </p>
       {query.isPending && <p role="status">Загрузка проектов…</p>}
       {query.error && (
