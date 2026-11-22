@@ -104,6 +104,8 @@ function columnStride(track: HTMLDivElement) {
  */
 function columnUnderPointer(current: Drag, track: HTMLDivElement, bounds: DOMRect) {
   if (!wideTrack(track, bounds)) return undefined;
+  const partial = partialColumnUnderPointer(current, track, bounds);
+  if (partial !== undefined) return partial;
   let best: { index: number; distance: number } | undefined;
   [...track.children].forEach((element, index) => {
     if (!fullyInside(element, bounds)) return;
@@ -112,6 +114,26 @@ function columnUnderPointer(current: Drag, track: HTMLDivElement, bounds: DOMRec
     if (!best || distance < best.distance) best = { index, distance };
   });
   return best?.index;
+}
+
+/**
+ * A column cut by the track edge is not loaded yet. A pointer over its visible part means that
+ * stage, so it scrolls fully into view (and loads) instead of the drop going to its neighbour.
+ */
+function partialColumnUnderPointer(current: Drag, track: HTMLDivElement, bounds: DOMRect) {
+  if (!insideTrack(current, bounds)) return undefined;
+  const index = [...track.children].findIndex((element) => {
+    const rect = element.getBoundingClientRect();
+    return (
+      !fullyInside(element, bounds) &&
+      current.x >= Math.max(rect.left, bounds.left) &&
+      current.x <= Math.min(rect.right, bounds.right)
+    );
+  });
+  const column = track.children[index];
+  if (!(column instanceof HTMLElement)) return undefined;
+  column.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+  return index;
 }
 
 function insideTrack(current: Drag, bounds: DOMRect) {
