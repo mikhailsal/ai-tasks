@@ -154,5 +154,7 @@ export function useTaskDraft(projectSlug: string, taskId?: string) {
     persist,
     saved,
     refreshed,
+    /** Loads the task again without reloading the app (QA F13). */
+    retryLoad: () => setAttempt((value) => value + 1),
   };
 }

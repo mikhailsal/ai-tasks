@@ -62,6 +62,8 @@ All notable changes are listed here. The format follows
   unchanged. See `docs/operations.md`.
 - Web: the first visit no longer shows «Доступна новая версия приложения». Installing the
   offline shell is not an update; the notice now needs a page already run by an older shell.
+- Web: a task that cannot be loaded («Задача не найдена») offers «К проекту», «К задачам»
+  and «Повторить загрузку» instead of a dead end.
 
 ## [0.2.0] - 2026-11-17
 

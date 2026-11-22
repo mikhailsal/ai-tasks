@@ -18,6 +18,7 @@ import { fieldsFromPage, loadTaskPage, mergeTaskFields, type TaskPage } from './
 import { Recurrence } from './Recurrence.js';
 import { useTaskDraft } from './use-task-draft.js';
 import { useTaskCommands } from './use-task-commands.js';
+import { TaskLoadFailure } from './TaskLoadFailure.js';
 
 function TaskNotices({
   editor,
@@ -213,7 +214,15 @@ export function TaskDetail({
     return (
       <>
         <h1>{title}</h1>
-        {editor.error ? <p role="alert">{editor.error}</p> : <p role="status">Загружаем задачу…</p>}
+        {editor.error ? (
+          <TaskLoadFailure
+            message={editor.error}
+            projectSlug={projectSlug}
+            onRetry={editor.retryLoad}
+          />
+        ) : (
+          <p role="status">Загружаем задачу…</p>
+        )}
       </>
     );
   const { archived, blocked, formUnavailable, actionUnavailable } = taskAvailability({
