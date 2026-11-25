@@ -1,0 +1,10 @@
+{
+  "allowlist": [
+    {
+      "finding": "env.kv",
+      "paths": ["web/src/screens/TaskDetail.tsx"],
+      "pattern": "\\{`\\$\\{commands\\.conflict\\.epoch\\}:\\$\\{String\\(commands\\.conflict\\.task\\?\\.revision\\)\\}`\\}",
+      "reason": "React key prop that remounts ConflictReview on a newer conflict (epoch:revision), not a credential"
+    }
+  ]
+}
