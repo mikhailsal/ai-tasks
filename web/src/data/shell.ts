@@ -5,7 +5,11 @@ export async function registerShell() {
   try {
     registration = await navigator.serviceWorker.register('/sw.js', { scope: '/', type: 'module' });
     const check = () => {
-      if (registration?.waiting) updateConnectivity({ shellUpdateAvailable: true });
+      // On the first visit there is no active worker yet: the new one passes through
+      // «waiting» on its way to activation, which is an install, not an update (QA F12).
+      // An active worker means an older shell is installed, even after a hard reload.
+      if (registration?.waiting && registration.active)
+        updateConnectivity({ shellUpdateAvailable: true });
     };
     check();
     registration.addEventListener('updatefound', () => {

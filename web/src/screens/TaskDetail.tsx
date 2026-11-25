@@ -10,13 +10,15 @@ import { useMutationAvailability } from '../app/MutationBoundary.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
 import { AdvisoryNotice, pageAdvisories } from '../components/AdvisoryNotice.js';
 import { ConflictReview } from '../components/ConflictReview.js';
+import { taskConflictView } from './task-conflict.js';
 import { TaskSavedDetails } from './TaskSavedDetails.js';
 import { TaskForm } from './TaskForm.js';
 import { MarkerCollision } from './TaskControls.js';
-import { fieldsFromPage, loadTaskPage, type TaskPage } from './task-model.js';
+import { fieldsFromPage, loadTaskPage, mergeTaskFields, type TaskPage } from './task-model.js';
 import { Recurrence } from './Recurrence.js';
 import { useTaskDraft } from './use-task-draft.js';
 import { useTaskCommands } from './use-task-commands.js';
+import { TaskLoadFailure } from './TaskLoadFailure.js';
 
 function TaskNotices({
   editor,
@@ -61,6 +63,9 @@ function TaskNotices({
         advisories={pageAdvisories(page.advisories, page.task?.id)}
         checkedAt={page.checkedAt}
         timezone={page.timezone}
+        statusLabels={Object.fromEntries(
+          page.configuration.recurring_workflow.statuses.map((status) => [status.id, status.label]),
+        )}
       />
       {editor.storageError && <p role="alert">{editor.storageError}</p>}
       {commands.error && <p role="alert">{commands.error}</p>}
@@ -141,8 +146,26 @@ function TaskOperationReview({
     <>
       {commands.conflict && (
         <ConflictReview
-          current={fieldsFromPage(commands.conflict)}
-          proposed={commands.conflictAction ? commands.conflictAction.payload : draft.fields}
+          // A newer conflict remounts the review, so it scrolls into view again.
+          key={`${commands.conflict.epoch}:${String(commands.conflict.task?.revision)}`}
+          current={taskConflictView(fieldsFromPage(commands.conflict, draft.fields.kind))}
+          proposed={
+            commands.conflictAction
+              ? commands.conflictAction.payload
+              : taskConflictView(
+                  mergeTaskFields(
+                    draft.fields,
+                    draft.origin,
+                    fieldsFromPage(commands.conflict, draft.fields.kind),
+                  ),
+                )
+          }
+          changedOnly={!commands.conflictAction}
+          note={
+            commands.conflictAction
+              ? undefined
+              : 'Поля, которые вы не меняли, взяты из текущей версии.'
+          }
           disabled={commands.conflictAction ? actionUnavailable : formUnavailable}
           onRetry={() => void commands.reconcile()}
         />
@@ -159,6 +182,14 @@ function TaskOperationReview({
   );
 }
 
+/** «План» links to `?occurrences=open` so marking an occurrence done starts in the sheet. */
+function occurrencesRequested() {
+  return new URLSearchParams(window.location.search).get('occurrences') === 'open';
+}
+function scrollToOccurrences() {
+  document.getElementById('occurrences')?.scrollIntoView({ block: 'start' });
+}
+
 export function TaskDetail({
   projectSlug,
   taskId,
@@ -170,7 +201,7 @@ export function TaskDetail({
 }) {
   const editor = useTaskDraft(projectSlug, taskId);
   const commands = useTaskCommands(editor, projectSlug);
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(occurrencesRequested);
   const [recurrenceBlocked, setRecurrenceBlocked] = useState(Boolean(taskId));
   const online = useMutationAvailability(metadata.database_epoch, projectSlug);
   const page = editor.page;
@@ -183,7 +214,15 @@ export function TaskDetail({
     return (
       <>
         <h1>{title}</h1>
-        {editor.error ? <p role="alert">{editor.error}</p> : <p role="status">Загружаем задачу…</p>}
+        {editor.error ? (
+          <TaskLoadFailure
+            message={editor.error}
+            projectSlug={projectSlug}
+            onRetry={editor.retryLoad}
+          />
+        ) : (
+          <p role="status">Загружаем задачу…</p>
+        )}
       </>
     );
   const { archived, blocked, formUnavailable, actionUnavailable } = taskAvailability({
@@ -207,6 +246,26 @@ export function TaskDetail({
         metadata={metadata}
         archived={archived}
       />
+      <TaskOperationReview
+        editor={editor}
+        commands={commands}
+        formUnavailable={formUnavailable}
+        actionUnavailable={actionUnavailable}
+        epoch={metadata.database_epoch}
+      />
+      {task?.kind === 'recurring' && (
+        <Button
+          variant="primary"
+          className="task-mark-done"
+          disabled={archived}
+          onClick={() => {
+            setActionsOpen(true);
+            requestAnimationFrame(scrollToOccurrences);
+          }}
+        >
+          Отметить выполнение
+        </Button>
+      )}
       <TaskForm
         page={page}
         fields={editor.draft.fields}
@@ -253,13 +312,6 @@ export function TaskDetail({
         />
         <Button onClick={() => setActionsOpen(false)}>Закрыть</Button>
       </Modal>
-      <TaskOperationReview
-        editor={editor}
-        commands={commands}
-        formUnavailable={formUnavailable}
-        actionUnavailable={actionUnavailable}
-        epoch={metadata.database_epoch}
-      />
     </div>
   );
 }

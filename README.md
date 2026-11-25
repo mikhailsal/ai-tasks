@@ -7,8 +7,8 @@ There are no accounts or login screen: access to the local service is access to 
 
 ## Install and start
 
-Use Linux, a local filesystem, Node.js **24.22.0**, npm **11.19.1**, and the `flock` utility.
-The Node/npm pins are enforced; `better-sqlite3` is a native dependency. If using nvm, run
+Use Linux, a local filesystem, Node.js **24.22.3** or newer, npm **11.19.1**, and the `flock` utility.
+The Node minimum and the npm pin are enforced; `better-sqlite3` is a native dependency. If using nvm, run
 `nvm install` and `nvm use` in the directory containing `package.json`, then install the
 pinned npm version if needed: `npm install --global npm@11.19.1`.
 

@@ -237,9 +237,10 @@ const reconcile = createReadReconciler({
   generation: connectivityGeneration,
   ready: () => updateConnectivity({ online: true, reconciling: false, maintenance: false }),
 });
+/** A success also clears an earlier manual refresh failure. */
 export function refreshReadState(): Promise<void> {
   updateConnectivity({ reconciling: navigator.onLine });
-  return reconcile();
+  return reconcile().then(() => updateConnectivity({ refreshError: null }));
 }
 /** Restore before mounting imperative editors as well as TanStack observers. Never resume mutations. */
 export async function initializeCache(queryClient: QueryClient) {

@@ -24,7 +24,7 @@ export function OccurrenceActions({ page }: { page: OccurrencePage }) {
           Boolean(page.query.error) ||
           Boolean(commands.conflict)
         }
-        onClick={() => void commands.send('complete')}
+        onClick={() => void page.sendWithNotice('complete')}
       >
         Выполнить выбранные
       </Button>
@@ -32,7 +32,7 @@ export function OccurrenceActions({ page }: { page: OccurrencePage }) {
         disabled={
           disabled || !page.canCancel || Boolean(page.query.error) || Boolean(commands.conflict)
         }
-        onClick={() => void commands.send('cancel')}
+        onClick={() => void page.sendWithNotice('cancel')}
       >
         Отменить выбранные
       </Button>

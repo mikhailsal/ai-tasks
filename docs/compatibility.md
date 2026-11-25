@@ -10,7 +10,7 @@ applicable**, not presumed passing. Upgrade steps from a 0.1.0 checkout are in
 Internal populated-schema migration tests are useful evidence, but they are not a substitute
 for testing upgrades from an actual shipped release.
 
-The supported deployment is Linux with local filesystem storage, `flock`, Node.js **24.22.0**,
+The supported deployment is Linux with local filesystem storage, `flock`, Node.js **24.22.3** or newer,
 npm **11.19.1**, and the pinned lockfile. `better-sqlite3` is native; the loaded SQLite must be
 **3.51.3 or newer**. Run `npm ci` and `npm run check:runtime` on the target host. Browser code
 requires a current Chromium/WebKit-class browser with IndexedDB, service workers, and modern

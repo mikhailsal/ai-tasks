@@ -4,6 +4,7 @@ import type { MetaData } from '../../../src/schema/meta.js';
 import { Button } from '../components/Button.js';
 import { RecoveryNotice } from '../components/RecoveryNotice.js';
 import { ConflictReview } from '../components/ConflictReview.js';
+import { RefreshButton } from '../components/RefreshButton.js';
 import type { projectEnvelopeSchema } from '../data/resources.js';
 import { ProjectFields } from './ProjectFields.js';
 import { ProjectDescriptionPreview } from './ProjectDescriptionPreview.js';
@@ -142,7 +143,8 @@ export function ProjectEditor({
           ‹
         </Button>
         <h1>{labels.page}</h1>
-        <span aria-hidden="true" />
+        {/* The editor hides the calm status bar; the header keeps the one refresh button. */}
+        <RefreshButton className="project-editor-refresh" />
       </header>
       <form
         className="project-editor-form"
@@ -158,6 +160,7 @@ export function ProjectEditor({
             onChange={editor.change}
             editing={source !== undefined}
             disabled={disabled}
+            invalid={editor.invalid}
           >
             {source && (
               <ProjectDescriptionPreview

@@ -86,6 +86,21 @@
   resize: none;
   overflow-wrap: anywhere;
   overflow: hidden;
+  border-radius: 8px;
+}
+/* The title edits in place; an empty title or the focused field shows its outline. */
+.task-identity-fields textarea::placeholder {
+  color: #69758a;
+  font-weight: 500;
+}
+.task-identity-fields textarea:placeholder-shown {
+  border: 1px dashed #b7c0cf;
+  background: #fff;
+}
+.task-identity-fields textarea:hover:not(:disabled),
+.task-identity-fields textarea:focus {
+  border: 1px solid #b7c0cf;
+  background: #fff;
 }
 .task-emoji-field {
   display: block;
@@ -130,6 +145,10 @@
 }
 .task-page textarea {
   max-width: 100%;
+}
+/* Keep a field the browser scrolls to (e.g. its validation bubble) above the fixed footer. */
+html:has(.task-draft-actions) {
+  scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 .task-draft-actions {
   position: fixed;
@@ -342,4 +361,34 @@
   .task-inline-parameters select {
     font-size: 12px;
   }
+}
+
+.occurrence-notice:empty {
+  display: none;
+}
+.occurrence-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e5f4ea;
+  color: #1d5c34;
+  font-weight: 600;
+}
+.task-mark-done {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.occurrence-open ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.occurrence-open li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }

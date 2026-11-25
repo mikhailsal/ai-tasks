@@ -5,7 +5,7 @@ Node.js, SQLite, Zod. See `README.md` for setup and `specs/` for contracts.
 
 ## Runtime
 
-- Node.js 24.22.0 and npm 11.19.1 are pinned (`package.json` engines, `.nvmrc`).
+- Node.js 24.22.3 or newer is required and npm 11.19.1 is pinned (`package.json` engines); `.nvmrc` names the version to install.
   Use `nvm use`. `npm run check:runtime` verifies them.
 - Never point commands at `data/` or a real database. Use a scratch database:
   `export AI_TASKS_DB_PATH="$(mktemp -d)/db.sqlite"`, `AI_TASKS_BACKUP_DIR` likewise,

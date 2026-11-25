@@ -77,6 +77,60 @@ describe('real API helper and browser request security', () => {
     expect(response.json()).toMatchObject({ ok: false, error: { code: 'ORIGIN_REJECTED' } });
   });
 
+  const navigation = { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document' };
+  const crossSite = (headers: Record<string, string>) => ({
+    host,
+    'sec-fetch-site': 'cross-site',
+    ...headers,
+  });
+  it('lets a link from another site open a page (QA F11)', async () => {
+    const page = await app.inject({ url: '/projects/alpha?x=1', headers: crossSite(navigation) });
+    expect(page.statusCode).not.toBe(403);
+    expect(page.body).not.toContain('ORIGIN_REJECTED');
+  });
+
+  it.each([
+    ['GET', '/api/v1/meta?all_projects=true', navigation],
+    ['GET', '/%61pi/v1/meta?all_projects=true', navigation],
+    ['GET', '//api/v1/meta?all_projects=true', navigation],
+    ['GET', '/API/v1/meta', navigation],
+    ['GET', '/api', navigation],
+    ['GET', '/assets/app.js', navigation],
+    ['HEAD', '/projects', navigation],
+    ['GET', '/projects', { 'sec-fetch-mode': 'no-cors', 'sec-fetch-dest': 'script' }],
+    ['GET', '/projects', { 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'iframe' }],
+  ] as const)('still refuses a cross-site %s %s %j', async (method, url, headers) => {
+    const response = await app.inject({ method, url, headers: crossSite(headers) });
+    expect(response.statusCode).toBe(403);
+  });
+
+  it.each(['POST', 'PUT', 'PATCH'] as const)(
+    'refuses a cross-site %s even with navigation headers',
+    async (method) => {
+      const response = await app.inject({
+        method,
+        url: '/projects',
+        headers: { ...mutationHeaders, 'sec-fetch-site': 'cross-site', ...navigation },
+        payload: '{}',
+      });
+      expect(response.statusCode).toBe(403);
+    },
+  );
+
+  it('serves no page for a malformed path from another site', async () => {
+    const response = await app.inject({ url: '/%E0%A4%A', headers: crossSite(navigation) });
+    expect(response.statusCode).toBe(400);
+    expect(response.body).not.toContain('<html');
+  });
+
+  it('keeps the Host check for a navigation', async () => {
+    const response = await app.inject({
+      url: '/projects',
+      headers: { ...crossSite(navigation), host: 'attacker.example:3000' },
+    });
+    expect(response.statusCode).toBe(403);
+  });
+
   it.each([
     '',
     '?all_projects=false',

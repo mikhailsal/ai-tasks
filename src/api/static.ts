@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import type { FastifyInstance } from 'fastify';
 import { domainError, errorEnvelope } from '../core/errors.js';
+import { apiPath, requestPath } from './shell-path.js';
 
 function staticDirectory(): string {
   const entries = [
@@ -21,7 +22,7 @@ export function registerStatic(app: FastifyInstance): void {
     app.register(fastifyStatic, { root, wildcard: false, index: ['index.html'] });
   app.setNotFoundHandler((request, reply) => {
     const pathname = request.url.split('?')[0] ?? '';
-    if (pathname.startsWith('/api'))
+    if (apiPath(requestPath(request.url) ?? pathname))
       return reply
         .code(404)
         .send(errorEnvelope(domainError('ROUTE_NOT_FOUND', 'API route not found')));

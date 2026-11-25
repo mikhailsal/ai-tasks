@@ -1329,6 +1329,10 @@ dd {
 #root:has(.project-editor-page) main > .connection-status[data-attention='false'] {
   display: none;
 }
+/* The editor header carries the refresh button, so the status bar never shows a second one. */
+#root:has(.project-editor-page) main > .connection-status .sync-refresh {
+  display: none;
+}
 .home-add-project {
   width: 44px;
   height: 44px;
@@ -1501,4 +1505,27 @@ dd {
 .advisory-notice .subtle {
   color: #4a5870;
   font-size: 0.875rem;
+}
+a.task-card-done {
+  justify-content: center;
+  margin-top: 6px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #e5f4ea;
+  color: #1d5c34;
+  font-weight: 600;
+}
+/* A wide screen shows several stages side by side (QA F15); phones keep one column. */
+@media (min-width: 900px) {
+  #root:has(.project-board) {
+    max-width: min(1440px, 100%);
+  }
+  .board-column {
+    flex: 0 0 300px;
+    /* Scrolling past several stages in view should not stop at each one. */
+    scroll-snap-stop: normal;
+  }
+  .board-column:last-child {
+    margin-right: 20px;
+  }
 }

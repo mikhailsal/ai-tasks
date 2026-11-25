@@ -1,7 +1,6 @@
-import { useState, type ReactNode } from 'react';
-import { refreshReadState } from '../data/cache.js';
-import { useConnectivity } from '../data/connectivity.js';
-import { Button } from './Button.js';
+import type { ReactNode } from 'react';
+import { useConnectivity, type Connectivity } from '../data/connectivity.js';
+import { RefreshButton } from './RefreshButton.js';
 
 export function OfflineBanner({
   compact = false,
@@ -13,21 +12,7 @@ export function OfflineBanner({
   children?: ReactNode;
 }) {
   const state = useConnectivity();
-  const [error, setError] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
-  async function refresh() {
-    if (refreshing) return;
-    setRefreshing(true);
-    setError('');
-    try {
-      await refreshReadState();
-    } catch {
-      setError('Не удалось обновить данные. Прежние снимки и черновики сохранены.');
-    } finally {
-      setRefreshing(false);
-    }
-  }
-  const attention = connectionAttention(state, error);
+  const attention = connectionAttention(state);
   const warning = !state.online || state.maintenance;
   if (quiet && !attention) return null;
   return (
@@ -55,41 +40,27 @@ export function OfflineBanner({
           )}
         </p>
         {children}
-        <Button
-          variant="ghost"
-          className="sync-refresh"
-          aria-label="Обновить сохранённые данные"
-          title="Обновить сохранённые данные"
-          disabled={!navigator.onLine || refreshing}
-          onClick={() => void refresh()}
-        >
-          <span aria-hidden="true">↻</span>
-        </Button>
+        <RefreshButton className="sync-refresh" />
       </div>
-      <ConnectionNotices state={state} error={error} />
+      <ConnectionNotices state={state} />
     </aside>
   );
 }
 
-function connectionAttention(state: ReturnType<typeof useConnectivity>, error: string) {
+/** Whether the status bar has something to say beyond the last update time. */
+function connectionAttention(state: Connectivity) {
   return [
     !state.online,
     state.maintenance,
     state.reconciling,
     state.unavailableProjects.length > 0,
     state.cacheError,
-    error,
+    state.refreshError,
     state.shellUpdateAvailable,
   ].some(Boolean);
 }
 
-function ConnectionNotices({
-  state,
-  error,
-}: {
-  state: ReturnType<typeof useConnectivity>;
-  error: string;
-}) {
+function ConnectionNotices({ state }: { state: ReturnType<typeof useConnectivity> }) {
   return (
     <>
       {!state.online && (
@@ -110,7 +81,7 @@ function ConnectionNotices({
         </p>
       )}
       {state.cacheError && <p role="alert">{state.cacheError}</p>}
-      {error && <p role="alert">{error}</p>}
+      {state.refreshError && <p role="alert">{state.refreshError}</p>}
       {state.shellUpdateAvailable && (
         <p className="shell-notice">
           Доступна новая версия приложения. Перезагрузите страницу после сохранения черновиков.

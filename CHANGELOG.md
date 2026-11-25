@@ -5,6 +5,91 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-22
+
+Fixes from the QA pass of 2026-11-19 (F1–F15). No migrations. The minimum Node is now
+24.22.3, so upgrade with `nvm install` (it reads `.nvmrc`), then `npm ci`, `npm run build`
+and a restart of `serve`.
+
+### Added
+
+- Web project editor: a «Обновить сохранённые данные» button in the header. The editor hides the
+  calm status bar, so there was no way to re-read saved data there.
+
+### Changed
+
+- Node.js 24.22.3 or newer is required (was exactly 24.22.0); 24.22.3 is the current 24.x
+  LTS security release and the version `.nvmrc` installs. npm stays pinned at 11.19.1.
+  `npm ci` (engine-strict), `npm run check:runtime` and the pre-push hook refuse older Node.
+- The browser JavaScript ceiling is 180000 gzip bytes (was 170000), approved by the owner on
+  2026-11-22: these fixes and the refresh button bring the build from 168700 to about 174000
+  bytes. The exception and its expiry are in `specs/002-mobile-ux/plan.md`.
+
+### Fixed
+
+- Web task editor: "Сохранить мой вариант ещё раз" after a conflict no longer reverts fields
+  that only the other client changed. Fields you did not edit take the current server value;
+  the compare block shows the merged result before you save.
+- Web, new project: the slug is suggested from the name (Russian letters transliterated, for
+  example «Щука и ёж» → `shchuka-i-ezh`) and follows the name until you type your own. The
+  link is shown under the name, so a Cyrillic name no longer fails on a hidden required slug.
+- Web forms: a rejected save names the field and its rule («Проверьте поле «Эмодзи». Нужен
+  ровно один эмодзи…») instead of only «Проверьте заполненные поля». The project editor marks
+  the rejected field (`aria-invalid` and a message under it) until it is edited, and opens
+  «Дополнительные настройки» when the slug or configuration was rejected.
+- Web task editor: the conflict comparison appears right under the warning, scrolls into view
+  and lists only the fields that differ, in form terms (title, emoji, description, priority,
+  deadline). Internal fields such as `timezone`, `kind` and recurrence settings are no longer
+  shown.
+- Web task editor: the title field is visible on a new task. It shows a placeholder and a
+  dashed outline while empty, takes focus on open, and the caption says a title is needed
+  before «Сохранить» becomes available.
+- Web: marking a recurring occurrence done takes one tap. «Открытые повторения» at the top of
+  the occurrence history lists each open occurrence with «Отметить выполненным»; a recurring
+  task's page has «Отметить выполнение», and its card in «План» links straight there
+  (`?occurrences=open`). After completing or cancelling, a status line confirms how many
+  occurrences changed.
+- Web occurrence rows show times in the task's time zone («Срок: 19 нояб. 2026 г., 08:00»)
+  instead of UTC ISO; the exact instant stays in the tooltip. The confirmation window reads
+  in days, hours and minutes instead of milliseconds, schedule times drop zero seconds
+  («время 08:00»), and «поколение» reads «версия расписания».
+- Web advisory notices («Обратите внимание») are in Russian. The web translates each advisory
+  by its `code` and no longer shows the English text meant for agents or raw status keys
+  such as `in_progress`; a code it does not know yet still shows the server's text.
+  «По данным на» and the worker's last pass are shown to the minute, without seconds and
+  milliseconds. The API, CLI and advisory text for agents are unchanged.
+- Web history names every recorded action in Russian («Повторение выполнено» instead of
+  `occurrence.complete`) and shows a board position as «Стадия «Черновик», позиция 1»
+  instead of JSON.
+- Web time fields show the precision a value has: «08:00» instead of «08:00:00.000», with
+  seconds or milliseconds only when they are set; a «с секундами» switch opens them for a new
+  value. The confirmation window is entered as a
+  number with a unit (мин, ч, сут., or мс) instead of raw milliseconds; it stays explicit and
+  starts empty, as do «Правило пропуска» and the first deadline. A field the browser scrolls
+  to for its validation message is no longer hidden behind the fixed save bar.
+- HTTP: a link to the app from another site opens the page instead of the raw
+  `ORIGIN_REJECTED` JSON. Only a cross-site GET navigation (`Sec-Fetch-Mode: navigate`,
+  `Sec-Fetch-Dest: document`) that the router answers with the page shell is let through: the
+  decoded path is neither the API nor a file. The API (in any spelling), files, frames,
+  scripts, HEAD and every write still refuse `Sec-Fetch-Site: cross-site`, and the Host check is
+  unchanged. See `docs/operations.md`.
+- Web: the first visit no longer shows «Доступна новая версия приложения». Installing the
+  offline shell is not an update; the notice now needs a page already run by an older shell.
+- Web: a task that cannot be loaded («Задача не найдена») offers «К проекту», «К задачам»
+  and «Повторить загрузку» instead of a dead end.
+- Web: the project list greets with «Выберите, над чем поработать», matching the «вы» used
+  everywhere else.
+- Web board on a wide screen (900 px and up) shows several stages side by side instead of one
+  phone-width column, and loads every stage in view. Dragging a card drops it into the column
+  under the pointer. Phones keep one column with swipe.
+
+### Agent-visible changes
+
+- An invalid emoji (`VALIDATION_ERROR`, message unchanged) now carries
+  `details.issues: [{code: "custom", path: ["emoji"], expected: "exactly one RGI emoji grapheme"}]`
+  instead of `details: null`, like other invalid fields. So does the refusal of the default
+  ⚪ as a project emoji (`expected: "an emoji other than the default ⚪"`).
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout

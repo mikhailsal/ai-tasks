@@ -121,7 +121,17 @@ test('an open project editor survives a real restore and cache refresh with its 
     page.on('framenavigated', (frame) => {
       if (frame === page.mainFrame()) navigations += 1;
     });
-    await page.getByRole('button', { name: 'Обновить сохранённые данные', exact: true }).click();
+    // The editor hides the calm status bar; its header carries the refresh button.
+    const refreshed = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/v1/meta',
+    );
+    await page
+      .locator('.project-editor-head')
+      .getByRole('button', { name: 'Обновить сохранённые данные', exact: true })
+      .click();
+    expect((await refreshed).status()).toBe(200);
     await expect(form).toHaveAttribute('data-recovery-mount', 'original');
     await expect(form.getByLabel('Название проекта', { exact: true })).toHaveValue(name);
     await expect(form.getByLabel('Описание проекта', { exact: true })).toHaveValue(description);

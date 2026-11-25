@@ -7,6 +7,7 @@ import { jsonValueSchema } from '../../../src/schema/values.js';
 import { reconcileDraft, proposalFor, type DraftRecord } from '../data/drafts.js';
 import {
   errorMessage,
+  invalidFields,
   readProject,
   readPresets,
   type projectEnvelopeSchema,
@@ -109,6 +110,18 @@ async function updateSaveFailure(options: {
     setMessage(errorMessage(readError));
   }
 }
+/** Fields the last save was rejected for; an edit clears them, nothing else does. */
+function useFieldFailure(change: (fields: ProjectFields) => void) {
+  const [failure, set] = useState<unknown>();
+  return {
+    invalid: invalidFields(failure),
+    set,
+    change(fields: ProjectFields) {
+      set(undefined);
+      change(fields);
+    },
+  };
+}
 async function finishProjectSave(
   slug: string | undefined,
   complete: (slug: string) => Promise<void>,
@@ -158,6 +171,7 @@ export function useProjectEditor(options: {
   const [savedSlug, setSavedSlug] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const failure = useFieldFailure(stored.change);
   const [current, setCurrent] = useState<ProjectEnvelope>();
   const [epochReview, setEpochReview] = useState<MetaData>();
   const operation = useProjectOperation(key, latestReadEpoch(current, epochReview, metadata));
@@ -166,6 +180,7 @@ export function useProjectEditor(options: {
     submitting.current = true;
     setBusy(true);
     setMessage('');
+    failure.set(undefined);
     try {
       const target = projectTarget(source, record.fields.slug);
       const path = `/projects/${encodeURIComponent(target.slug)}`;
@@ -182,6 +197,7 @@ export function useProjectEditor(options: {
       setSavedSlug(slug);
       await completeProjectSave(slug, operation.cleanup, stored.remove, onSaved);
     } catch (error) {
+      failure.set(error);
       await updateSaveFailure({
         error,
         saved: operation.wasSaved(),
@@ -230,7 +246,8 @@ export function useProjectEditor(options: {
     current:
       current?.data ??
       (epochReview ? { name: 'База данных восстановлена. Проверьте свой вариант.' } : undefined),
-    change: stored.change,
+    change: failure.change,
+    invalid: failure.invalid,
     submit,
     retry,
     review,

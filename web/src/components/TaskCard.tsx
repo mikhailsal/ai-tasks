@@ -96,6 +96,20 @@ function TaskExtras({ task, timezone }: { task: TaskResource; timezone: string }
   );
 }
 
+/** A recurring task with an open occurrence links straight to marking it done. */
+function MarkDoneLink({ task }: { task: TaskResource }) {
+  if (task.kind !== 'recurring' || task.display_deadline === null || task.archived_at !== null)
+    return null;
+  return (
+    <AppLink
+      className="task-card-done"
+      href={`/projects/${task.project_slug}/tasks/${task.id}?occurrences=open`}
+    >
+      Отметить выполнение
+    </AppLink>
+  );
+}
+
 export function TaskCard({
   task,
   group,
@@ -148,6 +162,7 @@ export function TaskCard({
         {task.archived_at !== null && <span className="badge badge-muted">Задача в архиве</span>}
       </p>
       <TaskDeadline task={task} timezone={timezone} search={search} />
+      <MarkDoneLink task={task} />
       {!compact && <TaskExtras task={task} timezone={timezone} />}
       <AdvisoryNotice advisories={itemAdvisories(advisories, task.id)} timezone={timezone} />
     </li>

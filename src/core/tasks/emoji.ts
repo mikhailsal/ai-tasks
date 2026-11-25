@@ -21,9 +21,16 @@ const recognizer = new RegExp(
   pinnedPattern.flags.replace('g', ''),
 );
 
+/** Names the field like schema issues do, so clients can mark it (`issues[].path`). */
+function invalidEmoji() {
+  return domainError('VALIDATION_ERROR', 'Emoji must contain exactly one RGI emoji grapheme', {
+    issues: [{ code: 'custom', path: ['emoji'], expected: 'exactly one RGI emoji grapheme' }],
+  });
+}
+
 export function normalizeEmoji(value: unknown) {
   if (typeof value !== 'string') {
-    throw domainError('VALIDATION_ERROR', 'Emoji must contain exactly one RGI emoji grapheme');
+    throw invalidEmoji();
   }
   const emoji = value.normalize('NFC');
   const graphemes = segmenter.segment(emoji)[Symbol.iterator]();
@@ -33,7 +40,7 @@ export function normalizeEmoji(value: unknown) {
   // RGI emoji. Presentation selectors are recognized without changing displayed text.
   const candidate = emoji.replace(/\uFE0E/gu, '\uFE0F');
   if (empty || multiple || /^\p{Emoji_Component}$/u.test(emoji) || !recognizer.test(candidate)) {
-    throw domainError('VALIDATION_ERROR', 'Emoji must contain exactly one RGI emoji grapheme');
+    throw invalidEmoji();
   }
   return { emoji, key: emoji.replace(/[\uFE0E\uFE0F]/gu, '') };
 }
@@ -78,7 +85,9 @@ export function reserveProjectEmoji(
   const normalized = normalizeEmoji(options.emoji);
   const now = readClock(() => options.now);
   if (normalized.key === DEFAULT_TASK_EMOJI) {
-    throw domainError('VALIDATION_ERROR', 'Projects require a nondefault emoji');
+    throw domainError('VALIDATION_ERROR', 'Projects require a nondefault emoji', {
+      issues: [{ code: 'custom', path: ['emoji'], expected: 'an emoji other than the default ⚪' }],
+    });
   }
   const existing = transaction
     .select()

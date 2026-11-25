@@ -64,7 +64,10 @@ describe('one RGI emoji grapheme and presentation identity', () => {
     'rejects non-RGI or multiple-grapheme input %j',
     (value) => {
       expect(() => emoji.normalizeEmoji(value)).toThrow(
-        expect.objectContaining({ code: 'VALIDATION_ERROR' }),
+        expect.objectContaining({
+          code: 'VALIDATION_ERROR',
+          details: { issues: [expect.objectContaining({ path: ['emoji'] })] },
+        }),
       );
     },
   );

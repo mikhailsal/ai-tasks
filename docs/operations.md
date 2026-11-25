@@ -1,6 +1,6 @@
 # Operations
 
-Run commands from the package directory with Node.js 24.22.0 and npm 11.19.1. See
+Run commands from the package directory with Node.js 24.22.3 or newer and npm 11.19.1. See
 [README](../README.md) for installation and the [normative contracts](../specs/001-ai-task-manager/contracts/common.md)
 for exact payloads. Examples containing `CURRENT_*`, `NEW_UUID`, or `BACKUP_UUID` are shapes:
 replace those strings with values from current responses, not literal request values.
@@ -66,8 +66,12 @@ as `ai-cli:SLUG`; browser writes use `human-web`. Supplying an actor in a reques
 Loopback access, filesystem permissions, and access to the OS account are the trust boundary.
 Origin/Host checks are browser request protections, not proof of an authorized human.
 
-The API checks exact Host and rejects disallowed `Sec-Fetch-Site` values. POST/PATCH/PUT
-also require the configured Origin, JSON content type, and `X-AI-Tasks-Mutation: 1`, including
+The API checks exact Host and rejects disallowed `Sec-Fetch-Site` values. One exception lets a
+link from another site open the app: a cross-site GET with `Sec-Fetch-Mode: navigate` and
+`Sec-Fetch-Dest: document` whose decoded path is neither the API nor a file, and which the
+router answers with the static page shell (no matched route, or `/`). No API handler runs for
+it; the shell's own API calls are same-origin. POST/PATCH/PUT also require the configured
+Origin, JSON content type, and `X-AI-Tasks-Mutation: 1`, including
 pure POST previews/validation. The raw JSON limit is 1 MiB. A valid same-origin HTTP mutation
 has this shape (the route supplies the project):
 

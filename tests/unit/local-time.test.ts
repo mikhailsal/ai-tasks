@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compactTime,
   deadlineDraft,
   localTimeChoices,
   resolveLocalDeadline,
+  timeStep,
 } from '../../web/src/data/local-time.js';
+import { fits, windowUnit } from '../../web/src/components/window-units.js';
 
 describe('browser native-Intl precise local deadlines', () => {
   it('preserves milliseconds and existing offset when editing an exact saved deadline', () => {
@@ -42,5 +45,36 @@ describe('browser native-Intl precise local deadlines', () => {
     { date: '2026-01-01', time: '', offset: '' },
   ])('rejects invalid or incomplete local input %j', (value) => {
     expect(() => resolveLocalDeadline(value, 'Europe/Moscow')).toThrow();
+  });
+});
+
+describe('time precision people need (QA F10)', () => {
+  it.each([
+    ['08:00:00.000', '08:00', '60'],
+    ['08:00:30.000', '08:00:30', '1'],
+    ['13:02:03.123', '13:02:03.123', '0.001'],
+    ['08:00', '08:00', '60'],
+  ])('%s shows as %s with step %s', (time, shown, step) => {
+    expect(compactTime(time)).toBe(shown);
+    expect(timeStep(shown)).toBe(step);
+  });
+  it('fills a whole-minute deadline as HH:MM', () => {
+    expect(deadlineDraft('2026-11-19T05:00:00.000Z', 'Europe/Moscow').time).toBe('08:00');
+  });
+  it.each([
+    ['', 'minute'],
+    ['0', 'minute'],
+    ['2592000000', 'day'],
+    ['5400000', 'minute'],
+    ['7200000', 'hour'],
+    ['123456', 'ms'],
+  ])('a window of %s ms is shown in %s', (ms, unit) => {
+    expect(windowUnit(ms)).toBe(unit);
+  });
+  it('a value set from outside leaves a unit that cannot show it whole', () => {
+    expect(fits('5400000', 'minute')).toBe(true);
+    expect(fits('5400000', 'hour')).toBe(false);
+    expect(fits('123456', 'minute')).toBe(false);
+    expect(fits('', 'day')).toBe(true);
   });
 });

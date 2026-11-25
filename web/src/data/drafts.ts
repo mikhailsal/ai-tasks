@@ -21,6 +21,7 @@ const storedDraftSchema = z.strictObject({
   key: draftKeySchema,
   fields: jsonValueSchema,
   base: draftBaseSchema,
+  origin: z.optional(jsonValueSchema),
 });
 const methodSchema = z.enum(['POST', 'PATCH', 'PUT']);
 const storedProposalSchema = z.strictObject({
@@ -34,6 +35,8 @@ export type DraftRecord<Fields extends JsonValue = JsonValue> = {
   readonly key: string;
   readonly fields: Fields;
   readonly base: DraftBase;
+  /** Server values the draft started from; lets a conflict keep the other client's edits. */
+  readonly origin?: JsonValue;
 };
 export type OperationProposal = {
   readonly path: string;
@@ -63,22 +66,52 @@ export function createDraft<Fields extends JsonValue>(options: {
   key: string;
   fields: Fields;
   base: DraftBase;
+  origin?: JsonValue | undefined;
 }): DraftRecord<Fields> {
   return Object.freeze({
     key: draftKeySchema.parse(options.key),
     fields: cloneFields(options.fields),
     base: Object.freeze(parseBase(options.base)),
+    ...(options.origin === undefined ? {} : { origin: cloneFields(options.origin) }),
   });
 }
 export function updateDraft<Fields extends JsonValue>(draft: DraftRecord<Fields>, fields: Fields) {
-  return createDraft({ key: draft.key, fields, base: draft.base });
+  return createDraft({ key: draft.key, fields, base: draft.base, origin: draft.origin });
 }
 /** Call only after the user explicitly reconciles the proposal with current server state. */
 export function reconcileDraft<Fields extends JsonValue>(
   draft: DraftRecord<Fields>,
   newBase: DraftBase,
 ) {
-  return createDraft({ key: draft.key, fields: draft.fields, base: newBase });
+  return createDraft({ key: draft.key, fields: draft.fields, base: newBase, origin: draft.origin });
+}
+function isRecord(value: JsonValue | undefined): value is { readonly [key: string]: JsonValue } {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+/**
+ * Three-way merge for "save my version" after a conflict: a top-level field this draft left at
+ * its origin value takes the current server value; an edited field keeps the edit. Without a
+ * readable origin (a draft saved by an older build) every field of the draft is kept.
+ */
+export function mergeDraftFields<Fields extends JsonValue>(
+  mine: Fields,
+  origin: JsonValue | undefined,
+  current: Fields,
+  parse: (value: JsonValue) => Fields,
+): Fields {
+  if (!isRecord(mine) || !isRecord(origin) || !isRecord(current)) return mine;
+  const merged: Record<string, JsonValue> = { ...mine };
+  for (const [key, value] of Object.entries(mine)) {
+    const before = origin[key];
+    const latest = current[key];
+    if (
+      before !== undefined &&
+      latest !== undefined &&
+      canonicalJson(value) === canonicalJson(before)
+    )
+      merged[key] = latest;
+  }
+  return parse(merged);
 }
 function canonicalJson(value: JsonValue): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
