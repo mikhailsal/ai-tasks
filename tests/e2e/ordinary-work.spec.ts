@@ -117,6 +117,8 @@ test('project chooser offers actual creation and built-in priority/workflow pres
   page,
 }, info) => {
   await page.goto('/projects');
+  // One form of address throughout (QA F14): «вы», as in «Создайте проект».
+  await expect(page.getByText('Выберите, над чем поработать', { exact: true })).toBeVisible();
   const create = page.getByRole('button', { name: 'Создать проект', exact: true });
   await expect(create).toBeVisible();
   await create.click();
