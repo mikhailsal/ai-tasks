@@ -86,6 +86,21 @@
   resize: none;
   overflow-wrap: anywhere;
   overflow: hidden;
+  border-radius: 8px;
+}
+/* The title edits in place; an empty title or the focused field shows its outline. */
+.task-identity-fields textarea::placeholder {
+  color: #69758a;
+  font-weight: 500;
+}
+.task-identity-fields textarea:placeholder-shown {
+  border: 1px dashed #b7c0cf;
+  background: #fff;
+}
+.task-identity-fields textarea:hover:not(:disabled),
+.task-identity-fields textarea:focus {
+  border: 1px solid #b7c0cf;
+  background: #fff;
 }
 .task-emoji-field {
   display: block;
