@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { domainError } from '../core/errors.js';
+import { shellPath } from './shell-path.js';
 
 export type SecurityOptions = { host: string; origin: string; developmentOrigin?: string };
 
@@ -10,12 +11,34 @@ function exactOrigin(origin: string): string {
   return origin;
 }
 
+/**
+ * A person following a link from another site to the app (QA F11): a top-level GET that the
+ * router answers with the page shell, and nothing else. Only the router fallback (no matched
+ * route) or the root serves the shell, so no API handler or file runs; the decoded path is
+ * checked as well. The shell is the static index.html; its own API calls are same-origin.
+ */
+function pageNavigation(request: FastifyRequest): boolean {
+  const route = request.routeOptions.url;
+  return (
+    request.method === 'GET' &&
+    request.headers['sec-fetch-mode'] === 'navigate' &&
+    request.headers['sec-fetch-dest'] === 'document' &&
+    (route === undefined || route === '/') &&
+    shellPath(request.url)
+  );
+}
+
+function allowedSite(site: string | string[] | undefined, request: FastifyRequest): boolean {
+  if (site === undefined || ['same-origin', 'same-site', 'none'].includes(String(site)))
+    return true;
+  return String(site) === 'cross-site' && pageNavigation(request);
+}
+
 function checkRequest(request: FastifyRequest, options: SecurityOptions): void {
   const reject = () => domainError('ORIGIN_REJECTED', 'Request origin is not allowed');
   if (request.headers.host !== options.host) throw reject();
   const site = request.headers['sec-fetch-site'];
-  if (site !== undefined && !['same-origin', 'same-site', 'none'].includes(String(site)))
-    throw reject();
+  if (!allowedSite(site, request)) throw reject();
   if (!['POST', 'PATCH', 'PUT'].includes(request.method)) return;
   const origin = request.headers.origin;
   if (
