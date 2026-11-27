@@ -5,6 +5,14 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web advisory notices («Обратите внимание») are in Russian. The web translates each advisory
+  by its `code` and no longer shows the English text meant for agents or raw status keys
+  such as `in_progress`; a code it does not know yet still shows the server's text.
+  «По данным на» and the worker's last pass are shown to the minute, without seconds and
+  milliseconds. The API, CLI and advisory text for agents are unchanged.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
