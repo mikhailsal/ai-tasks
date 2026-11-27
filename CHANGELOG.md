@@ -5,6 +5,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web history names every recorded action in Russian («Повторение выполнено» instead of
+  `occurrence.complete`) and shows a board position as «Стадия «Черновик», позиция 1»
+  instead of JSON.
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
