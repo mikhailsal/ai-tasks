@@ -83,6 +83,7 @@ export async function collectProjectTasks(slug: string, signal?: AbortSignal) {
   } while (cursor !== null);
   return items;
 }
+const genericValidation = 'Проверьте заполненные поля. Данные не сохранены.';
 const messages: Readonly<Record<string, string>> = {
   EMOJI_CONFLICT: 'Этот эмодзи уже занят. Выберите другой эмодзи.',
   REVISION_CONFLICT: 'Данные изменились в другом клиенте. Сравните версии перед сохранением.',
@@ -93,15 +94,55 @@ const messages: Readonly<Record<string, string>> = {
   CURSOR_STALE: 'Список изменился. Обновите его с первой страницы.',
   DEPENDENCY_BLOCKED: 'Сначала завершите задачи, от которых зависит эта работа.',
   CONFIRMATION_REQUIRED: 'Для этого перехода нужен текст вашего подтверждения.',
-  VALIDATION_ERROR: 'Проверьте заполненные поля. Данные не сохранены.',
+  VALIDATION_ERROR: genericValidation,
   PROJECT_NOT_FOUND: 'Проект не найден.',
   TASK_NOT_FOUND: 'Задача не найдена.',
   PROJECT_MISMATCH: 'Задача принадлежит другому проекту.',
   DB_CONFLICT: 'База данных занята. Повторите ту же операцию.',
   MAINTENANCE: 'Приложение временно недоступно. Сохраните свой вариант и повторите позже.',
 };
+// Neutral labels: errorMessage serves every form, so a label never names one screen's field.
+const fieldLabels: Readonly<Record<string, string>> = {
+  name: 'Название',
+  title: 'Название',
+  emoji: 'Эмодзи',
+  slug: 'Slug',
+  description: 'Описание',
+  priority: 'Приоритет',
+};
+/** Field-level hints for rules people cannot guess from the label alone. */
+export const fieldRuleHints: Readonly<Record<string, string>> = {
+  emoji: 'Нужен ровно один эмодзи, например 🚀.',
+  slug: 'Только латинские буквы в нижнем регистре, цифры и дефисы.',
+};
+/** Top-level payload fields a VALIDATION_ERROR names in `details.issues[].path`. */
+export function invalidFields(error: unknown): string[] {
+  if (!(error instanceof ApiClientError) || error.code !== 'VALIDATION_ERROR') return [];
+  const details = error.details;
+  if (details === null || typeof details !== 'object' || Array.isArray(details)) return [];
+  const issues = details.issues;
+  if (!Array.isArray(issues)) return [];
+  const fields = issues.flatMap((issue) => {
+    if (issue === null || typeof issue !== 'object' || Array.isArray(issue)) return [];
+    const path = Array.isArray(issue.path) ? issue.path : [];
+    const field = path[0] === 'payload' ? path[1] : path[0];
+    return typeof field === 'string' ? [field] : [];
+  });
+  return [...new Set(fields)];
+}
+function validationMessage(error: ApiClientError) {
+  const fields = invalidFields(error);
+  const named = fields.filter((field) => Object.hasOwn(fieldLabels, field));
+  if (named.length === 0) return genericValidation;
+  // Fields without a label are not hidden: the message says there are more.
+  const more = named.length < fields.length ? ' и другие поля' : '';
+  const list = named.map((field) => `«${fieldLabels[field] ?? field}»`).join(', ');
+  const hints = named.flatMap((field) => fieldRuleHints[field] ?? []).join(' ');
+  return `Проверьте ${named.length === 1 && !more ? 'поле' : 'поля'} ${list}${more}. ${hints ? `${hints} ` : ''}Данные не сохранены.`;
+}
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiClientError) {
+    if (error.code === 'VALIDATION_ERROR') return validationMessage(error);
     if (
       error.code === 'DEPENDENCY_BLOCKED' &&
       error.details !== null &&

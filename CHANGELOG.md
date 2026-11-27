@@ -5,6 +5,20 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web forms: a rejected save names the field and its rule («Проверьте поле «Эмодзи». Нужен
+  ровно один эмодзи…») instead of only «Проверьте заполненные поля». The project editor marks
+  the rejected field (`aria-invalid` and a message under it) until it is edited, and opens
+  «Дополнительные настройки» when the slug or configuration was rejected.
+
+### Agent-visible changes
+
+- An invalid emoji (`VALIDATION_ERROR`, message unchanged) now carries
+  `details.issues: [{code: "custom", path: ["emoji"], expected: "exactly one RGI emoji grapheme"}]`
+  instead of `details: null`, like other invalid fields. So does the refusal of the default
+  ⚪ as a project emoji (`expected: "an emoji other than the default ⚪"`).
+
 ## [0.2.0] - 2026-11-17
 
 First tagged release. The package was 0.1.0 before, never tagged. Upgrading a 0.1.0 checkout
