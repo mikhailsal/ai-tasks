@@ -159,6 +159,14 @@ function TaskOperationReview({
   );
 }
 
+/** «План» links to `?occurrences=open` so marking an occurrence done starts in the sheet. */
+function occurrencesRequested() {
+  return new URLSearchParams(window.location.search).get('occurrences') === 'open';
+}
+function scrollToOccurrences() {
+  document.getElementById('occurrences')?.scrollIntoView({ block: 'start' });
+}
+
 export function TaskDetail({
   projectSlug,
   taskId,
@@ -170,7 +178,7 @@ export function TaskDetail({
 }) {
   const editor = useTaskDraft(projectSlug, taskId);
   const commands = useTaskCommands(editor, projectSlug);
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(occurrencesRequested);
   const [recurrenceBlocked, setRecurrenceBlocked] = useState(Boolean(taskId));
   const online = useMutationAvailability(metadata.database_epoch, projectSlug);
   const page = editor.page;
@@ -207,6 +215,19 @@ export function TaskDetail({
         metadata={metadata}
         archived={archived}
       />
+      {task?.kind === 'recurring' && (
+        <Button
+          variant="primary"
+          className="task-mark-done"
+          disabled={archived}
+          onClick={() => {
+            setActionsOpen(true);
+            requestAnimationFrame(scrollToOccurrences);
+          }}
+        >
+          Отметить выполнение
+        </Button>
+      )}
       <TaskForm
         page={page}
         fields={editor.draft.fields}
